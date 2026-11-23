@@ -10,9 +10,14 @@ import type { ActionResult } from "@/lib/action-result";
 import { EMPLOYMENT_STATUSES, employeeSchema, type EmployeeValues } from "@/lib/validation/employees";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/toast";
 import { Textarea } from "@/components/ui/textarea";
 import { ActionError } from "@/components/forms/action-error";
-import { Field, FormAlert, NativeSelect } from "@/components/forms/field";
+import { Field, NativeSelect } from "@/components/forms/field";
+import { FormActions, FormSection } from "@/components/forms/form-section";
+import { MoneyInput } from "@/components/forms/money-input";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { saveEmployeeAction } from "./actions";
 
 export function EmployeeForm({
@@ -28,44 +33,52 @@ export function EmployeeForm({
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<ActionResult<string> | null>(null);
   const form = useForm<EmployeeValues>({ resolver: zodResolver(employeeSchema), defaultValues: defaults });
-  const { errors } = form.formState;
+  const { errors, isDirty } = form.formState;
+  const [leaving, setLeaving] = useState(false);
+  useUnsavedChanges(isDirty);
 
   const onSubmit = form.handleSubmit((values) =>
     startTransition(async () => {
       const res = await saveEmployeeAction(employeeId, salaryAccess === "manage" ? values : { ...values, salary: "" });
       setResult(res);
-      if (res.ok && !employeeId && res.data) router.push(`/employees/${res.data}`);
+      if (!res.ok) return;
+      form.reset(values);
+      toast.add({ title: employeeId ? t.employees.updated : t.employees.created, type: "success" });
+      if (!employeeId && res.data) router.push(`/employees/${res.data}`);
     })
   );
 
-  const text = (name: keyof EmployeeValues, label: string, props: React.ComponentProps<typeof Input> = {}) => (
-    <Field id={name} label={label} error={errors[name]?.message}>
-      <Input id={name} aria-invalid={!!errors[name]} {...props} {...form.register(name)} />
+  const leave = () => (isDirty ? setLeaving(true) : router.push("/employees"));
+
+  const text = (
+    name: keyof EmployeeValues,
+    label: string,
+    { required, optional, ...props }: React.ComponentProps<typeof Input> & { optional?: boolean } = {}
+  ) => (
+    <Field id={name} label={label} required={required} optional={optional} error={errors[name]?.message}>
+      <Input id={name} aria-required={required} {...props} {...form.register(name)} />
     </Field>
   );
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-6" noValidate>
-      {result?.ok && <FormAlert tone="success">{employeeId ? t.employees.updated : t.employees.created}</FormAlert>}
+    <form onSubmit={onSubmit} className="grid max-w-4xl gap-6" noValidate>
       <ActionError result={result} />
 
-      <section className="grid gap-4 rounded-lg border bg-card p-4 sm:grid-cols-2">
-        <h2 className="text-sm font-semibold text-navy sm:col-span-2">{t.employees.personal}</h2>
-        {text("fullName", t.employees.fullName)}
-        {text("fullNameUr", `${t.employees.fullNameUr} (${t.common.optional})`, { dir: "rtl", lang: "ur" })}
-        {text("fatherName", `${t.employees.fatherName} (${t.common.optional})`)}
-        {text("cnic", `${t.employees.cnic} (${t.common.optional})`, { dir: "ltr", inputMode: "numeric", placeholder: "12345-1234567-1" })}
-        {text("phone", t.employees.phone, { dir: "ltr", type: "tel" })}
-        {text("whatsapp", t.employees.whatsapp, { dir: "ltr", type: "tel" })}
-        {text("email", `${t.employees.email} (${t.common.optional})`, { dir: "ltr", type: "email" })}
-        {text("emergencyContact", `${t.employees.emergencyContact} (${t.common.optional})`)}
-        <Field id="address" label={`${t.employees.address} (${t.common.optional})`} error={errors.address?.message} className="sm:col-span-2">
+      <FormSection title={t.employees.personal}>
+        {text("fullName", t.employees.fullName, { required: true })}
+        {text("fullNameUr", t.employees.fullNameUr, { dir: "rtl", lang: "ur", optional: true })}
+        {text("fatherName", t.employees.fatherName, { optional: true })}
+        {text("cnic", t.employees.cnic, { dir: "ltr", inputMode: "numeric", placeholder: "12345-1234567-1", optional: true })}
+        {text("phone", t.employees.phone, { dir: "ltr", type: "tel", optional: true })}
+        {text("whatsapp", t.employees.whatsapp, { dir: "ltr", type: "tel", optional: true })}
+        {text("email", t.employees.email, { dir: "ltr", type: "email", optional: true })}
+        {text("emergencyContact", t.employees.emergencyContact, { optional: true })}
+        <Field id="address" label={t.employees.address} optional error={errors.address?.message} className="sm:col-span-2">
           <Textarea id="address" rows={2} {...form.register("address")} />
         </Field>
-      </section>
+      </FormSection>
 
-      <section className="grid gap-4 rounded-lg border bg-card p-4 sm:grid-cols-2">
-        <h2 className="text-sm font-semibold text-navy sm:col-span-2">{t.employees.employment}</h2>
+      <FormSection title={t.employees.employment}>
         <Field id="employeeCode" label={t.employees.code} hint={employeeId ? undefined : t.employees.codeAuto} error={errors.employeeCode?.message}>
           <Input id="employeeCode" dir="ltr" {...form.register("employeeCode")} />
         </Field>
@@ -74,26 +87,38 @@ export function EmployeeForm({
             {EMPLOYMENT_STATUSES.map((s) => <option key={s} value={s}>{t.employees.statusLabels[s]}</option>)}
           </NativeSelect>
         </Field>
-        {text("jobTitle", t.employees.jobTitle)}
-        {text("department", t.employees.department)}
-        {text("hireDate", t.employees.joiningDate, { type: "date", dir: "ltr" })}
+        {text("jobTitle", t.employees.jobTitle, { optional: true })}
+        {text("department", t.employees.department, { optional: true })}
+        {text("hireDate", t.employees.joiningDate, { type: "date", dir: "ltr", optional: true })}
         {salaryAccess !== "none" && (
           <Field id="salary" label={t.employees.salary} hint={t.employees.salaryConfidential} error={errors.salary?.message}>
-            <div className="relative">
-              <Input id="salary" dir="ltr" inputMode="decimal" readOnly={salaryAccess !== "manage"} className="pe-8" {...form.register("salary")} />
-              <Lock className="pointer-events-none absolute end-2.5 top-2.5 h-4 w-4 text-amber-600" aria-hidden />
-            </div>
+            <MoneyInput
+              id="salary"
+              readOnly={salaryAccess !== "manage"}
+              suffix={<Lock className="size-4 text-warning" aria-hidden />}
+              {...form.register("salary")}
+            />
           </Field>
         )}
-        <Field id="notes" label={`${t.employees.notes} (${t.common.optional})`} error={errors.notes?.message} className="sm:col-span-2">
+        <Field id="notes" label={t.employees.notes} optional error={errors.notes?.message} className="sm:col-span-2">
           <Textarea id="notes" rows={3} {...form.register("notes")} />
         </Field>
-      </section>
+      </FormSection>
 
-      <div className="flex gap-2">
-        <Button type="submit" disabled={pending}>{pending ? t.common.saving : t.common.save}</Button>
-        <Button type="button" variant="outline" onClick={() => router.push("/employees")}>{t.common.back}</Button>
-      </div>
+      <FormActions>
+        <Button type="submit" size="lg" disabled={pending}>{pending ? t.common.saving : t.common.save}</Button>
+        <Button type="button" size="lg" variant="outline" disabled={pending} onClick={leave}>{t.common.cancel}</Button>
+      </FormActions>
+
+      <ConfirmDialog
+        open={leaving}
+        onOpenChange={setLeaving}
+        title={t.states.unsavedTitle}
+        description={t.states.unsavedHint}
+        confirmLabel={t.common.discard}
+        cancelLabel={t.common.keepEditing}
+        onConfirm={() => { form.reset(defaults); setLeaving(false); router.push("/employees"); }}
+      />
     </form>
   );
 }

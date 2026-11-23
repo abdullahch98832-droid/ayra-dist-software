@@ -1,11 +1,44 @@
-export function PageHeader({ title, description, actions }: { title: string; description?: string; actions?: React.ReactNode }) {
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+import { getT } from "@/i18n/server";
+
+export interface Crumb {
+  label: string;
+  href: string;
+}
+
+/** Page title with optional trail, description and actions. */
+export async function PageHeader({
+  title, description, actions, breadcrumbs,
+}: {
+  title: string;
+  description?: React.ReactNode;
+  actions?: React.ReactNode;
+  breadcrumbs?: Crumb[];
+}) {
+  const t = await getT();
   return (
-    <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-navy">{title}</h1>
-        {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+    <div className="mb-6">
+      {breadcrumbs && (
+        <nav aria-label={t.common.breadcrumb} className="mb-2">
+          <ol className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
+            {breadcrumbs.map((c) => (
+              <li key={c.href} className="flex items-center gap-1">
+                <Link href={c.href} className="rounded hover:text-foreground hover:underline">{c.label}</Link>
+                <ChevronRight className="size-3.5 rtl:-scale-x-100" aria-hidden />
+              </li>
+            ))}
+            <li aria-current="page" className="min-w-0 truncate text-foreground">{title}</li>
+          </ol>
+        </nav>
+      )}
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+        <div className="min-w-0">
+          <h1 className="font-heading text-2xl break-words text-navy sm:text-[1.75rem] sm:leading-9">{title}</h1>
+          {description && <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p>}
+        </div>
+        {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
       </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
   );
 }

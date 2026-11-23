@@ -1,12 +1,18 @@
 import { ShieldAlert } from "lucide-react";
 import { getT } from "@/i18n/server";
+import { LinkButton } from "@/components/shared/link-button";
+import { EmptyState } from "@/components/shared/states";
 
 export async function Forbidden() {
   const t = await getT();
   return (
-    <div className="mx-auto mt-16 flex max-w-md flex-col items-center gap-3 text-center">
-      <ShieldAlert className="h-10 w-10 text-muted-foreground" />
-      <p className="text-muted-foreground">{t.errors.permissionDenied}</p>
-    </div>
+    <EmptyState
+      icon={ShieldAlert}
+      tone="warning"
+      headingLevel="h1"
+      title={t.states.forbiddenTitle}
+      description={t.states.forbiddenHint}
+      actions={<LinkButton variant="outline" href="/profile">{t.profile.title}</LinkButton>}
+    />
   );
 }

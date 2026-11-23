@@ -1,12 +1,19 @@
 import { notFound } from "next/navigation";
 import { z } from "zod";
-import { getT } from "@/i18n/server";
+import { getLocale, getT } from "@/i18n/server";
 import { can, requireActiveSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { EMPLOYEE_COLUMNS, signedPhotoUrls, type EmployeeRecord } from "@/features/employees/queries";
 import { Forbidden } from "@/components/layout/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
+import { Ltr, Money } from "@/components/shared/bidi";
+import { DescriptionList } from "@/components/shared/description-list";
+import { formatDate } from "@/components/shared/format";
+import { SectionCard } from "@/components/shared/section-card";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { toPaisa } from "@/lib/utils/money";
 import { EmployeeForm } from "../employee-form";
+import { EMPLOYEE_STATUS_TONE } from "../employee-status";
 import { PhotoUploader } from "../photo-uploader";
 
 export default async function EmployeePage({ params }: PageProps<"/employees/[id]">) {
@@ -14,7 +21,7 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
   if (!can(ctx, "employees.view")) return <Forbidden />;
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const t = await getT();
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
   const supabase = await createClient();
 
   const canViewSalary = can(ctx, "payroll.view");
@@ -35,8 +42,15 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
   return (
     <>
       <PageHeader
-        title={employee.full_name}
-        description={[employee.employee_code, linked.data ? `${t.employees.linkedUser}: ${linked.data.full_name}` : null].filter(Boolean).join(" · ")}
+        title={locale === "ur" && employee.full_name_ur ? employee.full_name_ur : employee.full_name}
+        breadcrumbs={[{ label: t.employees.title, href: "/employees" }]}
+        description={
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <Ltr className="font-mono text-xs">{employee.employee_code}</Ltr>
+            <StatusBadge tone={EMPLOYEE_STATUS_TONE[employee.status]}>{t.employees.statusLabels[employee.status]}</StatusBadge>
+            {linked.data && <span>{t.employees.linkedUser}: {linked.data.full_name}</span>}
+          </span>
+        }
       />
       <div className="grid max-w-4xl gap-6">
         <PhotoUploader employeeId={employee.id} name={employee.full_name} url={photo} canEdit={canEdit} />
@@ -73,25 +87,22 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
 }
 
 async function EmployeeDetails({ employee, salary }: { employee: EmployeeRecord; salary: number | null | undefined }) {
-  const t = await getT();
-  const rows: [string, string | null | undefined][] = [
-    [t.employees.fullNameUr, employee.full_name_ur],
-    [t.employees.jobTitle, employee.job_title],
-    [t.employees.department, employee.department],
-    [t.employees.phone, employee.phone],
-    [t.employees.whatsapp, employee.whatsapp],
-    [t.employees.joiningDate, employee.hire_date],
-    [t.employees.status, t.employees.statusLabels[employee.status]],
-    ...(salary !== undefined ? [[t.employees.salary, salary === null ? "—" : Number(salary).toFixed(2)] as [string, string]] : []),
-  ];
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
   return (
-    <dl className="grid gap-3 rounded-lg border bg-card p-4 sm:grid-cols-2">
-      {rows.map(([label, value]) => (
-        <div key={label}>
-          <dt className="text-xs text-muted-foreground">{label}</dt>
-          <dd className="text-sm">{value || "—"}</dd>
-        </div>
-      ))}
-    </dl>
+    <SectionCard title={t.employees.employment}>
+      <DescriptionList
+        items={[
+          { label: t.employees.fullNameUr, value: employee.full_name_ur && <span lang="ur" dir="rtl">{employee.full_name_ur}</span> },
+          { label: t.employees.jobTitle, value: employee.job_title },
+          { label: t.employees.department, value: employee.department },
+          { label: t.employees.phone, value: employee.phone && <Ltr>{employee.phone}</Ltr> },
+          { label: t.employees.whatsapp, value: employee.whatsapp && <Ltr>{employee.whatsapp}</Ltr> },
+          { label: t.employees.joiningDate, value: formatDate(employee.hire_date, locale) },
+          ...(salary !== undefined
+            ? [{ label: t.employees.salary, value: salary === null ? null : <Money amount={toPaisa(salary)} locale={locale} /> }]
+            : []),
+        ]}
+      />
+    </SectionCard>
   );
 }

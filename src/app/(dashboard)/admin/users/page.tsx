@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { getT } from "@/i18n/server";
 import { can, requireActiveSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { Forbidden } from "@/components/layout/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
 import { UsersTable } from "./users-table";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT()).users.title };
+}
 
 export default async function UsersPage() {
   const ctx = await requireActiveSession();

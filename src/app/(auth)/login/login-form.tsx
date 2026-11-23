@@ -1,14 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { Mail } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useI18n } from "@/i18n/context";
 import type { ActionResult } from "@/lib/action-result";
 import { loginSchema, type LoginValues } from "@/lib/validation/auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Field, FormAlert, useMessage } from "@/components/forms/field";
+import { IconInput } from "@/components/forms/icon-input";
+import { PasswordInput } from "@/components/forms/password-input";
 import { signInAction } from "../actions";
 
 export function LoginForm({ next, disabled }: { next?: string; disabled: boolean }) {
@@ -24,17 +27,18 @@ export function LoginForm({ next, disabled }: { next?: string; disabled: boolean
   );
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-4" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-5" noValidate>
       {result && !result.ok && result.code !== "validation" && (
         <FormAlert>{message(result.message) ?? t.errors.unexpected}</FormAlert>
       )}
       <Field id="email" label={t.auth.email} error={errors.email?.message}>
-        <Input id="email" type="email" autoComplete="username" dir="ltr" {...form.register("email")} aria-invalid={!!errors.email} />
+        <IconInput id="email" icon={Mail} type="email" autoComplete="username" dir="ltr" {...form.register("email")} />
       </Field>
       <Field id="password" label={t.auth.password} error={errors.password?.message}>
-        <Input id="password" type="password" autoComplete="current-password" dir="ltr" {...form.register("password")} aria-invalid={!!errors.password} />
+        <PasswordInput id="password" autoComplete="current-password" {...form.register("password")} />
       </Field>
-      <Button type="submit" disabled={pending || disabled}>
+      <Link href="/forgot-password" className="justify-self-end text-sm font-medium text-primary hover:underline">{t.auth.forgotPassword}</Link>
+      <Button type="submit" size="lg" disabled={pending || disabled}>
         {pending ? t.auth.signingIn : t.auth.signIn}
       </Button>
     </form>

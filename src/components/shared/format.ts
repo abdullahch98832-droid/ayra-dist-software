@@ -18,3 +18,8 @@ export function formatDate(value: string | null | undefined, locale: Locale): st
     timeZone: "UTC",
   }).format(new Date(`${value.slice(0, 10)}T00:00:00Z`));
 }
+
+/** Counts and quantities with grouping and Latin digits. Not for money: use formatPaisa. */
+export function formatNumber(value: number | bigint, locale: Locale): string {
+  return new Intl.NumberFormat(locale === "ur" ? "ur-PK" : "en-PK", { numberingSystem: "latn" }).format(value);
+}

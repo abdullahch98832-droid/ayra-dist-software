@@ -1,24 +1,32 @@
-import { APP_CONFIG } from "@/config/app";
 import { getT } from "@/i18n/server";
+import { AuthArtwork } from "@/components/layout/auth-artwork";
+import { Brand } from "@/components/layout/brand";
 import { Footer } from "@/components/layout/footer";
-import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { LanguageMenu } from "@/components/layout/language-menu";
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const t = await getT();
   return (
-    <div className="flex min-h-screen flex-col bg-muted/40">
-      <header className="flex justify-end px-4 py-4">
-        <LocaleSwitcher />
-      </header>
-      <main className="flex flex-1 items-start justify-center px-4 pb-12 pt-4 sm:items-center">
-        <div className="w-full max-w-sm">
-          <div className="mb-6 text-center">
-            <p className="font-latin text-2xl font-bold tracking-tight text-navy">{APP_CONFIG.name}</p>
-            <p className="text-sm text-muted-foreground">{t.common.subtitle}</p>
+    <div className="flex min-h-dvh flex-col">
+      <div className="grid flex-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+        <aside className="relative hidden overflow-hidden bg-navy text-white lg:flex lg:flex-col lg:gap-8 lg:p-12">
+          <Brand subtitle={t.common.subtitle} tone="white" size="lg" />
+          <AuthArtwork className="-mx-12 min-h-0 w-[calc(100%+6rem)] flex-1" />
+          <div className="max-w-md">
+            <p className="font-heading text-3xl leading-tight text-balance xl:text-4xl">{t.auth.brandHeadline}</p>
+            <p className="mt-4 text-base text-white/75">{t.auth.brandText}</p>
           </div>
-          {children}
+        </aside>
+        <div className="flex min-w-0 flex-col bg-card">
+          <header className="flex items-center justify-between gap-4 px-4 py-4 sm:px-8">
+            <Brand subtitle={t.common.subtitle} className="lg:invisible" />
+            <LanguageMenu compact />
+          </header>
+          <main className="flex flex-1 items-center justify-center px-4 py-8 sm:px-8">
+            <div className="w-full max-w-sm">{children}</div>
+          </main>
         </div>
-      </main>
+      </div>
       <Footer />
     </div>
   );

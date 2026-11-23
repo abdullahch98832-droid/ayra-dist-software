@@ -3,6 +3,7 @@ import { z } from "zod";
 const optionalText = (max: number) => z.string().trim().max(max, "tooLong");
 
 export const EMPLOYMENT_STATUSES = ["active", "on_leave", "terminated"] as const;
+export type EmploymentStatus = (typeof EMPLOYMENT_STATUSES)[number];
 
 // All fields are strings so the same schema validates the form and the server action.
 export const employeeSchema = z.object({

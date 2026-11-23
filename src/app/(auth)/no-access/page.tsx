@@ -3,7 +3,7 @@ import { AUTH_CONFIG } from "@/config/auth";
 import { getT } from "@/i18n/server";
 import { getSessionContext } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AuthPanel } from "@/components/layout/auth-panel";
 import { signOutAction } from "../actions";
 
 export default async function NoAccessPage() {
@@ -13,16 +13,10 @@ export default async function NoAccessPage() {
   if (ctx.isActive && ctx.role) redirect(AUTH_CONFIG.homePath);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t.auth.noAccessTitle}</CardTitle>
-        <CardDescription>{ctx.isActive ? t.auth.noAccessNoRole : t.auth.noAccessSuspended}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form action={signOutAction}>
-          <Button type="submit" variant="outline" className="w-full">{t.auth.signOut}</Button>
-        </form>
-      </CardContent>
-    </Card>
+    <AuthPanel title={t.auth.noAccessTitle} description={ctx.isActive ? t.auth.noAccessNoRole : t.auth.noAccessSuspended}>
+      <form action={signOutAction}>
+        <Button type="submit" variant="outline" className="w-full">{t.auth.signOut}</Button>
+      </form>
+    </AuthPanel>
   );
 }

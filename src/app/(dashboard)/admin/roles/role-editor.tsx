@@ -12,10 +12,13 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/toast";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ActionError } from "@/components/forms/action-error";
-import { Field } from "@/components/forms/field";
+import { Field, NativeSelect } from "@/components/forms/field";
+import { Ltr } from "@/components/shared/bidi";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { createRoleAction, deleteRoleAction, setRolePermissionAction, updateRoleAction } from "./actions";
 
@@ -78,26 +81,30 @@ export function RoleEditor({
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
-      <div className="grid content-start gap-2">
+    <div className="grid gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]">
+      <div className="grid content-start gap-3">
         {canManage && (
-          <Button variant="outline" className="justify-start gap-2" onClick={() => { setError(null); setDialog("new"); }}>
-            <Plus className="h-4 w-4" />{t.roles.newRole}
+          <Button variant="outline" className="justify-start" onClick={() => { setError(null); setDialog("new"); }}>
+            <Plus aria-hidden />{t.roles.newRole}
           </Button>
         )}
-        <ul className="grid gap-1 rounded-lg border bg-card p-1">
+        <NativeSelect className="lg:hidden" aria-label={t.users.role} value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>
+          {roles.map((r) => <option key={r.id} value={r.id}>{name(r)}</option>)}
+        </NativeSelect>
+        <ul className="hidden gap-0.5 rounded-xl border bg-card p-1.5 shadow-card lg:grid">
           {roles.map((r) => (
             <li key={r.id}>
               <button
                 type="button"
+                aria-current={r.id === selectedId || undefined}
                 onClick={() => setSelectedId(r.id)}
                 className={cn(
-                  "flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-start text-sm",
-                  r.id === selectedId ? "bg-primary/10 font-medium text-primary" : "hover:bg-muted"
+                  "flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-start text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/40",
+                  r.id === selectedId ? "bg-accent font-medium text-accent-foreground" : "hover:bg-muted"
                 )}
               >
                 <span>{name(r)}</span>
-                <span className="text-xs text-muted-foreground">{userCounts[r.id] ?? 0}</span>
+                <span className="rounded-full bg-muted px-2 text-xs text-muted-foreground tabular-nums" title={t.roles.users}>{userCounts[r.id] ?? 0}</span>
               </button>
             </li>
           ))}
@@ -105,21 +112,21 @@ export function RoleEditor({
       </div>
 
       {role && (
-        <div className="grid content-start gap-4">
-          <div className="flex flex-wrap items-start justify-between gap-3 rounded-lg border bg-card p-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold">{name(role)}</h2>
-                <StatusBadge tone={role.is_system ? "blue" : "gray"}>{role.is_system ? t.roles.system : t.roles.custom}</StatusBadge>
+        <div className="grid min-w-0 content-start gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border bg-card p-5 shadow-card">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-semibold text-navy">{name(role)}</h2>
+                <StatusBadge tone={role.is_system ? "blue" : "gray"} dot={false}>{role.is_system ? t.roles.system : t.roles.custom}</StatusBadge>
               </div>
-              <p className="font-mono text-xs text-muted-foreground" dir="ltr">{role.code}</p>
+              <Ltr className="font-mono text-xs text-muted-foreground">{role.code}</Ltr>
               {role.description && <p className="mt-1 text-sm text-muted-foreground">{role.description}</p>}
               <p className="mt-1 text-sm text-muted-foreground">{t.roles.users}: {userCounts[role.id] ?? 0}</p>
             </div>
             {canManage && !role.is_system && (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => { setError(null); setDialog("edit"); }}>{t.common.edit}</Button>
-                <Button variant="destructive" size="sm" onClick={() => { setError(null); setDialog("delete"); }}>{t.roles.deleteRole}</Button>
+                <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive-soft hover:text-destructive" onClick={() => { setError(null); setDialog("delete"); }}>{t.roles.deleteRole}</Button>
               </div>
             )}
           </div>
@@ -131,13 +138,13 @@ export function RoleEditor({
 
           <div className="grid gap-3 md:grid-cols-2">
             {byModule.map(([module, items]) => (
-              <fieldset key={module} className="rounded-lg border bg-card p-4" disabled={locked}>
-                <legend className="px-1 text-sm font-semibold text-navy">{modules[module] ?? module}</legend>
-                <div className="grid gap-2">
+              <fieldset key={module} className="min-w-0 rounded-xl border bg-card p-5 shadow-card" disabled={locked}>
+                <legend className="float-start mb-3 w-full text-sm font-semibold text-navy">{modules[module] ?? module}</legend>
+                <div className="clear-both grid gap-3">
                   {items.map((p) => {
                     const id = `perm-${p.code}`;
                     return (
-                      <label key={p.code} htmlFor={id} className="flex items-start gap-2 text-sm">
+                      <label key={p.code} htmlFor={id} className="flex items-start gap-3 text-sm">
                         <Checkbox
                           id={id}
                           checked={granted.has(p.code)}
@@ -145,12 +152,12 @@ export function RoleEditor({
                           onCheckedChange={(checked) => toggle(p.code, checked === true)}
                           className="mt-0.5"
                         />
-                        <span>
+                        <span className="min-w-0">
                           {locale === "ur" ? p.description_ur : p.description_en}
                           {CONFIDENTIAL.has(p.code) && (
-                            <span className="ms-2 inline-block"><StatusBadge tone="amber">{t.roles.confidential}</StatusBadge></span>
+                            <span className="ms-2 inline-block"><StatusBadge tone="amber" dot={false}>{t.roles.confidential}</StatusBadge></span>
                           )}
-                          <span className="block font-mono text-[11px] text-muted-foreground" dir="ltr">{p.code}</span>
+                          <span className="block"><Ltr className="font-mono text-[0.6875rem] text-muted-foreground">{p.code}</Ltr></span>
                         </span>
                       </label>
                     );
@@ -162,7 +169,7 @@ export function RoleEditor({
         </div>
       )}
 
-      <Dialog open={dialog !== null} onOpenChange={(open) => !open && setDialog(null)}>
+      <Dialog open={dialog === "new" || dialog === "edit"} onOpenChange={(open) => !open && setDialog(null)}>
         <DialogContent className="sm:max-w-md">
           {(dialog === "new" || (dialog === "edit" && role)) && (
             <RoleForm
@@ -175,36 +182,33 @@ export function RoleEditor({
                 if (result.ok) {
                   setDialog(null);
                   setError(null);
+                  toast.add({ title: t.common.saved, type: "success" });
                   if (typeof result.data === "string") setSelectedId(result.data);
                 } else setError(result);
               })}
             />
           )}
-          {dialog === "delete" && role && (
-            <>
-              <DialogHeader>
-                <DialogTitle>{t.roles.deleteRole}</DialogTitle>
-                <DialogDescription>{name(role)} — {t.roles.confirmDelete}</DialogDescription>
-              </DialogHeader>
-              <ActionError result={error} />
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setDialog(null)}>{t.common.cancel}</Button>
-                <Button
-                  variant="destructive"
-                  disabled={pending}
-                  onClick={() => startTransition(async () => {
-                    const result = await deleteRoleAction(role.id);
-                    if (result.ok) { setDialog(null); setSelectedId(roles.find((r) => r.id !== role.id)?.id); }
-                    else setError(result);
-                  })}
-                >
-                  {t.common.delete}
-                </Button>
-              </DialogFooter>
-            </>
-          )}
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={dialog === "delete" && !!role}
+        onOpenChange={(open) => !open && setDialog(null)}
+        title={t.roles.deleteRole}
+        subject={role ? name(role) : undefined}
+        description={t.roles.confirmDelete}
+        confirmLabel={t.common.delete}
+        pending={pending}
+        error={error}
+        onConfirm={() => role && startTransition(async () => {
+          const result = await deleteRoleAction(role.id);
+          if (result.ok) {
+            setDialog(null);
+            setSelectedId(roles.find((r) => r.id !== role.id)?.id);
+            toast.add({ title: t.common.saved, type: "success" });
+          } else setError(result);
+        })}
+      />
     </div>
   );
 }
@@ -230,7 +234,7 @@ function RoleForm({
   });
   const { errors } = form.formState;
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4" noValidate>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-5" noValidate>
       <DialogHeader>
         <DialogTitle>{role ? t.common.edit : t.roles.newRole}</DialogTitle>
       </DialogHeader>
@@ -244,12 +248,12 @@ function RoleForm({
       <Field id="role-ur" label={t.roles.nameUr} error={errors.nameUr?.message}>
         <Input id="role-ur" dir="rtl" lang="ur" {...form.register("nameUr")} />
       </Field>
-      <Field id="role-desc" label={`${t.common.description} (${t.common.optional})`} error={errors.description?.message}>
+      <Field id="role-desc" label={t.common.description} optional error={errors.description?.message}>
         <Textarea id="role-desc" rows={2} {...form.register("description")} />
       </Field>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>{t.common.cancel}</Button>
-        <Button type="submit" disabled={pending}>{t.common.save}</Button>
+        <Button type="submit" disabled={pending}>{pending ? t.common.saving : t.common.save}</Button>
       </DialogFooter>
     </form>
   );

@@ -1,6 +1,7 @@
 import * as React from "react"
 
-const MOBILE_BREAKPOINT = 768
+// Below Tailwind's `lg`, the sidebar becomes a drawer.
+const MOBILE_BREAKPOINT = 1024
 const QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
 
 function subscribe(onChange: () => void) {

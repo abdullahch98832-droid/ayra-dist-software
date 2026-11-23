@@ -15,11 +15,14 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "@/components/ui/toast";
 import { ActionError } from "@/components/forms/action-error";
-import { Field, FormAlert, NativeSelect } from "@/components/forms/field";
+import { Field, NativeSelect } from "@/components/forms/field";
+import { Ltr } from "@/components/shared/bidi";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { StatusBadge, type BadgeTone } from "@/components/shared/status-badge";
 import { formatDateTime } from "@/components/shared/format";
+import { DataTable, type DataTableColumn } from "@/components/tables/data-table";
 import {
   assignRoleAction, inviteUserAction, linkEmployeeAction, sendPasswordResetAction, setUserStatusAction,
 } from "./actions";
@@ -59,7 +62,6 @@ export function UsersTable({
 }) {
   const { t, locale } = useI18n();
   const [dialog, setDialog] = useState<DialogState>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<ActionResult<unknown> | null>(null);
   const [pending, startTransition] = useTransition();
   const roleName = (r: { name_en: string | null; name_ur: string | null }) => (locale === "ur" ? r.name_ur : r.name_en) ?? "";
@@ -71,7 +73,8 @@ export function UsersTable({
       if (result.ok) {
         setDialog(null);
         setError(null);
-        setNotice(result.data === "authWarning" ? t.users.authWarning : success ?? null);
+        if (result.data === "authWarning") toast.add({ title: t.users.authWarning, type: "warning", timeout: 0 });
+        else if (success) toast.add({ title: success, type: "success" });
       } else {
         setError(result);
       }
@@ -79,90 +82,98 @@ export function UsersTable({
 
   const close = () => { setDialog(null); setError(null); };
 
+  const columns: DataTableColumn<UserRow>[] = [
+    {
+      id: "name", header: t.common.name, primary: true, sortValue: (u) => u.full_name || u.email,
+      cell: (u) => (
+        <div className="min-w-0">
+          <p className="font-medium break-words">
+            {u.full_name || "—"}
+            {u.id === currentUserId && <span className="ms-1.5 text-xs font-normal text-muted-foreground">({t.common.you})</span>}
+          </p>
+          <Ltr className="text-xs break-all text-muted-foreground">{u.email}</Ltr>
+        </div>
+      ),
+    },
+    {
+      id: "role", header: t.users.role, sortValue: (u) => roleName({ name_en: u.role_name_en, name_ur: u.role_name_ur }),
+      cell: (u) => (u.role_id ? roleName({ name_en: u.role_name_en, name_ur: u.role_name_ur }) : "—"),
+    },
+    {
+      id: "employee", header: t.users.employee, hideBelow: "lg", sortValue: (u) => u.employee_name,
+      cell: (u) => u.employee_name ?? <span className="text-muted-foreground">{t.users.noEmployee}</span>,
+    },
+    {
+      id: "status", header: t.common.status, sortValue: (u) => statusLabels[u.status] ?? u.status,
+      cell: (u) => <StatusBadge tone={STATUS_TONE[u.status] ?? "gray"}>{statusLabels[u.status] ?? u.status}</StatusBadge>,
+    },
+    {
+      id: "lastSignIn", header: t.users.lastSignIn, hideBelow: "lg", sortValue: (u) => u.last_sign_in_at,
+      cell: (u) => <span className="text-muted-foreground">{formatDateTime(u.last_sign_in_at, locale) ?? t.common.never}</span>,
+    },
+  ];
+
+  const rowActions = (u: UserRow) => u.id === currentUserId ? null : (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label={`${t.common.actions}: ${u.full_name || u.email}`} />}>
+        <MoreHorizontal />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        {u.status !== "removed" && (
+          <DropdownMenuItem onClick={() => setDialog({ kind: "role", user: u })}>{t.users.changeRole}</DropdownMenuItem>
+        )}
+        <DropdownMenuItem onClick={() => setDialog({ kind: "employee", user: u })}>{t.users.linkEmployee}</DropdownMenuItem>
+        {u.status !== "removed" && (
+          <DropdownMenuItem onClick={() => run(() => sendPasswordResetAction(u.id), t.users.passwordResetSent)}>
+            {t.users.sendPasswordReset}
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        {(u.status === "suspended" || u.status === "removed") && (
+          <DropdownMenuItem onClick={() => setDialog({ kind: "active", user: u })}>{t.users.reactivate}</DropdownMenuItem>
+        )}
+        {u.status !== "suspended" && u.status !== "removed" && (
+          <DropdownMenuItem onClick={() => setDialog({ kind: "suspended", user: u })}>{t.users.suspend}</DropdownMenuItem>
+        )}
+        {u.status !== "removed" && (
+          <DropdownMenuItem variant="destructive" onClick={() => setDialog({ kind: "removed", user: u })}>{t.users.removeAccess}</DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  const confirming = dialog?.kind === "suspended" || dialog?.kind === "removed" ? { kind: dialog.kind, user: dialog.user } : null;
+  const inviteButton = canManage && (
+    <Button onClick={() => setDialog({ kind: "invite" })}><UserPlus aria-hidden />{t.users.invite}</Button>
+  );
+
   return (
     <div className="grid gap-4">
-      {notice && <FormAlert tone="success">{notice}</FormAlert>}
       {!dialog && <ActionError result={error} />}
-      {canManage && (
-        <div>
-          <Button onClick={() => setDialog({ kind: "invite" })} className="gap-2">
-            <UserPlus className="h-4 w-4" />
-            {t.users.invite}
-          </Button>
-        </div>
-      )}
+      <DataTable
+        rows={users}
+        columns={columns}
+        rowKey={(u) => u.id}
+        caption={t.users.title}
+        searchText={(u) => [u.full_name, u.email, u.role_name_en, u.role_name_ur, u.employee_name].join(" ")}
+        toolbar={<div className="sm:ms-auto">{inviteButton}</div>}
+        actions={canManage ? rowActions : undefined}
+        empty={{ title: t.states.emptyTitle, action: inviteButton }}
+      />
 
-      <div className="rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-start">{t.common.name}</TableHead>
-              <TableHead className="text-start">{t.users.role}</TableHead>
-              <TableHead className="text-start">{t.users.employee}</TableHead>
-              <TableHead className="text-start">{t.common.status}</TableHead>
-              <TableHead className="text-start">{t.users.lastSignIn}</TableHead>
-              {canManage && <TableHead className="w-12"><span className="sr-only">{t.common.actions}</span></TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">{t.common.noResults}</TableCell></TableRow>
-            )}
-            {users.map((u) => {
-              const self = u.id === currentUserId;
-              return (
-                <TableRow key={u.id}>
-                  <TableCell>
-                    <div className="font-medium">
-                      {u.full_name || "—"}
-                      {self && <span className="ms-1 text-xs text-muted-foreground">({t.common.you})</span>}
-                    </div>
-                    <div className="text-xs text-muted-foreground" dir="ltr">{u.email}</div>
-                  </TableCell>
-                  <TableCell>{u.role_id ? roleName({ name_en: u.role_name_en, name_ur: u.role_name_ur }) : "—"}</TableCell>
-                  <TableCell>{u.employee_name ?? <span className="text-muted-foreground">{t.users.noEmployee}</span>}</TableCell>
-                  <TableCell><StatusBadge tone={STATUS_TONE[u.status] ?? "gray"}>{statusLabels[u.status] ?? u.status}</StatusBadge></TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{formatDateTime(u.last_sign_in_at, locale) ?? t.common.never}</TableCell>
-                  {canManage && (
-                    <TableCell>
-                      {!self && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label={t.common.actions} />}>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {u.status !== "removed" && (
-                              <DropdownMenuItem onClick={() => setDialog({ kind: "role", user: u })}>{t.users.changeRole}</DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem onClick={() => setDialog({ kind: "employee", user: u })}>{t.users.linkEmployee}</DropdownMenuItem>
-                            {u.status !== "removed" && (
-                              <DropdownMenuItem onClick={() => run(() => sendPasswordResetAction(u.id), t.users.passwordResetSent)}>
-                                {t.users.sendPasswordReset}
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuSeparator />
-                            {(u.status === "suspended" || u.status === "removed") && (
-                              <DropdownMenuItem onClick={() => setDialog({ kind: "active", user: u })}>{t.users.reactivate}</DropdownMenuItem>
-                            )}
-                            {u.status !== "suspended" && u.status !== "removed" && (
-                              <DropdownMenuItem onClick={() => setDialog({ kind: "suspended", user: u })}>{t.users.suspend}</DropdownMenuItem>
-                            )}
-                            {u.status !== "removed" && (
-                              <DropdownMenuItem variant="destructive" onClick={() => setDialog({ kind: "removed", user: u })}>{t.users.removeAccess}</DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </TableCell>
-                  )}
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+      <ConfirmDialog
+        open={confirming !== null}
+        onOpenChange={(open) => !open && close()}
+        title={confirming?.kind === "removed" ? t.users.removeAccess : t.users.suspend}
+        subject={confirming ? confirming.user.full_name || confirming.user.email : undefined}
+        description={confirming?.kind === "removed" ? t.users.confirmRemove : t.users.confirmSuspend}
+        confirmLabel={confirming?.kind === "removed" ? t.users.removeAccess : t.users.suspend}
+        pending={pending}
+        error={error}
+        onConfirm={() => confirming && run(() => setUserStatusAction({ userId: confirming.user.id, status: confirming.kind, roleId: "" }), t.common.saved)}
+      />
 
-      <Dialog open={dialog !== null} onOpenChange={(open) => !open && close()}>
+      <Dialog open={dialog !== null && !confirming} onOpenChange={(open) => !open && close()}>
         <DialogContent className="sm:max-w-md">
           {dialog?.kind === "invite" && (
             <InviteForm
@@ -192,28 +203,6 @@ export function UsersTable({
                 ? assignRoleAction(dialog.user.id, value)
                 : linkEmployeeAction(dialog.user.id, value), t.common.saved)}
             />
-          )}
-          {(dialog?.kind === "suspended" || dialog?.kind === "removed") && (
-            <>
-              <DialogHeader>
-                <DialogTitle>{dialog.kind === "suspended" ? t.users.suspend : t.users.removeAccess}</DialogTitle>
-                <DialogDescription>
-                  <span className="font-medium text-foreground">{dialog.user.full_name || dialog.user.email}</span> —{" "}
-                  {dialog.kind === "suspended" ? t.users.confirmSuspend : t.users.confirmRemove}
-                </DialogDescription>
-              </DialogHeader>
-              <ActionError result={error} />
-              <DialogFooter>
-                <Button variant="outline" onClick={close}>{t.common.cancel}</Button>
-                <Button
-                  variant="destructive"
-                  disabled={pending}
-                  onClick={() => run(() => setUserStatusAction({ userId: dialog.user.id, status: dialog.kind, roleId: "" }), t.common.saved)}
-                >
-                  {t.common.confirm}
-                </Button>
-              </DialogFooter>
-            </>
           )}
           {dialog?.kind === "active" && (
             <PickerForm
@@ -253,26 +242,26 @@ function InviteForm({
   });
   const { errors } = form.formState;
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4" noValidate>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-5" noValidate>
       <DialogHeader>
         <DialogTitle>{t.users.inviteTitle}</DialogTitle>
         <DialogDescription>{t.users.inviteDescription}</DialogDescription>
       </DialogHeader>
       <ActionError result={error} />
-      <Field id="invite-name" label={t.users.fullName} error={errors.fullName?.message}>
+      <Field id="invite-name" label={t.users.fullName} required error={errors.fullName?.message}>
         <Input id="invite-name" {...form.register("fullName")} />
       </Field>
-      <Field id="invite-email" label={t.common.email} error={errors.email?.message}>
+      <Field id="invite-email" label={t.common.email} required error={errors.email?.message}>
         <Input id="invite-email" type="email" dir="ltr" {...form.register("email")} />
       </Field>
-      <Field id="invite-role" label={t.users.role} error={errors.roleId?.message}>
+      <Field id="invite-role" label={t.users.role} required error={errors.roleId?.message}>
         <NativeSelect id="invite-role" {...form.register("roleId")}>
           <option value="">—</option>
           {roles.map((r) => <option key={r.id} value={r.id}>{roleName(r)}</option>)}
         </NativeSelect>
       </Field>
       {employees.length > 0 && (
-        <Field id="invite-employee" label={`${t.users.employee} (${t.common.optional})`}>
+        <Field id="invite-employee" label={t.users.employee} optional>
           <NativeSelect id="invite-employee" {...form.register("employeeId")}>
             <option value="">{t.users.noEmployee}</option>
             {employees.map((e) => <option key={e.id} value={e.id}>{e.employee_code} — {e.full_name}</option>)}
@@ -281,7 +270,7 @@ function InviteForm({
       )}
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>{t.common.cancel}</Button>
-        <Button type="submit" disabled={pending}>{t.users.sendInvite}</Button>
+        <Button type="submit" disabled={pending}>{pending ? t.common.processing : t.users.sendInvite}</Button>
       </DialogFooter>
     </form>
   );
@@ -306,7 +295,7 @@ function PickerForm({
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); if (!required || value) onSubmit(value); }}
-      className="grid gap-4"
+      className="grid gap-5"
     >
       <DialogHeader>
         <DialogTitle>{title}</DialogTitle>
@@ -321,7 +310,7 @@ function PickerForm({
       </Field>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>{t.common.cancel}</Button>
-        <Button type="submit" disabled={pending || (required && !value)}>{t.common.save}</Button>
+        <Button type="submit" disabled={pending || (required && !value)}>{pending ? t.common.saving : t.common.save}</Button>
       </DialogFooter>
     </form>
   );

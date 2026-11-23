@@ -2,43 +2,57 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* The interface is light only; the variant exists because shadcn components reference it. */
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Font stacks are switched per language below; see docs/DESIGN_SYSTEM.md. */
+  --font-sans: var(--app-sans);
+  --font-heading: var(--app-heading);
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-strong: var(--muted-strong);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-navy-foreground: var(--navy-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -46,103 +60,149 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  --color-navy: var(--navy);
-  --color-navy-foreground: var(--navy-foreground);
+
+  --shadow-card: 0 1px 2px rgb(18 38 77 / 0.05), 0 2px 8px -2px rgb(18 38 77 / 0.05);
+  --shadow-overlay: 0 4px 12px -2px rgb(18 38 77 / 0.1), 0 16px 40px -8px rgb(18 38 77 / 0.16);
 }
 
 :root {
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.15 0.015 260);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.015 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.015 260);
-  --primary: oklch(0.35 0.12 260);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.96 0.005 260);
-  --secondary-foreground: oklch(0.25 0.06 260);
-  --muted: oklch(0.96 0.005 260);
-  --muted-foreground: oklch(0.5 0.02 260);
-  --accent: oklch(0.94 0.01 260);
-  --accent-foreground: oklch(0.25 0.06 260);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.01 260);
-  --input: oklch(0.91 0.01 260);
-  --ring: oklch(0.5 0.1 260);
-  --chart-1: oklch(0.55 0.15 260);
-  --chart-2: oklch(0.6 0.12 200);
-  --chart-3: oklch(0.65 0.1 150);
-  --chart-4: oklch(0.55 0.08 300);
-  --chart-5: oklch(0.7 0.1 50);
   --radius: 0.625rem;
-  --navy: oklch(0.25 0.08 260);
-  --navy-foreground: oklch(0.98 0 0);
-  --sidebar: oklch(0.22 0.07 260);
-  --sidebar-foreground: oklch(0.9 0.01 260);
-  --sidebar-primary: oklch(0.6 0.15 260);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.3 0.08 260);
-  --sidebar-accent-foreground: oklch(0.92 0.01 260);
-  --sidebar-border: oklch(0.35 0.07 260);
-  --sidebar-ring: oklch(0.5 0.1 260);
+
+  /* Surfaces: white cards on a cool light grey page. */
+  --background: #f5f7fa;
+  --foreground: #16233b;
+  --card: #ffffff;
+  --card-foreground: #16233b;
+  --popover: #ffffff;
+  --popover-foreground: #16233b;
+  --muted: #f0f3f7;
+  --muted-strong: #e4e9f0;
+  --muted-foreground: #55627a;
+  --border: #e0e5ed;
+  --input: #cbd3df;
+
+  /* Navy carries headings and the brand; blue is the only interactive colour. */
+  --navy: #14284f;
+  --navy-deep: #0d1c3a;
+  --navy-foreground: #ffffff;
+  --primary: #1f56c9;
+  --primary-hover: #1847ab;
+  --primary-foreground: #ffffff;
+  --secondary: #eef2f8;
+  --secondary-foreground: #14284f;
+  --accent: #e9f0fd;
+  --accent-foreground: #163f94;
+  --ring: #2f6be6;
+
+  /* Status colours are reserved for state and always paired with text or an icon. */
+  --destructive: #c0282f;
+  --destructive-soft: #fdecec;
+  --success: #12704a;
+  --success-soft: #e5f5ed;
+  --warning: #8a5800;
+  --warning-soft: #fdf2da;
+
+  /* Categorical chart order, validated for colour-vision deficiency. Do not reorder or cycle. */
+  --chart-1: #1d5fd0;
+  --chart-2: #e8793a;
+  --chart-3: #12a594;
+  --chart-4: #e0a100;
+  --chart-5: #7a5af0;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #3b4a64;
+  --sidebar-primary: #1f56c9;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e9f0fd;
+  --sidebar-accent-foreground: #163f94;
+  --sidebar-border: #e0e5ed;
+  --sidebar-ring: #2f6be6;
 }
 
-.dark {
-  --background: oklch(0.13 0.015 260);
-  --foreground: oklch(0.95 0.005 260);
-  --card: oklch(0.18 0.02 260);
-  --card-foreground: oklch(0.95 0.005 260);
-  --popover: oklch(0.18 0.02 260);
-  --popover-foreground: oklch(0.95 0.005 260);
-  --primary: oklch(0.6 0.15 260);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.25 0.03 260);
-  --secondary-foreground: oklch(0.9 0.01 260);
-  --muted: oklch(0.25 0.03 260);
-  --muted-foreground: oklch(0.65 0.02 260);
-  --accent: oklch(0.28 0.04 260);
-  --accent-foreground: oklch(0.9 0.01 260);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(0.3 0.03 260);
-  --input: oklch(0.3 0.03 260);
-  --ring: oklch(0.5 0.1 260);
-  --chart-1: oklch(0.6 0.15 260);
-  --chart-2: oklch(0.55 0.12 200);
-  --chart-3: oklch(0.6 0.1 150);
-  --chart-4: oklch(0.5 0.08 300);
-  --chart-5: oklch(0.65 0.1 50);
-  --navy: oklch(0.2 0.06 260);
-  --navy-foreground: oklch(0.95 0.005 260);
-  --sidebar: oklch(0.15 0.02 260);
-  --sidebar-foreground: oklch(0.9 0.01 260);
-  --sidebar-primary: oklch(0.55 0.15 260);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.22 0.03 260);
-  --sidebar-accent-foreground: oklch(0.9 0.01 260);
-  --sidebar-border: oklch(0.3 0.03 260);
-  --sidebar-ring: oklch(0.5 0.1 260);
+/* ---------------------------------------------------------------------------
+   Language typography. Applies to <html lang> and to any element with its own
+   lang attribute, such as an Urdu-name input inside the English interface.
+   --------------------------------------------------------------------------- */
+/* Latin faces come first in both languages: they have no Urdu letters, so Urdu always
+   reaches Nastaliq, while names, codes and digits keep one look. The reverse order would
+   draw them with the Latin glyphs built into the Nastaliq font. */
+:root {
+  --app-sans: var(--font-geist-sans), var(--font-urdu), ui-sans-serif, system-ui, sans-serif;
+  --app-heading: var(--font-marcellus), var(--font-urdu), ui-serif, serif;
+}
+
+[lang="ur"] {
+  /* Nastaliq is small on the body and tall on the line: larger sizes, open leading. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 2;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 2;
+  --text-base--line-height: 2;
+  --text-lg--line-height: 1.95;
+  --text-xl--line-height: 1.9;
+  --text-2xl--line-height: 1.85;
+  --text-3xl--line-height: 1.8;
+  --text-4xl--line-height: 1.75;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    @apply font-sans;
+    scrollbar-gutter: stable;
+  }
   body {
     @apply bg-background text-foreground;
   }
-  html {
-    @apply font-sans;
-  }
-  /* Nastaliq glyphs are tall; tighter line-heights clip ascenders and descenders. */
   html[lang="ur"] body {
-    font-family: var(--font-urdu), var(--font-sans), serif;
     line-height: 2;
   }
-  html[lang="ur"] :is(h1, h2, h3, h4, h5, h6) {
-    line-height: 1.9;
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 18%, transparent);
   }
-  html[lang="ur"] .font-latin {
-    font-family: var(--font-sans), sans-serif;
-    line-height: normal;
+}
+
+/* Unlayered on purpose: these must win over Tailwind utilities. */
+
+/* Letter-spacing and tight leading break joined Nastaliq script. */
+[lang="ur"] :not(.font-latin, .font-latin *, [lang="en"], [lang="en"] *) {
+  letter-spacing: normal;
+}
+[lang="ur"] :is(.leading-none, .leading-tight, .leading-snug):not(.font-latin, svg *) {
+  line-height: 1.9;
+}
+[lang="ur"] .font-latin {
+  line-height: 1.35;
+}
+
+/* Cut long labels at the side only, so tall letters are never shaved. */
+[lang="ur"] .truncate {
+  overflow: visible;
+  overflow-x: clip;
+}
+
+/* Text controls need room for Nastaliq ascenders and descenders. */
+[lang="ur"] :is([data-slot="input"], select[data-slot="native-select"]),
+:is(input, select)[lang="ur"] {
+  height: 2.75rem;
+}
+
+/* Left-to-right values (phone, email, codes) keep their digit order but follow the form's edge. */
+[dir="rtl"] :is(input, textarea)[dir="ltr"] {
+  text-align: right;
+}
+[dir="rtl"] input[type="date"] {
+  direction: ltr;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
