@@ -1,0 +1,202 @@
+# Database Design
+
+> **Status:** implemented as migrations in `supabase/migrations/` and verified by 68 automated tests on PostgreSQL 17 (`npm run test:db`). **Not yet applied to a Supabase project.** See [SUPABASE_SETUP.md](SUPABASE_SETUP.md).
+
+## Conventions
+
+| Topic | Rule |
+|---|---|
+| Keys | `uuid` primary keys (`gen_random_uuid()`); ledgers use `bigint` identity for strict ordering |
+| Money | `numeric(18,2)`; unit prices/costs per unit `numeric(18,2)`; average cost `numeric(18,6)` |
+| Quantities | `bigint` in the product's **base unit** (usually pieces). Line tables keep the entered unit, quantity and a snapshot of the conversion `factor`; `base_quantity` is a generated column |
+| Documents | `doc_no` from `document_sequences` (e.g. `INV-000123`), gap-free; `status` changes only through posting functions |
+| Idempotency | `client_request_id uuid unique` on documents a client might submit twice |
+| Audit columns | `created_at/by`, `updated_at/by` maintained by defaults and triggers |
+| Schemas | `public` (exposed through the Supabase API), `private` (helpers, never exposed) |
+
+## Migrations
+
+| File | Contents |
+|---|---|
+| `…100000_foundation` | `private` schema, enums, document numbering, settings, audit log |
+| `…100100_identity_access` | employees, roles, permissions, profiles (linked to `auth.users`), permission helpers |
+| `…100200_master_data` | customers, suppliers (+contacts), units, categories, products, product units, vehicles, drivers, warehouses |
+| `…100300_accounting` | chart of accounts, cash/bank accounts, accounting periods, journal, fund transfers |
+| `…100400_inventory` | stock balances, valuation, movements, adjustments, counts, transfers, `move_stock` engine |
+| `…100500_purchasing` | purchase orders, goods receipts, supplier invoices, supplier payments/allocations, supplier returns |
+| `…100600_sales` | sales orders, deliveries, sales invoices, customer returns, customer payments/allocations |
+| `…100700_sol` | SOL transport jobs, SOL vehicle trips, job payment allocation |
+| `…100800_expenses_payroll` | expense categories, expenses, employee advances, payroll runs/items, salary payments |
+| `…100900_reporting` | ledger, balance, outstanding and profitability views; trial balance; profit and loss |
+| `…101000_security` | RLS policies, column privileges, audit/updated triggers, storage buckets |
+| `…101100_reference_data` | permissions, roles, units, chart of accounts, expense categories, numbering, settings, default warehouses, main company |
+| `20261124100000_access_control` | Super Admin / Manager / Data Entry / Viewer roles, company-account and costs permissions, user lifecycle functions, manager limit, confidential column restrictions and `secure_*` views, salary and bank-detail tables, employee codes |
+
+## Table catalogue
+
+**Identity & system:** `profiles`, `roles`, `permissions`, `role_permissions`, `employees`, `employee_salaries` (confidential), `app_settings`, `document_sequences`, `audit_logs`
+**Catalog:** `units`, `product_categories`, `products`, `product_units`
+**Parties:** `customers`, `suppliers`, `supplier_contacts`
+**Fleet:** `vehicles`, `drivers`
+**Inventory:** `warehouses`, `stock_balances`, `inventory_valuation`, `stock_movements`, `stock_adjustments(+_items)`, `stock_counts(+_items)`, `stock_transfers(+_items)`
+**Purchasing:** `purchase_orders(+_items)`, `goods_receipts(+_items)`, `supplier_invoices`, `supplier_invoice_receipts`, `supplier_payments`, `supplier_payment_allocations`, `supplier_returns(+_items)`
+**Sales:** `sales_orders(+_items)`, `deliveries`, `delivery_items`, `sales_invoices(+_items)`, `customer_returns(+_items)`, `customer_payments`, `customer_payment_allocations`
+**SOL:** `sol_jobs`, `sol_trips`
+**Finance:** `chart_of_accounts`, `financial_accounts` (cash + bank), `financial_account_bank_details` (confidential), `accounting_periods`, `journal_entries`, `journal_entry_lines`, `fund_transfers`, `expense_categories`, `expenses`, `employee_advances`, `payroll_runs`, `payroll_items`, `salary_payments`
+
+Requested items that are **views or roles rather than tables**:
+- *Main company ledger* → `v_company_ledger` (journal lines on control account `AP_PRINCIPAL`)
+- *Supplier / customer ledgers* → `v_supplier_ledger`, `v_customer_ledger` (+ balances views)
+- *SOL payments* → customer payments allocated to a job (`customer_payment_allocations.sol_job_id`), summarised in `v_sol_job_summary`
+- *Cash accounts / bank accounts* → one table `financial_accounts` with `account_type`
+- *Order takers* → employees linked from `customers.order_taker_id` / `sales_orders.order_taker_id`, with the `order_taker` role
+
+## Entity relationship diagrams
+
+### Identity, parties and catalog
+
+```mermaid
+erDiagram
+  auth_users ||--|| profiles : "has"
+  roles ||--o{ profiles : "assigned"
+  roles ||--o{ role_permissions : ""
+  permissions ||--o{ role_permissions : ""
+  employees |o--o| profiles : "linked user"
+  employees ||--o| drivers : "is"
+  employees |o--o{ customers : "order taker of"
+  suppliers ||--o{ supplier_contacts : ""
+  product_categories |o--o{ product_categories : "parent"
+  product_categories |o--o{ products : ""
+  units ||--o{ products : "base unit"
+  products ||--|{ product_units : "sold/bought in"
+  units ||--o{ product_units : ""
+  vehicles |o--o| warehouses : "vehicle stock"
+```
+
+### Inventory
+
+```mermaid
+erDiagram
+  products ||--o{ stock_balances : ""
+  warehouses ||--o{ stock_balances : "on hand / reserved"
+  products ||--o| inventory_valuation : "qty, value, avg cost"
+  products ||--o{ stock_movements : ""
+  warehouses ||--o{ stock_movements : ""
+  warehouses ||--o{ stock_adjustments : ""
+  stock_adjustments ||--|{ stock_adjustment_items : ""
+  warehouses ||--o{ stock_counts : ""
+  stock_counts ||--|{ stock_count_items : ""
+  stock_counts |o--o| stock_adjustments : "posts"
+  stock_transfers ||--|{ stock_transfer_items : ""
+  warehouses ||--o{ stock_transfers : "from / to"
+  sol_trips |o--o{ stock_transfers : "vehicle load"
+```
+
+### Purchasing and payables
+
+```mermaid
+erDiagram
+  suppliers ||--o{ purchase_orders : ""
+  purchase_orders ||--|{ purchase_order_items : ""
+  suppliers ||--o{ goods_receipts : ""
+  purchase_orders |o--o{ goods_receipts : ""
+  goods_receipts ||--|{ goods_receipt_items : ""
+  purchase_order_items |o--o{ goods_receipt_items : ""
+  suppliers ||--o{ supplier_invoices : ""
+  supplier_invoices ||--|{ supplier_invoice_receipts : ""
+  goods_receipts ||--o| supplier_invoice_receipts : "billed by"
+  suppliers ||--o{ supplier_payments : ""
+  financial_accounts ||--o{ supplier_payments : "paid from"
+  supplier_payments ||--o{ supplier_payment_allocations : ""
+  supplier_invoices ||--o{ supplier_payment_allocations : ""
+  suppliers ||--o{ supplier_returns : ""
+  supplier_returns ||--|{ supplier_return_items : ""
+```
+
+### Sales, receivables and SOL
+
+```mermaid
+erDiagram
+  customers ||--o{ sales_orders : ""
+  employees |o--o{ sales_orders : "order taker"
+  sales_orders ||--|{ sales_order_items : ""
+  sales_orders ||--o{ deliveries : ""
+  deliveries ||--|{ delivery_items : ""
+  sales_order_items ||--o{ delivery_items : ""
+  deliveries |o--o| sales_invoices : "creates"
+  vehicles |o--o{ deliveries : ""
+  drivers |o--o{ deliveries : ""
+  customers ||--o{ sales_invoices : ""
+  sales_invoices ||--|{ sales_invoice_items : ""
+  sales_order_items |o--o{ sales_invoice_items : ""
+  customers ||--o{ customer_returns : ""
+  sales_invoices |o--o{ customer_returns : ""
+  customer_returns ||--|{ customer_return_items : ""
+  customers ||--o{ customer_payments : ""
+  customer_payments ||--o{ customer_payment_allocations : ""
+  sales_invoices |o--o{ customer_payment_allocations : ""
+  sol_jobs |o--o{ customer_payment_allocations : ""
+  customers ||--o{ sol_jobs : "SOL client"
+  vehicles |o--o{ sol_jobs : ""
+  vehicles ||--o{ sol_trips : ""
+  sol_trips |o--o{ sales_invoices : "route sales"
+```
+
+### Finance
+
+```mermaid
+erDiagram
+  chart_of_accounts |o--o{ chart_of_accounts : "parent"
+  chart_of_accounts ||--o| financial_accounts : "GL account"
+  journal_entries ||--|{ journal_entry_lines : ""
+  chart_of_accounts ||--o{ journal_entry_lines : ""
+  customers |o--o{ journal_entry_lines : "AR party"
+  suppliers |o--o{ journal_entry_lines : "AP party"
+  employees |o--o{ journal_entry_lines : "advance / salary party"
+  journal_entries |o--o| journal_entries : "reversal of"
+  expense_categories ||--o{ expenses : ""
+  chart_of_accounts ||--o{ expense_categories : "posts to"
+  financial_accounts ||--o{ expenses : "paid from"
+  employees ||--o{ employee_advances : ""
+  payroll_runs ||--|{ payroll_items : ""
+  employees ||--o{ payroll_items : ""
+  payroll_items ||--o{ salary_payments : ""
+  financial_accounts ||--o{ fund_transfers : "from / to"
+```
+
+Every posting document also references the `journal_entries` row it created (`journal_entry_id`); omitted above for readability.
+
+## Document lifecycle
+
+Clients insert and edit **drafts** directly (RLS + column privileges). Every state change is a database function that locks the document, validates, moves stock, posts the journal and sets the status in one transaction.
+
+| Function | Effect |
+|---|---|
+| `approve_purchase_order`, `cancel_purchase_order` | PO status |
+| `post_goods_receipt` | Stock in at line value; Dr Inventory / Cr payable (main company or supplier) |
+| `post_supplier_invoice` | Matches receipts; posts any price difference to inventory variance |
+| `post_supplier_payment`, `allocate_supplier_payment`, `void_supplier_payment` | Payables, partial payments |
+| `post_supplier_return` | Stock out at average cost; payable reduced by agreed credit |
+| `submit_sales_order`, `approve_sales_order`, `cancel_sales_order` | Approval reserves stock and checks credit limit |
+| `dispatch_delivery`, `confirm_delivery` | Dispatch creates + posts the sales invoice and releases the reservation |
+| `post_sales_invoice` | Direct (counter/vehicle) invoices |
+| `post_customer_return` | Stock back at original cost (damaged → quarantine); credit note |
+| `post_customer_payment`, `allocate_customer_payment`, `allocate_payment_to_sol_job`, `void_customer_payment` | Receivables, partial payments |
+| `post_stock_adjustment`, `post_stock_count`, `post_stock_transfer` | Opening stock, write-offs, count differences, transfers |
+| `set_sol_job_status`, `complete_sol_job`, `close_sol_trip` | SOL |
+| `post_expense`, `void_expense`, `post_employee_advance`, `post_payroll_run`, `post_salary_payment` | Expenses and payroll |
+| `post_fund_transfer`, `create_manual_journal`, `reverse_manual_journal` | Cash/bank and journal |
+| `my_permissions` | Permissions of the signed-in user |
+| `trial_balance`, `profit_and_loss` | Financial reports (require `reports.financial`) |
+| `admin_list_users`, `admin_assign_role`, `admin_link_employee`, `admin_set_user_status` | User administration |
+| `bootstrap_super_admin` | First administrator (secret key only) |
+
+## Views
+
+`v_stock_on_hand`, `v_inventory_valuation`, `v_posted_journal_lines`, `v_account_balances`, `v_customer_ledger`, `v_customer_balances`, `v_supplier_ledger`, `v_supplier_balances`, `v_company_ledger`, `v_employee_balances`, `v_financial_account_balances`, `v_sales_invoice_balances`, `v_supplier_invoice_balances`, `v_sol_job_summary`, `v_salary_balances`, `v_purchase_receipt_discrepancies`, `v_access_audit`. All use `security_invoker`, so the caller's RLS applies.
+
+Confidential values (costs, purchase prices, stock value, margins) are read through `secure_*` views (`secure_product_unit_costs`, `secure_sales_invoice_costs`, `secure_sales_invoice_item_costs`, `secure_customer_return_costs`, `secure_customer_return_item_costs`, `secure_stock_movement_values`, `secure_stock_adjustment_values`, `secure_stock_adjustment_item_values`, `secure_sol_trip_profitability`, `secure_sol_job_profitability`). They run with the owner's rights and return rows only when the caller holds `costs.view`.
+
+## TypeScript types
+
+`src/types/database.ts` is generated by `npm run db:types` from the migrations (throwaway local Postgres). Types follow client privileges: hidden columns are omitted from `Row`, system-managed columns from `Insert`/`Update`, and numeric columns accept exact decimal strings on write.
