@@ -70,7 +70,7 @@ export function ColumnChartCard({
           </div>
           <div className="mt-2 flex text-xs text-muted-foreground" aria-hidden>
             {points.map((p, i) => (
-              <span key={p.label} className="min-w-0 flex-1 text-center break-words">{i % labelEvery === 0 ? p.label : ""}</span>
+              <span key={p.label} className="min-w-0 flex-1 truncate px-0.5 text-center">{i % labelEvery === 0 ? p.label : ""}</span>
             ))}
           </div>
         </div>

@@ -9,7 +9,7 @@
   /* Font stacks are switched per language below; see docs/DESIGN_SYSTEM.md. */
   --font-sans: var(--app-sans);
   --font-heading: var(--app-heading);
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-mono: var(--font-geist-mono), var(--face-urdu), ui-monospace, monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -127,8 +127,8 @@
    reaches Nastaliq, while names, codes and digits keep one look. The reverse order would
    draw them with the Latin glyphs built into the Nastaliq font. */
 :root {
-  --app-sans: var(--font-geist-sans), var(--font-urdu), ui-sans-serif, system-ui, sans-serif;
-  --app-heading: var(--font-marcellus), var(--font-urdu), ui-serif, serif;
+  --app-sans: var(--face-sans), var(--face-urdu), ui-sans-serif, system-ui, sans-serif;
+  --app-heading: var(--face-heading), var(--face-urdu), ui-serif, serif;
 }
 
 [lang="ur"] {
@@ -177,16 +177,29 @@
   line-height: 1.35;
 }
 
-/* Cut long labels at the side only, so tall letters are never shaved. */
+/* Cut long labels at the side only, so tall letters are never shaved. The padding keeps
+   the opening stroke of letters such as kaf, which starts outside its own box. */
 [lang="ur"] .truncate {
   overflow: visible;
   overflow-x: clip;
+  padding-inline-start: 0.4em;
+  margin-inline-start: -0.4em;
 }
 
 /* Text controls need room for Nastaliq ascenders and descenders. */
 [lang="ur"] :is([data-slot="input"], select[data-slot="native-select"]),
 :is(input, select)[lang="ur"] {
   height: 2.75rem;
+}
+
+[lang="ur"] [data-slot="button"].h-9 {
+  height: 2.5rem;
+}
+[lang="ur"] [data-slot="button"].h-8 {
+  height: 2.25rem;
+}
+input[lang="ur"] {
+  padding-block-end: 0.375rem;
 }
 
 /* Left-to-right values (phone, email, codes) keep their digit order but follow the form's edge. */

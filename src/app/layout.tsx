@@ -6,17 +6,21 @@ import { LOCALES } from "@/types";
 import { getLocale, getT } from "@/i18n/server";
 import "./globals.css";
 
-// Fallback faces are disabled: "Geist Fallback" is Arial, which would draw Urdu before
-// the browser ever reaches Nastaliq.
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"], adjustFontFallback: false });
+const geistSans = Geist({ subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"], preload: false });
-const marcellus = Marcellus({ variable: "--font-marcellus", subsets: ["latin"], weight: "400", adjustFontFallback: false });
-const nastaliq = Noto_Nastaliq_Urdu({
-  variable: "--font-urdu",
-  subsets: ["arabic"],
-  weight: ["400", "500", "600", "700"],
-  adjustFontFallback: false,
-});
+const marcellus = Marcellus({ subsets: ["latin"], weight: "400" });
+const nastaliq = Noto_Nastaliq_Urdu({ subsets: ["arabic"], weight: ["400", "500", "600", "700"] });
+
+/**
+ * Only the real face of each font. next/font appends a metric-matched "… Fallback" (Arial
+ * or Times), which has Arabic letters and would draw Urdu before Nastaliq is reached.
+ */
+const face = (font: { style: { fontFamily: string } }) => font.style.fontFamily.split(",")[0] ?? "sans-serif";
+const FONT_FACES = {
+  "--face-sans": face(geistSans),
+  "--face-heading": face(marcellus),
+  "--face-urdu": face(nastaliq),
+} as React.CSSProperties;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
@@ -35,7 +39,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang={locale}
       dir={LOCALES[locale].direction}
-      className={`${geistSans.variable} ${geistMono.variable} ${marcellus.variable} ${nastaliq.variable} h-full antialiased`}
+      className={`${geistMono.variable} h-full antialiased`}
+      style={FONT_FACES}
     >
       <body className="flex min-h-full flex-col">
         <Providers locale={locale}>{children}</Providers>

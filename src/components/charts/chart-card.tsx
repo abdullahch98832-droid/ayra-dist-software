@@ -63,7 +63,7 @@ export function ChartCard({
             </Table>
           </div>
         ) : (
-          <figure aria-labelledby={titleId} className="grid gap-4">
+          <figure aria-labelledby={titleId} className="grid grid-cols-1 gap-4">
             {series.length > 1 && (
               <figcaption className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 {series.map((s, i) => (

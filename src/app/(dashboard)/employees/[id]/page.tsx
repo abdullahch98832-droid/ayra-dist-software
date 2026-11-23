@@ -48,7 +48,7 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <Ltr className="font-mono text-xs">{employee.employee_code}</Ltr>
             <StatusBadge tone={EMPLOYEE_STATUS_TONE[employee.status]}>{t.employees.statusLabels[employee.status]}</StatusBadge>
-            {linked.data && <span>{t.employees.linkedUser}: {linked.data.full_name}</span>}
+            {linked.data && <span>{t.employees.linkedUser}: <bdi>{linked.data.full_name}</bdi></span>}
           </span>
         }
       />

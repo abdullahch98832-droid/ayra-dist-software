@@ -22,6 +22,7 @@ Next.js 16 App Router (`src/proxy.ts`, not `middleware.ts`), React 19, TypeScrip
 - Journal entries must balance; posted entries are immutable (reverse, don't edit).
 - `SUPABASE_SECRET_KEY` is server-only. No hardcoded credentials.
 - Every user-facing string goes through `src/i18n/en.ts` and `src/i18n/ur.ts` (the `Dictionary` type enforces parity). Use logical CSS (`ms-`, `me-`, `ps-`, `pe-`, `start-`, `end-`) so RTL works. Locale comes from the `ayra_locale` cookie and is rendered on the server.
+- UI: build screens from the components in `docs/DESIGN_SYSTEM.md`; new modules are registered in `src/config/navigation.ts`. Do not key or branch the React tree by locale (it would discard unsaved form input).
 - No fake data in dashboards or reports.
 - Business rules not yet confirmed are listed in `docs/BUSINESS_REQUIREMENTS.md` — do not invent them; ask.
 

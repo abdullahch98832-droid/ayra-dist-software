@@ -4,6 +4,7 @@ import { CalendarOff, Plus, UserCheck, UserCog, UserRoundX, Users } from "lucide
 import { visibleNavigation } from "@/config/navigation";
 import { loadAccessAudit } from "@/features/audit/access-audit";
 import { loadEmployeeFigures, loadUserFigures } from "@/features/dashboard/queries";
+import { fill } from "@/i18n/format";
 import { getLocale, getT } from "@/i18n/server";
 import { can, requireActiveSession } from "@/lib/auth/session";
 import { BarListCard } from "@/components/charts/bar-list";
@@ -34,7 +35,7 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader
-        title={`${t.dashboard.welcome}${locale === "ur" ? "،" : ","} ${ctx.fullName || ctx.email}`}
+        title={fill(t.dashboard.greeting, { name: ctx.fullName || ctx.email })}
         description={t.dashboard.subtitle}
         actions={
           <>
@@ -88,8 +89,8 @@ export default async function DashboardPage() {
                   <li key={row.id} className="flex gap-3 text-sm">
                     <span className="mt-2 size-2 shrink-0 rounded-full bg-primary" aria-hidden />
                     <div className="min-w-0">
-                      <p className="break-words"><span className="font-medium">{row.subject || row.action}</span>{row.subject && <span className="text-muted-foreground"> — {row.action}</span>}</p>
-                      <p className="text-xs text-muted-foreground">{row.actor} · {formatDateTime(row.occurredAt, locale)}</p>
+                      <p className="break-words"><bdi className="font-medium">{row.subject || row.action}</bdi>{row.subject && <span className="text-muted-foreground"> — {row.action}</span>}</p>
+                      <p className="text-xs text-muted-foreground"><bdi>{row.actor}</bdi> · <bdi>{formatDateTime(row.occurredAt, locale)}</bdi></p>
                     </div>
                   </li>
                 ))}

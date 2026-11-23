@@ -175,7 +175,7 @@ const ur: Dictionary = {
   },
   dashboard: {
     title: "ڈیش بورڈ",
-    welcome: "خوش آمدید",
+    greeting: "خوش آمدید، \u2068{name}\u2069",
     subtitle: "ان ریکارڈز کے موجودہ اعداد و شمار جن تک آپ کو رسائی ہے۔",
     quickActions: "فوری اعمال",
     employeesActive: "فعال ملازمین",

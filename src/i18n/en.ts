@@ -173,7 +173,7 @@ const en = {
   },
   dashboard: {
     title: "Dashboard",
-    welcome: "Welcome",
+    greeting: "Welcome, {name}",
     subtitle: "Live figures from the records you have access to.",
     quickActions: "Quick actions",
     employeesActive: "Active employees",

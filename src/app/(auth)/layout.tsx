@@ -11,7 +11,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
       <div className="grid flex-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
         <aside className="relative hidden overflow-hidden bg-navy text-white lg:flex lg:flex-col lg:gap-8 lg:p-12">
           <Brand subtitle={t.common.subtitle} tone="white" size="lg" />
-          <AuthArtwork className="-mx-12 min-h-0 w-[calc(100%+6rem)] flex-1" />
+          <AuthArtwork className="-mx-12 h-0 min-h-0 w-[calc(100%+6rem)] flex-1" />
           <div className="max-w-md">
             <p className="font-heading text-3xl leading-tight text-balance xl:text-4xl">{t.auth.brandHeadline}</p>
             <p className="mt-4 text-base text-white/75">{t.auth.brandText}</p>

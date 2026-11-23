@@ -2,7 +2,7 @@
 
 Business management for a distribution company: purchases from the main company and suppliers, warehouse and inventory, sales and deliveries, SOL, expenses, payroll, cash/bank and accounting. English and Urdu (RTL).
 
-**Status:** Phase 3 — database, authentication, roles and permissions, user administration and employee management. Business module screens are not built yet; see [docs/DEVELOPMENT_ROADMAP.md](docs/DEVELOPMENT_ROADMAP.md).
+**Status:** Phase 3 — database, authentication, roles and permissions, user administration, employee management, and the complete UI design system. Business module screens are not built yet; see [docs/DEVELOPMENT_ROADMAP.md](docs/DEVELOPMENT_ROADMAP.md).
 
 ## Requirements
 - Node.js 20.9+ (developed on Node 26)
@@ -40,7 +40,7 @@ npm run dev                  # http://localhost:3000
 | `SUPABASE_SECRET_KEY` | Server only | User administration; never expose to the browser |
 
 ## Documentation
-[Overview](docs/PROJECT_OVERVIEW.md) · [Business requirements](docs/BUSINESS_REQUIREMENTS.md) · [Architecture](docs/ARCHITECTURE.md) · [Database](docs/DATABASE_DESIGN.md) · [Accounting](docs/ACCOUNTING_RULES.md) · [Inventory](docs/INVENTORY_RULES.md) · [Security](docs/SECURITY_PLAN.md) · [Supabase setup](docs/SUPABASE_SETUP.md) · [Roadmap](docs/DEVELOPMENT_ROADMAP.md)
+[Overview](docs/PROJECT_OVERVIEW.md) · [Business requirements](docs/BUSINESS_REQUIREMENTS.md) · [Architecture](docs/ARCHITECTURE.md) · [Database](docs/DATABASE_DESIGN.md) · [Accounting](docs/ACCOUNTING_RULES.md) · [Inventory](docs/INVENTORY_RULES.md) · [Security](docs/SECURITY_PLAN.md) · [Supabase setup](docs/SUPABASE_SETUP.md) · [Design system](docs/DESIGN_SYSTEM.md) · [Roadmap](docs/DEVELOPMENT_ROADMAP.md)
 
 ---
 Developed by Webcore Solutions.
