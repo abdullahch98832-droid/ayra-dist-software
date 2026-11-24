@@ -25,7 +25,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
   const claims = claimsData?.claims;
   if (!claims?.sub) return null;
 
-  const [{ data: profile }, { data: permissions }] = await Promise.all([
+  const [profileResult, permissionsResult] = await Promise.all([
     supabase
       .from("profiles")
       .select("full_name, is_active, removed_at, employee_id, role:roles(id, code, name_en, name_ur)")
@@ -33,11 +33,24 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
       .maybeSingle(),
     supabase.rpc("my_permissions"),
   ]);
-  if (!profile) return null;
+  // A failed read is not "signed out": sending the user to the login page would bounce them
+  // straight back here, because the proxy still sees a valid session.
+  if (profileResult.error) throw profileResult.error;
+  if (permissionsResult.error) throw permissionsResult.error;
+
+  const email = typeof claims.email === "string" ? claims.email : "";
+  const profile = profileResult.data;
+  if (!profile) {
+    // Signed in without a profile row: no access, like an account without a role.
+    return {
+      userId: claims.sub, email, fullName: "", isActive: true, removed: false, employeeId: null, role: null,
+      permissions: new Set(),
+    };
+  }
 
   return {
     userId: claims.sub,
-    email: typeof claims.email === "string" ? claims.email : "",
+    email,
     fullName: profile.full_name,
     isActive: profile.is_active,
     removed: profile.removed_at !== null,
@@ -45,7 +58,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
     role: profile.role
       ? { id: profile.role.id, code: profile.role.code, nameEn: profile.role.name_en, nameUr: profile.role.name_ur }
       : null,
-    permissions: new Set((permissions ?? []).filter(isPermission)),
+    permissions: new Set((permissionsResult.data ?? []).filter(isPermission)),
   };
 });
 

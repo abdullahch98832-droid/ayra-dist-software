@@ -46,8 +46,12 @@ export async function migrationFiles() {
   return (await readdir(MIGRATIONS_DIR)).filter((f) => f.endsWith(".sql")).sort();
 }
 
-/** Creates `name` with the shim and every migration applied, each migration in its own transaction. */
-export async function createMigratedDatabase(connection, name = TEMPLATE_DB) {
+/**
+ * Creates `name` with the shim and every migration applied, each migration in its own transaction.
+ * `autoExpose: false` emulates Supabase projects that do not grant API roles access to new tables
+ * automatically; there, only explicit grants in the migrations count.
+ */
+export async function createMigratedDatabase(connection, name = TEMPLATE_DB, { autoExpose = true } = {}) {
   const admin = new pg.Client({ ...connection, database: "postgres" });
   await admin.connect();
   await admin.query(`create database ${name}`);
@@ -56,7 +60,8 @@ export async function createMigratedDatabase(connection, name = TEMPLATE_DB) {
   const client = new pg.Client({ ...connection, database: name });
   await client.connect();
   try {
-    await client.query(await readFile(SHIM, "utf8"));
+    const shim = await readFile(SHIM, "utf8");
+    await client.query(autoExpose ? shim : shim.replace(/^alter default privileges .*;$/gm, ""));
     for (const file of await migrationFiles()) {
       const sql = await readFile(join(MIGRATIONS_DIR, file), "utf8");
       try {

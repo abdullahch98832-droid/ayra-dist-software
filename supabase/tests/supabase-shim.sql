@@ -1,9 +1,16 @@
 -- Minimal emulation of the Supabase platform objects the migrations depend on.
 -- Used ONLY by the local test database; never applied to a Supabase project.
 
-create role anon nologin noinherit;
-create role authenticated nologin noinherit;
-create role service_role nologin noinherit bypassrls;
+-- Roles are shared by every database of the server, so a second test database finds them in place.
+do $$
+begin
+  if not exists (select from pg_roles where rolname = 'anon') then
+    create role anon nologin noinherit;
+    create role authenticated nologin noinherit;
+    create role service_role nologin noinherit bypassrls;
+  end if;
+end;
+$$;
 
 grant usage on schema public to anon, authenticated, service_role;
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;

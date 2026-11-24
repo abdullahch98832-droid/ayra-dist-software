@@ -14,7 +14,8 @@ declare module "vitest" {
 export default async function setup(project: TestProject) {
   const { server, connection } = await startLocalPostgres();
   try {
-    await createMigratedDatabase(connection);
+    // Without automatic grants: the strictest project setting, so missing grants fail here first.
+    await createMigratedDatabase(connection, undefined, { autoExpose: false });
   } catch (error) {
     await server.stop();
     throw error;

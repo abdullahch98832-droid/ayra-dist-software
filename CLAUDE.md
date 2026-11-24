@@ -18,7 +18,7 @@ Next.js 16 App Router (`src/proxy.ts`, not `middleware.ts`), React 19, TypeScrip
 - Server actions: `await authorize("<permission>")` first, Zod-validate, then use the caller's Supabase client (RLS applies). `createAdminClient()` (secret key) only for Supabase Auth admin calls, after authorization.
 - Pages: `requireActiveSession()` then `can(ctx, permission)`; render `<Forbidden />` when missing.
 - State changes (approve/post/dispatch/void) are SECURITY DEFINER functions that call `private.require_permission` first and set `search_path = ''`. Clients only write drafts.
-- New tables: enable RLS + policies + column privileges in a migration (tests enforce RLS on every table and permission checks in every public definer function).
+- New tables: enable RLS + policies + column privileges + explicit `grant … to authenticated` in a migration (never rely on Supabase exposing tables automatically) (tests enforce RLS on every table and permission checks in every public definer function).
 - Journal entries must balance; posted entries are immutable (reverse, don't edit).
 - `SUPABASE_SECRET_KEY` is server-only. No hardcoded credentials.
 - Every user-facing string goes through `src/i18n/en.ts` and `src/i18n/ur.ts` (the `Dictionary` type enforces parity). Use logical CSS (`ms-`, `me-`, `ps-`, `pe-`, `start-`, `end-`) so RTL works. Locale comes from the `ayra_locale` cookie and is rendered on the server.

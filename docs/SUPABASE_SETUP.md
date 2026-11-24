@@ -51,6 +51,8 @@ npm run db:push             # applies supabase/migrations
 npm run db:check            # verifies URL, key, Auth and migrations
 ```
 
+If you apply migrations in the dashboard's SQL Editor instead, run every file in `supabase/migrations` in name order. `npm run db:check` only proves the tables exist; if sign-in succeeds but "This page could not be loaded" appears, `20261124110000_explicit_grants.sql` has not been applied.
+
 ## 6. Create the first administrator (Super Admin)
 
 ```bash
