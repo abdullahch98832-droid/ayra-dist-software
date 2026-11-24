@@ -92,8 +92,7 @@ beforeAll(async () => {
     await q("select public.allocate_customer_payment($1, $2, 30)", [await pay("30.00"), old.id]);
 
     const category = one(await q("select id from public.expense_categories where code = 'FUEL'")).id;
-    const expense = one(await q("insert into public.expenses (expense_date, category_id, amount, financial_account_id) values ($1, $2, 15.50, $3) returning id", [today, category, cash])).id;
-    await q("select public.post_expense($1)", [expense]);
+    await q("select public.record_expense(jsonb_build_object('date', $1::date, 'category_id', $2::uuid, 'amount', 15.50, 'financial_account_id', $3::uuid, 'method', 'cash', 'payee', 'Vendor', 'description', 'Test', 'no_receipt_reason', 'None issued')) id", [today, category, cash]);
 
     await journal("Capital", [{ account_id: await gl(bank), debit: 1000 }, { account_id: await account("CAPITAL"), credit: 1000 }]);
     await journal("Other income", [{ account_id: await gl(cash), debit: 5 }, { account_id: await account("OTHER_INCOME"), credit: 5 }]);
@@ -195,10 +194,7 @@ describe("performance", () => {
   it("moves reversed expenses out of the total", async () => {
     const before = (await rpc(b.admin, "public.dashboard_performance($1, $2)", range()) as unknown as { current: Record<string, string> }).current.expenses;
     const id = await db.as(b.admin, async (q) => {
-      const x = one(await q(`insert into public.expenses (expense_date, category_id, amount, financial_account_id)
-        select $1, (select id from public.expense_categories where code = 'RENT'), 99, id from public.financial_accounts where account_type = 'cash' returning id`, [day(-1)])).id;
-      await q("select public.post_expense($1)", [x]);
-      return x;
+      return one(await q(`select public.record_expense(jsonb_build_object('date', $1::date, 'category_id', (select id from public.expense_categories where code = 'RENT'), 'amount', 99, 'financial_account_id', (select id from public.financial_accounts where account_type = 'cash' limit 1), 'method', 'cash', 'payee', 'Vendor', 'description', 'Test', 'no_receipt_reason', 'None issued')) id`, [day(-1)])).id;
     });
     expect((await rpc(b.admin, "public.dashboard_performance($1, $2)", range()) as unknown as { current: Record<string, string> }).current.expenses).toBe("414.50");
     await db.as(b.admin, (q) => q("select public.void_expense($1, 'test')", [id]));

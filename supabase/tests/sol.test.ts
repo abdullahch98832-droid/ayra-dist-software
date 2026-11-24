@@ -51,7 +51,7 @@ const deliveryItems = async (d: string) => db.sql("select id, quantity::float, r
 const pay = (user: string, job: string, amount: string, extra: Record<string, unknown> = {}) =>
   call(user, "record_sol_payment", job, json({ amount, method: "cash", financial_account_id: cash, client_request_id: randomUUID(), ...extra }));
 const expense = (user: string, category: string, amount: string, extra: Record<string, unknown> = {}) =>
-  call(user, "record_expense", json({ category_id: cats[category], amount, financial_account_id: cash, client_request_id: randomUUID(), ...extra }));
+  call(user, "record_expense", json({ category_id: cats[category], amount, financial_account_id: cash, method: "cash", payee: "Vendor", description: "Test", no_receipt_reason: "None", client_request_id: randomUUID(), ...extra }));
 let plate = 0;
 const vehicle = async (driver: string | null = null) =>
   one(await db.sql("insert into public.vehicles (registration_no, name, driver_id) values ($1, 'Shehzore', $2) returning id", [`LEA-${++plate}`, driver])).id as string;
@@ -191,6 +191,15 @@ describe("jobs", () => {
     expect(await db.as(desk, (q) => q("select * from public.secure_sol_item_costs"))).toEqual([]);
     expect(await report(job, desk)).toMatchObject({ received: null, pending: null, direct_costs: null, vehicle_expenses: null, profit: null, estimated_cost: null });
     await invariants();
+  });
+
+  it("keep a due date that has passed when work starts late", async () => {
+    const job = await confirmed(await customer(db), "10", [], { due_date: "2026-01-31" });
+    await call(b.admin, "dispatch_sol_delivery", await plan(b.admin, job, []));
+    expect(one(await db.sql("select due_date::text d, start_date s, status::text from public.sol_jobs where id = $1", [job]))).toEqual({ d: "2026-01-31", s: null, status: "in_progress" });
+    const other = await confirmed(await customer(db), "10");
+    await call(b.admin, "set_sol_job_status", other, "in_progress");
+    expect(one(await db.sql("select start_date::text s from public.sol_jobs where id = $1", [other])).s).toBe(today);
   });
 
   it("can be reopened, corrected and completed again with one entry in force", async () => {

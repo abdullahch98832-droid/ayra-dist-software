@@ -29,8 +29,9 @@
 - Vehicles, drivers, delivery records, pending amounts, profitability.
 
 ## F. Financial Management
-- Expenses: salaries, advances, petrol, rent, utilities, snacks, other.
-- Cash and bank accounts, income, profit and loss.
+- Expenses: guard, sweeper, servant, salaries, electricity, gas, water, snacks, rent, petrol, vehicle repairs, other.
+- Payroll: salary, advances, bonuses, deductions, paid and pending amounts per month.
+- Cash and bank accounts, double-entry accounting, statements, daily cash closing and period closing.
 
 ## G. Employees
 - Profiles with picture, contact info, job title, employment status.
@@ -83,6 +84,32 @@ Phase 7 brief (2026-11-24), sales and distribution (ASSUMPTION — confirm; see 
 - A driver confirms their own deliveries; recording goods brought back needs `sales.return`.
 - A cash count records a shortage without posting it. **OPEN** — should a shortage be recovered from salary, or expensed?
 
+Phase 8 brief (2026-11-24), SOL and vehicles (ASSUMPTION — confirm; see SOL_AND_VEHICLES.md):
+- SOL clients are customers, with one account for sales and SOL.
+- The contract amount is entered; the items may add up to another amount. No sales tax on jobs.
+- Income is booked when a job is completed. Advances are credits of the client until then.
+- Expenses of a vehicle for a job count as that job's vehicle expenses; others are not shared out over jobs.
+- Products are taken from stock at dispatch and are not reserved for a job.
+- Account identifiers are kept as their last four characters.
+- Selling stock from a vehicle on a route (decision 2b above) keeps its tables but has no screens; the brief did not ask for it.
+- **OPEN** — May drivers see the contract amount of the jobs they deliver? (They do.)
+- **OPEN** — Refunding an advance in cash after a cancellation. (Not modelled; the money stays on account.)
+- **OPEN** — Who besides managers should create jobs? (`sol.manage` can be given to any role.)
+
+Phase 9 brief (2026-11-24), expenses, payroll and accounting (ASSUMPTION — confirm; see FINANCE.md):
+- A voucher of someone who may approve is approved at once; all others wait for approval.
+- A receipt is required, or the reason why there is none.
+- The Salaries category is filled by payroll only. Guard, Sweeper and Servant are for people paid without payroll; a person on payroll must not also be paid by a voucher.
+- One payroll per month, dated at its end. A deduction reduces the salary expense.
+- Deposits and withdrawals are transfers between cash and bank.
+- A cash difference is booked only if chosen. Closing a day locks it and all earlier days of that cash account.
+- Months are closed in order; the latest can be reopened with a reason.
+- Cash and bank may show a negative balance; payments are not blocked.
+- Cash with order takers is shown apart and is not part of cash.
+- **OPEN** — Bank reconciliation against bank statements was not asked for and is not built.
+- **OPEN** — Must the approver be a different person from the one who recorded the voucher?
+- **OPEN** — Depreciation of fixed assets and income tax. (Manual journals.)
+
 ## Open Questions
 
 Items marked ASSUMPTION are implemented as safe, configurable defaults and can be changed without restructuring.
@@ -105,4 +132,4 @@ Items marked ASSUMPTION are implemented as safe, configurable defaults and can b
 12. **OPEN** — Number of cash and bank accounts? (ASSUMPTION: any number, user-defined.)
 13. **OPEN** — Sales tax / GST / withholding? (ASSUMPTION: per-product sales tax rate, default 0%; no purchase tax.)
 14. **OPEN** — Currency PKR only? (ASSUMPTION: yes.)
-15. **OPEN** — Fiscal year (e.g. July–June)? Needed for year-end closing and reports.
+15. **OPEN** — Fiscal year (e.g. July–June)? Needed for year-end closing and reports. (Until then the result to date is shown in the balance sheet and nothing is moved to retained earnings.)

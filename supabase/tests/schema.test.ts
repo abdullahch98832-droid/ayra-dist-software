@@ -69,7 +69,7 @@ describe("schema safety", () => {
 
 describe("reference data", () => {
   it("seeds roles and permissions", async () => {
-    expect(Number(one(await db.sql("select count(*) c from public.permissions")).c)).toBe(64);
+    expect(Number(one(await db.sql("select count(*) c from public.permissions")).c)).toBe(66);
     const roles = await db.sql("select code from public.roles order by code");
     expect(roles.map((r) => r.code)).toEqual(["accountant", "data_entry", "driver", "manager", "order_taker", "super_admin", "viewer", "warehouse"]);
     const system = await db.sql("select code from public.roles where is_system order by code");

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { maskAccount } from "./mask";
-import { decimalAmount } from "./quantity";
+import { decimalAbove, decimalAmount, wholeAbove } from "./quantity";
 
 describe("maskAccount", () => {
   it("keeps the last four characters and is stable when repeated", () => {
@@ -18,5 +18,15 @@ describe("decimalAmount", () => {
     expect(decimalAmount("0.01", "0.50")).toBe(BigInt(1));
     expect(decimalAmount("", "5")).toBeNull();
     expect(decimalAmount("1", "x")).toBeNull();
+  });
+});
+
+describe("limits while typing", () => {
+  it("never throw on unfinished numbers", () => {
+    for (const unfinished of ["", "1.", "x", "-", "1e3"]) {
+      expect(decimalAbove(unfinished, "0")).toBe(false);
+      expect(wholeAbove(unfinished, 0)).toBe(false);
+    }
+    expect([decimalAbove("2.51", "2.5"), decimalAbove("2.5", "2.5"), wholeAbove("6", 5), wholeAbove("5", "5")]).toEqual([true, false, true, false]);
   });
 });

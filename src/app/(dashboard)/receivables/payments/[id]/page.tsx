@@ -69,6 +69,8 @@ export default async function PaymentPage({ params }: PageProps<"/receivables/pa
             { label: r.amount, value: <Money amount={toPaisa(payment.amount)} locale={locale} className="font-semibold" /> },
             { label: r.method, value: t.purchasing.methods[payment.method] },
             { label: r.destination, value: payment.account?.name ?? (payment.financial_account_id ? null : r.heldByTaker) },
+            ...(payment.payer_account ? [{ label: t.sol.payerAccount, value: <Ltr>{payment.payer_account}</Ltr> }] : []),
+            ...(payment.sol_job ? [{ label: t.sol.job, value: can(ctx, "sol.view") ? <Link href={`/sol/jobs/${payment.sol_job.id}`} className="text-primary hover:underline"><Ltr>{payment.sol_job.doc_no}</Ltr></Link> : <Ltr>{payment.sol_job.doc_no}</Ltr> }] : []),
             { label: r.collectedBy, value: collector ? local(collector.nameEn, collector.nameUr) : payment.collected_by ? null : r.nobody },
             { label: r.reference, value: payment.reference && <Ltr>{payment.reference}</Ltr> },
             ...(posted ? [{ label: r.onAccount, value: <Money amount={left} locale={locale} /> }] : []),
@@ -79,7 +81,7 @@ export default async function PaymentPage({ params }: PageProps<"/receivables/pa
         {payment.customer_payment_allocations.length > 0 && (
           <SpecTable
             caption={r.settled}
-            rows={payment.customer_payment_allocations.map((a) => ({ id: a.id, no: a.invoice?.doc_no ?? a.job?.doc_no, noHref: a.invoice ? `/sales/invoices/${a.invoice.id}` : undefined, amount: a.amount }))}
+            rows={payment.customer_payment_allocations.map((a) => ({ id: a.id, no: a.invoice?.doc_no ?? a.job?.doc_no, noHref: a.invoice ? `/sales/invoices/${a.invoice.id}` : a.job && can(ctx, "sol.view") ? `/sol/jobs/${a.job.id}` : undefined, amount: a.amount }))}
             columns={[{ key: "no", label: t.sales.invoiceNo, kind: "link", primary: true }, { key: "amount", label: r.settled, kind: "money", total: true }]}
             empty={{ title: r.noOpenInvoices }}
           />

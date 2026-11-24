@@ -200,8 +200,7 @@ describe("SOL", () => {
       await q("select public.post_customer_payment($1)", [pay]);
       await q("select public.allocate_payment_to_sol_job($1, $2, 15000)", [pay, job]);
       const fuel = one(await q("select id from public.expense_categories where code = 'FUEL'")).id;
-      const exp = one(await q("insert into public.expenses (category_id, amount, financial_account_id, sol_job_id, vehicle_id) values ($1, 6000, $2, $3, $4) returning id", [fuel, cash, job, vehicle])).id;
-      await q("select public.post_expense($1)", [exp]);
+      await q("select public.record_expense(jsonb_build_object('category_id', $1::uuid, 'amount', 6000, 'financial_account_id', $2::uuid, 'sol_job_id', $3::uuid, 'vehicle_id', $4::uuid, 'method', 'cash', 'payee', 'Pump', 'description', 'Fuel', 'no_receipt_reason', 'None'))", [fuel, cash, job, vehicle]);
     });
     expect(one(await db.as(b.admin, (q) => q("select received_amount, pending_amount from public.v_sol_job_summary where sol_job_id = $1", [job]))))
       .toEqual({ received_amount: "15000.00", pending_amount: "10000.00" });
@@ -237,8 +236,7 @@ describe("expenses and payroll", () => {
     const before = await glBalance(db, "INVENTORY");
     const id = await db.as(b.admin, async (q) => {
       const rent = one(await q("select id from public.expense_categories where code = 'RENT'")).id;
-      const id = one(await q("insert into public.expenses (category_id, amount, financial_account_id) values ($1, 45000, $2) returning id", [rent, cash])).id;
-      await q("select public.post_expense($1)", [id]);
+      const id = one(await q("select public.record_expense(jsonb_build_object('category_id', $1::uuid, 'amount', 45000, 'financial_account_id', $2::uuid, 'method', 'cash', 'payee', 'Owner', 'description', 'Rent', 'no_receipt_reason', 'None')) id", [rent, cash])).id;
       await q("select public.void_expense($1, 'wrong month')", [id]);
       return id;
     });
@@ -251,10 +249,10 @@ describe("expenses and payroll", () => {
   it("recovers advances through payroll and pays salaries in parts", async () => {
     const e = await employee(db);
     const item = await db.as(b.admin, async (q) => {
-      const adv = one(await q("insert into public.employee_advances (employee_id, amount, financial_account_id) values ($1, 5000, $2) returning id", [e, cash])).id;
-      await q("select public.post_employee_advance($1)", [adv]);
-      const run = one(await q("insert into public.payroll_runs (period_month) values ('2026-02-01') returning id")).id;
-      const item = one(await q("insert into public.payroll_items (payroll_run_id, employee_id, basic_salary, allowances, deductions, advance_recovery) values ($1, $2, 30000, 2000, 500, 2000) returning id, net_pay", [run, e]));
+      await q("select public.record_advance(jsonb_build_object('employee_id', $1::uuid, 'amount', 5000, 'financial_account_id', $2::uuid, 'method', 'cash'))", [e, cash]);
+      const run = one(await q("select public.prepare_payroll('2026-02-01') id")).id;
+      await q("select public.save_payroll($1, jsonb_build_array(jsonb_build_object('employee_id', $2::uuid, 'basic_salary', 30000, 'allowances', 2000, 'deductions', 500, 'advance_recovery', 2000)))", [run, e]);
+      const item = one(await q("select id, net_pay from public.payroll_items where payroll_run_id = $1", [run]));
       expect(item.net_pay).toBe("29500.00");
       await q("select public.post_payroll_run($1)", [run]);
       return item.id as string;
@@ -263,8 +261,7 @@ describe("expenses and payroll", () => {
       .toEqual({ advances_outstanding: "3000.00", salary_payable: "29500.00" });
 
     const paySalary = (amount: string) => db.as(b.admin, async (q) => {
-      const id = one(await q("insert into public.salary_payments (payroll_item_id, amount, financial_account_id, method) values ($1, $2, $3, 'cash') returning id", [item, amount, cash])).id;
-      await q("select public.post_salary_payment($1)", [id]);
+      await q("select public.pay_salaries((select payroll_run_id from public.payroll_items where id = $1), jsonb_build_object('financial_account_id', $3::uuid, 'method', 'cash'), jsonb_build_array(jsonb_build_object('payroll_item_id', $1::uuid, 'amount', $2::numeric)))", [item, amount, cash]);
     });
     await paySalary("10000.00");
     await expect(paySalary("19500.01")).rejects.toThrow(/exceeds the salary due/);
@@ -275,8 +272,8 @@ describe("expenses and payroll", () => {
   it("rejects recovering more than the outstanding advance", async () => {
     const e = await employee(db);
     await expect(db.as(b.admin, async (q) => {
-      const run = one(await q("insert into public.payroll_runs (period_month) values ('2026-03-01') returning id")).id;
-      await q("insert into public.payroll_items (payroll_run_id, employee_id, basic_salary, advance_recovery) values ($1, $2, 20000, 100)", [run, e]);
+      const run = one(await q("select public.prepare_payroll('2026-03-01') id")).id;
+      await q("select public.save_payroll($1, jsonb_build_array(jsonb_build_object('employee_id', $2::uuid, 'basic_salary', 20000, 'advance_recovery', 100)))", [run, e]);
       await q("select public.post_payroll_run($1)", [run]);
     })).rejects.toThrow(/exceeds the outstanding advance/);
   });

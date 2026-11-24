@@ -15,13 +15,17 @@ export interface SubNavItem {
 /** Tabs between the pages of a module. Scrolls sideways inside itself on small screens. */
 export function SubNav({ label, items }: { label: string; items: SubNavItem[] }) {
   const pathname = usePathname();
+  const nav = useRef<HTMLElement>(null);
   const active = useRef<HTMLAnchorElement>(null);
   useEffect(() => {
-    // Braces matter: newer browsers return a promise here, and an effect may only return a cleanup function.
-    active.current?.scrollIntoView({ block: "nearest", inline: "center" });
+    if (!nav.current || !active.current) return;
+    // Scrolls the tab bar only; scrollIntoView would also be allowed to move the page. Works in both directions.
+    const bar = nav.current.getBoundingClientRect();
+    const tab = active.current.getBoundingClientRect();
+    nav.current.scrollLeft += tab.left + tab.width / 2 - (bar.left + bar.width / 2);
   }, [pathname]);
   return (
-    <nav aria-label={label} className="no-scrollbar -mx-4 mb-6 overflow-x-auto border-b px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 print:hidden">
+    <nav ref={nav} aria-label={label} className="no-scrollbar -mx-4 mb-6 overflow-x-auto border-b px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 print:hidden">
       <ul className="flex w-max gap-1">
         {items.map((item) => {
           const current = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);

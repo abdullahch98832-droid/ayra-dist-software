@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { amountOf } from "@/lib/utils/quantity";
-import { parseRupees } from "@/lib/utils/money";
+import { amountOf, decimalAbove } from "@/lib/utils/quantity";
+import { toDbAmount } from "@/lib/utils/money";
 import { isoDate, money, optionalDate, optionalId, optionalMoney, optionalQuantity, quantity, requiredId, text } from "@/lib/validation/common";
 
 const requestId = z.uuid();
@@ -12,7 +12,7 @@ export const orderSchema = z.object({
   if (v.requiredDate !== "" && v.requiredDate < v.date) ctx.addIssue({ code: "custom", message: "invalidDate", path: ["requiredDate"] });
   v.lines.forEach((l, i) => {
     const gross = amountOf([l.quantity], l.price);
-    if (l.discount !== "" && gross !== null && parseRupees(l.discount) > gross) ctx.addIssue({ code: "custom", message: "discountTooHigh", path: ["lines", i, "discount"] });
+    if (gross !== null && decimalAbove(l.discount, toDbAmount(gross))) ctx.addIssue({ code: "custom", message: "discountTooHigh", path: ["lines", i, "discount"] });
   });
 });
 export type OrderValues = z.infer<typeof orderSchema>;

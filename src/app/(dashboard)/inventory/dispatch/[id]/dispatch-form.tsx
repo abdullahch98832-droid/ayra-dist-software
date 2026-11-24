@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { dispatchAction } from "@/features/inventory/actions";
 import { dispatchSchema, type DispatchValues } from "@/features/inventory/schema";
 import { useI18n } from "@/i18n/context";
+import { wholeAbove } from "@/lib/utils/quantity";
 import { DocumentForm } from "@/components/documents/document-form";
 import { Field, NativeSelect, useMessage } from "@/components/forms/field";
 import { FormSection } from "@/components/forms/form-section";
@@ -33,7 +34,7 @@ export function DispatchForm({ defaults, lines, vehicles, drivers }: {
   const s = t.stock;
   const limited = dispatchSchema.superRefine((v, ctx) => {
     v.lines.forEach((l, i) => {
-      if (l.quantity !== "" && BigInt(l.quantity) > BigInt(lines[i]?.remaining ?? 0)) ctx.addIssue({ code: "custom", message: "tooMuch", path: ["lines", i, "quantity"] });
+      if (wholeAbove(l.quantity, lines[i]?.remaining ?? 0)) ctx.addIssue({ code: "custom", message: "tooMuch", path: ["lines", i, "quantity"] });
     });
   });
   return (

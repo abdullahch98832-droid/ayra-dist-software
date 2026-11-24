@@ -17,12 +17,15 @@ import { UrlPagination } from "./url-filters";
 export type Cell = string | number | boolean | null | undefined;
 export type SpecRow = { id: string } & Record<string, Cell>;
 
+/** Quantities with up to two decimals (hours, litres), added exactly as hundredths. */
+const decimalText = (hundredths: bigint, locale: "en" | "ur") => formatNumber(Number(hundredths) / 100, locale);
+
 /** A column described as data, so pages can define tables on the server. */
 export interface SpecColumn {
   key: string;
   label: string;
   /** `link` reads its address from `<key>Href`. Money is a decimal string or PostgREST number. */
-  kind: "text" | "link" | "code" | "date" | "datetime" | "quantity" | "money" | "percent" | "status";
+  kind: "text" | "link" | "code" | "date" | "datetime" | "quantity" | "decimal" | "money" | "percent" | "status";
   /** Second line in small print, read from this key. */
   sub?: string;
   hideBelow?: "lg" | "xl" | "2xl";
@@ -58,11 +61,14 @@ export function SpecTable({ rows, columns, caption, empty, toolbar, searchKeys, 
     const value = row[c.key];
     if (value === null || value === undefined || value === "") return "—";
     switch (c.kind) {
-      case "link": return <Link href={String(row[`${c.key}Href`] ?? "#")} className="font-medium break-words hover:text-primary hover:underline"><bdi>{String(value)}</bdi></Link>;
+      case "link":
+        if (!row[`${c.key}Href`]) return <bdi className="font-medium break-words">{String(value)}</bdi>;
+        return <Link href={String(row[`${c.key}Href`] ?? "#")} className="font-medium break-words hover:text-primary hover:underline"><bdi>{String(value)}</bdi></Link>;
       case "code": return <Ltr className="font-mono text-xs">{String(value)}</Ltr>;
       case "date": return <bdi className="whitespace-nowrap">{formatDate(String(value), locale)}</bdi>;
       case "datetime": return <bdi className="whitespace-nowrap">{formatDateTime(String(value), locale)}</bdi>;
       case "quantity": return <Ltr className={cn("tabular-nums", String(value).startsWith("-") && "text-destructive")}>{formatNumber(BigInt(String(value)), locale)}</Ltr>;
+      case "decimal": return <Ltr className="tabular-nums">{decimalText(toPaisa(value as string | number), locale)}</Ltr>;
       case "money": {
         const amount = toPaisa(value as string | number);
         return <Ltr className={cn("whitespace-nowrap tabular-nums", amount < BigInt(0) && "text-destructive")}>{formatPaisa(amount, locale)}</Ltr>;
@@ -79,7 +85,7 @@ export function SpecTable({ rows, columns, caption, empty, toolbar, searchKeys, 
   const sortValue = (c: SpecColumn, row: SpecRow) => {
     const value = row[c.key];
     if (value === null || value === undefined || value === "") return null;
-    if (c.kind === "money") return toPaisa(value as string | number);
+    if (c.kind === "money" || c.kind === "decimal") return toPaisa(value as string | number);
     if (c.kind === "quantity") return BigInt(String(value));
     if (c.kind === "percent") return Number(value);
     return c.kind === "status" ? c.options?.[String(value)]?.label ?? String(value) : String(value);
@@ -89,12 +95,13 @@ export function SpecTable({ rows, columns, caption, empty, toolbar, searchKeys, 
     if (!c.total || rows.length === 0) return undefined;
     const values = rows.map((r) => r[c.key]).filter((v): v is string | number => v !== null && v !== undefined && v !== "");
     if (values.length === 0) return undefined;
+    if (c.kind === "decimal") return <Ltr>{decimalText(sumPaisa(values.map((v) => toPaisa(v))), locale)}</Ltr>;
     return c.kind === "money"
       ? <Ltr className="whitespace-nowrap">{formatPaisa(sumPaisa(values.map((v) => toPaisa(v))), locale)}</Ltr>
       : <Ltr>{formatNumber(values.reduce<bigint>((sum, v) => sum + BigInt(String(v)), BigInt(0)), locale)}</Ltr>;
   };
 
-  const end = (c: SpecColumn) => c.kind === "quantity" || c.kind === "money" || c.kind === "percent";
+  const end = (c: SpecColumn) => c.kind === "quantity" || c.kind === "decimal" || c.kind === "money" || c.kind === "percent";
   const tableColumns: DataTableColumn<SpecRow>[] = columns.map((c) => ({
     id: c.key, header: c.label, primary: c.primary, hideBelow: c.hideBelow, align: end(c) ? "end" : "start",
     cell: (row) => c.sub && row[c.sub]

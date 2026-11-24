@@ -24,7 +24,7 @@ Never use raw colours (`text-blue-600`, hex) in components. Text meets WCAG AA c
 | Page title, breadcrumbs, actions | `layout/page-header` |
 | Titled surface / one figure / record fields | `shared/section-card`, `shared/stat-card`, `shared/description-list` |
 | Any list | `tables/data-table` (sort, search, paging, phone cards); `tables/url-filters` when the server filters |
-| List described on the server, totals, CSV, print | `tables/spec-table` |
+| List described on the server, totals, CSV, print | `tables/spec-table` (`quantity` for whole numbers, `decimal` for hours and litres) |
 | Tabs between the pages of a module | `layout/sub-nav` |
 | Document with lines | `documents/document-form` + `documents/line-editor` (or `issue-lines` when stock leaves); `draft-actions`, `action-button` and `document-status` on its page |
 | Choose a customer, settle invoices, show the order steps, print a document | `documents/customer-picker`, `invoice-allocations`, `order-steps`, `print-button` (`.page-portrait` for A4 portrait) |
@@ -40,6 +40,9 @@ Never use raw colours (`text-blue-600`, hex) in components. Text meets WCAG AA c
 | Phone, email, code, amount inside text | `Ltr` and `Money` from `shared/bidi` |
 | Link that looks like a button | `shared/link-button` |
 | Independently loading part of a page | `dashboard/section` (`DataSection`: skeleton, error and retry per section) |
+| Ledger with running balance | `accounting/ledger-table` |
+| Financial statement | `accounting/statement` (sections, rows, totals) |
+| Tabs of a module | `layout/sub-nav` (scrolls inside itself) |
 | Charts | `charts/bar-list`, `charts/column-chart`, `charts/line-chart` |
 
 Charts take `{ value, display }`: `value` only sizes the mark, `display` is the exact formatted text (for money, from `formatPaisa`). Every chart can be viewed as a table.

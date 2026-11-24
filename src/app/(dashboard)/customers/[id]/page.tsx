@@ -35,6 +35,7 @@ const documentHref = (kind: string, id: string | null, customerId: string): stri
     case "customer_payment": return `/receivables/payments/${id}`;
     case "customer_return": return `/sales/returns/${id}`;
     case "opening": case "credit_note": case "debit_note": return `/receivables/notes/${id}`;
+    case "sol_job": return `/sol/jobs/${id}`;
     default: return `/customers/${customerId}`;
   }
 };

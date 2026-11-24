@@ -69,3 +69,7 @@ Create a second Supabase project for testing only, push the migrations to it, an
 - Change the database only by adding a new file in `supabase/migrations/` and running `npm run db:push`. Never edit tables in the dashboard on production.
 - Run `npm run test:db` before pushing a migration.
 - Use a separate Supabase project (or branch) for testing; never test against production data.
+
+## Checking the database
+
+`supabase/verify-schema.sql` is read-only. Run it in the SQL Editor: `ok` means the database matches the migrations; otherwise it lists what differs or is missing.

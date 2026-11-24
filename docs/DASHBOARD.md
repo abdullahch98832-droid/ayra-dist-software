@@ -17,7 +17,7 @@ Every figure is calculated in the database (`supabase/migrations/20261124120000_
 | Expenses | Ledger: expense accounts outside Cost of Sales | `reports.financial`; with only `expenses.view`, expense documents without payroll |
 | Gross profit | Sales − every account under Cost of Sales (`COST_OF_SALES`: COGS, variances, write-offs) | `reports.financial` |
 | Net profit | All income − all expense; always equals `profit_and_loss()` | `reports.financial` |
-| SOL revenue | Ledger: SOL_REVENUE (transport jobs). Vehicle route sales are part of Sales and shown as a note | `sol.view` and (`sales.view_all` or `reports.financial`) |
+| SOL revenue | Ledger: SOL_REVENUE (completed jobs). Vehicle route sales are part of Sales and shown as a note | `sol.view` and (`sales.view_all` or `reports.financial`) |
 | Pending SOL payments | Completed jobs: contract value − allocated payments | `sol.view` and `receivables.view` |
 | Low stock | On hand − reserved, excluding damaged warehouses, at or below the reorder level | `inventory.view` |
 | Overdue balances | Posted invoices past their due date, less allocations, returns and credit notes | `receivables.view`, `payables.view`, `company.view` |

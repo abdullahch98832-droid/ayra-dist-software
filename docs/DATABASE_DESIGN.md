@@ -1,6 +1,6 @@
 # Database Design
 
-> **Status:** implemented as migrations in `supabase/migrations/` and verified by 165 automated tests on PostgreSQL 17 (`npm run test:db`). See [SUPABASE_SETUP.md](SUPABASE_SETUP.md).
+> **Status:** implemented as migrations in `supabase/migrations/` and verified by 197 automated tests on PostgreSQL 17 (`npm run test:db`). See [SUPABASE_SETUP.md](SUPABASE_SETUP.md).
 
 ## Conventions
 
@@ -34,8 +34,9 @@
 | `20261124110000_explicit_grants` | explicit table grants (projects that do not expose tables automatically) |
 | `20261124120000_dashboard` | dashboard functions |
 | `20261125100000_inventory_procurement` | brands, product details and images, receiving with damaged and rejected quantities, closing orders, save functions for every document, negative-stock override, stock-count guard, reports, Pakistan business day for document dates |
-
 | `20261126100000_sales_distribution` | customer details and notes, order takers, order workflow with picking, delivery confirmation with returns, held cash, deposits and counts, customer statement, sales reports, assigned-customer access |
+| `20261127100000_sol_vehicles` | SOL job types, services, items, deliveries, returns and payments; vehicle details, drivers list; expenses of jobs and vehicles; account list with masked numbers; reports. Its first section completes databases that received an early copy of the Phase 7 file |
+| `20261128100000_finance` | expense approval and categories, payroll, opening balances, vouchers, daily cash closing, period closing, ledgers, statements and ledger checks |
 
 With every new migration, set `app_settings.schema_version` and update `src/config/database.ts` (a test enforces it). Until that migration has been applied, administrators see a notice naming the file and affected pages say the database needs an update.
 
@@ -48,8 +49,8 @@ With every new migration, set `app_settings.schema_version` and update `src/conf
 **Inventory:** `warehouses`, `stock_balances`, `inventory_valuation`, `stock_movements`, `stock_adjustments(+_items)`, `stock_counts(+_items)`, `stock_transfers(+_items)`
 **Purchasing:** `purchase_orders(+_items)`, `goods_receipts(+_items)`, `supplier_invoices`, `supplier_invoice_receipts`, `supplier_payments`, `supplier_payment_allocations`, `supplier_returns(+_items)`
 **Sales:** `order_takers`, `customer_notes`, `cash_deposits`, `cash_reconciliations`, `sales_orders(+_items)`, `deliveries`, `delivery_items`, `sales_invoices(+_items)`, `customer_returns(+_items)`, `customer_payments`, `customer_payment_allocations`
-**SOL:** `sol_jobs`, `sol_trips`
-**Finance:** `chart_of_accounts`, `financial_accounts` (cash + bank), `financial_account_bank_details` (confidential), `accounting_periods`, `journal_entries`, `journal_entry_lines`, `fund_transfers`, `expense_categories`, `expenses`, `employee_advances`, `payroll_runs`, `payroll_items`, `salary_payments`
+**SOL:** `sol_job_types`, `sol_services`, `sol_jobs`, `sol_job_items`, `sol_deliveries`, `sol_delivery_items`, `sol_returns`, `sol_return_items`, `sol_trips`
+**Finance:** `chart_of_accounts`, `financial_accounts` (cash + bank), `financial_account_bank_details` (confidential), `accounting_periods`, `journal_entries`, `journal_entry_lines`, `fund_transfers`, `account_openings`, `cash_vouchers`, `cash_closings`, `expense_categories`, `expenses`, `employee_advances`, `payroll_runs`, `payroll_items`, `salary_payments`
 
 Requested items that are **views or roles rather than tables**:
 - *Main company ledger* → `v_company_ledger` (journal lines on control account `AP_PRINCIPAL`)
@@ -148,6 +149,15 @@ erDiagram
   sales_invoices |o--o{ customer_payment_allocations : ""
   sol_jobs |o--o{ customer_payment_allocations : ""
   customers ||--o{ sol_jobs : "SOL client"
+  sol_job_types |o--o{ sol_jobs : ""
+  sol_jobs ||--o{ sol_job_items : ""
+  sol_services |o--o{ sol_job_items : ""
+  sol_jobs ||--o{ sol_deliveries : ""
+  vehicles |o--o{ sol_deliveries : ""
+  sol_deliveries ||--o{ sol_delivery_items : ""
+  sol_deliveries ||--o{ sol_returns : ""
+  sol_jobs |o--o{ expenses : "job cost"
+  sol_jobs |o--o{ customer_payments : "received for"
   vehicles |o--o{ sol_jobs : ""
   vehicles ||--o{ sol_trips : ""
   sol_trips |o--o{ sales_invoices : "route sales"
@@ -173,6 +183,10 @@ erDiagram
   employees ||--o{ payroll_items : ""
   payroll_items ||--o{ salary_payments : ""
   financial_accounts ||--o{ fund_transfers : "from / to"
+  financial_accounts ||--o{ account_openings : "opening"
+  financial_accounts ||--o{ cash_vouchers : ""
+  chart_of_accounts ||--o{ cash_vouchers : "other side"
+  financial_accounts ||--o{ cash_closings : "counted"
 ```
 
 Every posting document also references the `journal_entries` row it created (`journal_entry_id`); omitted above for readability.
@@ -196,9 +210,15 @@ Clients insert and edit **drafts** directly (RLS + column privileges). Every sta
 | `record_cash_deposit`, `post_cash_deposit`, `void_cash_deposit`, `reconcile_collector_cash` | Cash with order takers |
 | `record_customer_payment`, `settle_invoices`, `post_customer_payment`, `allocate_customer_payment`, `allocate_payment_to_sol_job`, `void_customer_payment` | Receivables, partial payments |
 | `post_stock_adjustment`, `post_stock_count`, `post_stock_transfer` | Opening stock, write-offs, count differences, transfers |
-| `set_sol_job_status`, `complete_sol_job`, `close_sol_trip` | SOL |
-| `post_expense`, `void_expense`, `post_employee_advance`, `post_payroll_run`, `post_salary_payment` | Expenses and payroll |
-| `post_fund_transfer`, `create_manual_journal`, `reverse_manual_journal` | Cash/bank and journal |
+| `save_sol_job`, `set_sol_job_status`, `complete_sol_job`, `reopen_sol_job`, `cancel_sol_job`, `close_sol_trip` | SOL jobs |
+| `save_sol_delivery`, `dispatch_sol_delivery`, `complete_sol_delivery`, `return_sol_goods`, `cancel_sol_delivery` | SOL deliveries and stock |
+| `record_sol_payment`, `release_sol_payment`, `record_expense` | Job payments and costs |
+| `record_expense`, `update_expense`, `post_expense`, `reject_expense`, `void_expense`, `attach_expense_receipt` | Expenses |
+| `prepare_payroll`, `save_payroll`, `post_payroll_run`, `pay_salaries`, `record_advance` and their `void_…` | Payroll |
+| `record_account_opening`, `record_fund_transfer`, `record_cash_voucher` and their `void_…`; `close_cash_day`, `reopen_cash_day` | Cash and bank |
+| `create_period`, `period_checklist`, `close_period`, `reopen_period` | Periods |
+| `general_ledger`, `account_book`, `list_journal`, `report_trial_balance`, `income_statement`, `balance_sheet`, `cash_flow`, `ledger_checks` | Ledgers, statements and checks |
+| `create_manual_journal`, `reverse_manual_journal` | Journal |
 | `my_permissions` | Permissions of the signed-in user |
 | `trial_balance`, `profit_and_loss` | Financial reports (require `reports.financial`) |
 | `admin_list_users`, `admin_assign_role`, `admin_link_employee`, `admin_set_user_status` | User administration |
@@ -208,7 +228,7 @@ Clients insert and edit **drafts** directly (RLS + column privileges). Every sta
 
 `v_stock_on_hand`, `v_inventory_valuation`, `v_posted_journal_lines`, `v_account_balances`, `v_customer_ledger`, `v_customer_balances`, `v_supplier_ledger`, `v_supplier_balances`, `v_company_ledger`, `v_employee_balances`, `v_financial_account_balances`, `v_sales_invoice_balances`, `v_supplier_invoice_balances`, `v_sol_job_summary`, `v_salary_balances`, `v_purchase_receipt_discrepancies`, `v_access_audit`. All use `security_invoker`, so the caller's RLS applies.
 
-Confidential values (costs, purchase prices, stock value, margins) are read through `secure_*` views (`secure_product_unit_costs`, `secure_sales_invoice_costs`, `secure_sales_invoice_item_costs`, `secure_customer_return_costs`, `secure_customer_return_item_costs`, `secure_stock_movement_values`, `secure_stock_adjustment_values`, `secure_stock_adjustment_item_values`, `secure_sol_trip_profitability`, `secure_sol_job_profitability`). They run with the owner's rights and return rows only when the caller holds `costs.view`.
+Confidential values (costs, purchase prices, stock value, margins) are read through `secure_*` views (`secure_product_unit_costs`, `secure_sales_invoice_costs`, `secure_sales_invoice_item_costs`, `secure_customer_return_costs`, `secure_customer_return_item_costs`, `secure_stock_movement_values`, `secure_stock_adjustment_values`, `secure_stock_adjustment_item_values`, `secure_sol_trip_profitability`, `secure_sol_item_costs`). They run with the owner's rights and return rows only when the caller holds `costs.view`.
 
 ## TypeScript types
 

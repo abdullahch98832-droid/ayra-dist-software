@@ -1,6 +1,88 @@
 -- Phase 8: SOL jobs (types, services, items, deliveries, costs, payments) and vehicles.
 
 -- ===========================================================================
+-- 0. Completes the Phase 7 migration on databases that received an early copy of it.
+--    Changes nothing where the final version was applied.
+-- ===========================================================================
+-- What was paid, returned and credited per invoice. Runs as definer because row level security shows a caller
+-- only some payments (an order taker their own, for example), which would make a settled invoice look unpaid.
+create or replace function private.invoice_settlements()
+returns table (invoice_id uuid, paid numeric, returned numeric, credited numeric)
+language sql stable security definer set search_path = '' as $$
+  select x.id, sum(x.paid), sum(x.returned), sum(x.credited)
+    from (select a.sales_invoice_id as id, a.amount as paid, 0::numeric as returned, 0::numeric as credited
+            from public.customer_payment_allocations a where a.sales_invoice_id is not null
+          union all
+          select r.sales_invoice_id, 0, r.total_amount, 0 from public.customer_returns r where r.status = 'posted' and r.sales_invoice_id is not null
+          union all
+          select n.sales_invoice_id, 0, 0, n.amount from public.customer_notes n where n.status = 'posted' and n.kind = 'credit' and n.sales_invoice_id is not null) x
+   group by x.id;
+$$;
+
+-- Paid and outstanding are NULL for callers who neither see nor collect receivables, instead of a misleading figure.
+create or replace function private.sees_settlements() returns boolean
+language sql stable security definer set search_path = '' as $$
+  select auth.uid() is null or private.has_permission('receivables.view') or private.has_permission('receivables.collect') or private.has_permission('receivables.post');
+$$;
+
+create or replace view public.v_sales_invoice_balances with (security_invoker = true) as
+select i.id as sales_invoice_id, i.doc_no, i.customer_id, i.order_taker_id, i.invoice_date, i.due_date, i.total_amount,
+       case when v.sees then coalesce(x.paid, 0) end as paid_amount,
+       case when v.sees then coalesce(x.returned, 0) end as returned_amount,
+       case when v.sees then greatest(i.total_amount - coalesce(x.paid, 0) - coalesce(x.returned, 0) - coalesce(x.credited, 0), 0) end as outstanding,
+       case
+         when not v.sees then null
+         when i.total_amount - coalesce(x.paid, 0) - coalesce(x.returned, 0) - coalesce(x.credited, 0) <= 0 then 'paid'
+         when coalesce(x.paid, 0) + coalesce(x.returned, 0) + coalesce(x.credited, 0) > 0 then 'partially_paid'
+         else 'unpaid'
+       end as payment_status,
+       case when v.sees then coalesce(x.credited, 0) end as credited_amount,
+       i.sales_order_id
+from public.sales_invoices i
+cross join (select private.sees_settlements() as sees) v
+left join private.invoice_settlements() x on x.invoice_id = i.id
+where i.status = 'posted';
+
+revoke execute on function private.invoice_settlements(), private.sees_settlements() from public, anon, authenticated;
+grant execute on function private.invoice_settlements(), private.sees_settlements() to authenticated;
+
+drop function if exists public.report_collections(date, date, uuid, text);
+create function public.report_collections(p_from date, p_to date, p_collector_id uuid default null, p_method text default null)
+returns table (payment_id uuid, doc_no text, payment_date date, customer_id uuid, customer text, customer_ur text, method public.payment_method, reference text,
+               collector_en text, collector_ur text, destination text, held boolean, amount numeric, settled numeric, on_account numeric, invoices text)
+language plpgsql stable security definer set search_path = '' as $$
+#variable_conflict use_column
+declare
+  v_own uuid;
+begin
+  if not (private.has_permission('receivables.post') or (private.has_permission('receivables.view') and private.has_permission('sales.view_all'))) then
+    perform private.require_permission('receivables.collect');
+    v_own := coalesce(private.current_employee_id(), '00000000-0000-0000-0000-000000000000');
+  end if;
+  return query
+  select p.id, p.doc_no, p.payment_date, c.id, c.name, c.name_ur, p.method, p.reference, e.full_name, e.full_name_ur, fa.name,
+         p.financial_account_id is null, p.amount, coalesce(a.settled, 0), p.amount - coalesce(a.settled, 0), a.invoices
+    from public.customer_payments p
+    join public.customers c on c.id = p.customer_id
+    left join public.employees e on e.id = p.collected_by
+    left join public.financial_accounts fa on fa.id = p.financial_account_id
+    left join (select pa.customer_payment_id, sum(pa.amount) as settled, string_agg(coalesce(i.doc_no, j.doc_no), ', ' order by coalesce(i.doc_no, j.doc_no)) as invoices
+                 from public.customer_payment_allocations pa
+                 left join public.sales_invoices i on i.id = pa.sales_invoice_id
+                 left join public.sol_jobs j on j.id = pa.sol_job_id
+                group by pa.customer_payment_id) a on a.customer_payment_id = p.id
+   where p.payment_date between p_from and p_to and p.status = 'posted'
+     and (v_own is null or p.collected_by = v_own)
+     and (p_collector_id is null or p.collected_by = p_collector_id)
+     and (p_method is null or p.method::text = p_method)
+   order by p.payment_date desc, p.doc_no desc;
+end;
+$$;
+
+revoke execute on function public.report_collections(date, date, uuid, text) from public, anon;
+grant execute on function public.report_collections(date, date, uuid, text) to authenticated;
+
+-- ===========================================================================
 -- 1. Permissions, version, numbering, accounts
 -- ===========================================================================
 insert into public.permissions (code, module, description_en, description_ur) values
@@ -536,8 +618,9 @@ begin
   update public.sol_jobs
      set status = p_status,
          started_at = case when p_status = 'in_progress' then now() else started_at end,
-         start_date = case when p_status = 'in_progress' then coalesce(start_date, private.business_today()) else start_date end,
-         due_date = case when p_status = 'in_progress' and start_date is null then greatest(due_date, private.business_today()) else due_date end
+         -- A job started after its due date keeps that date, so it stays visible as late.
+         start_date = case when p_status = 'in_progress' and (due_date is null or due_date >= private.business_today())
+                           then coalesce(start_date, private.business_today()) else start_date end
    where id = p_id;
   return p_id;
 end;
@@ -771,8 +854,8 @@ begin
    where id = p_id;
   if v_job.status = 'confirmed' then
     update public.sol_jobs
-       set status = 'in_progress', started_at = coalesce(started_at, now()), start_date = coalesce(start_date, private.business_today()),
-           due_date = case when start_date is null then greatest(due_date, private.business_today()) else due_date end
+       set status = 'in_progress', started_at = coalesce(started_at, now()),
+           start_date = case when due_date is null or due_date >= private.business_today() then coalesce(start_date, private.business_today()) else start_date end
      where id = v_job.id;
   end if;
   return p_id;

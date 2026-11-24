@@ -7,6 +7,40 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      account_openings: {
+        Row: {
+          id: string
+          doc_no: string
+          financial_account_id: string
+          opening_date: string
+          amount: number
+          status: Database["public"]["Enums"]["document_status"]
+          journal_entry_id: string | null
+          void_reason: string | null
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
+        Relationships: [
+          {
+            foreignKeyName: "account_openings_financial_account_id_fkey"
+            columns: ["financial_account_id"]
+            isOneToOne: false
+            referencedRelation: "financial_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_openings_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       accounting_periods: {
         Row: {
           id: string
@@ -20,21 +54,13 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          reopen_reason: string | null
+          reopened_at: string | null
+          reopened_by: string | null
+          closing_totals: Json | null
         }
-        Insert: {
-          id?: string
-          name: string
-          start_date: string
-          end_date: string
-          status?: Database["public"]["Enums"]["period_status"]
-        }
-        Update: {
-          id?: string
-          name?: string
-          start_date?: string
-          end_date?: string
-          status?: Database["public"]["Enums"]["period_status"]
-        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
         Relationships: []
       }
       app_settings: {
@@ -94,6 +120,50 @@ export type Database = {
           is_active?: boolean
         }
         Relationships: []
+      }
+      cash_closings: {
+        Row: {
+          id: string
+          doc_no: string
+          financial_account_id: string
+          closing_date: string
+          opening_balance: number
+          receipts: number
+          payments: number
+          expected: number
+          counted: number
+          difference: number | null
+          difference_entry_id: string | null
+          denominations: Json | null
+          notes: string | null
+          status: string
+          reopen_reason: string | null
+          reopened_at: string | null
+          reopened_by: string | null
+          client_request_id: string | null
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
+        Relationships: [
+          {
+            foreignKeyName: "cash_closings_difference_entry_id_fkey"
+            columns: ["difference_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_closings_financial_account_id_fkey"
+            columns: ["financial_account_id"]
+            isOneToOne: false
+            referencedRelation: "financial_accounts"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       cash_deposits: {
         Row: {
@@ -166,6 +236,54 @@ export type Database = {
           }
         ]
       }
+      cash_vouchers: {
+        Row: {
+          id: string
+          doc_no: string
+          kind: string
+          voucher_date: string
+          financial_account_id: string
+          counter_account_id: string
+          amount: number
+          party_name: string | null
+          method: Database["public"]["Enums"]["payment_method"]
+          reference: string | null
+          description: string
+          status: Database["public"]["Enums"]["document_status"]
+          journal_entry_id: string | null
+          void_reason: string | null
+          client_request_id: string | null
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
+        Relationships: [
+          {
+            foreignKeyName: "cash_vouchers_counter_account_id_fkey"
+            columns: ["counter_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_vouchers_financial_account_id_fkey"
+            columns: ["financial_account_id"]
+            isOneToOne: false
+            referencedRelation: "financial_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_vouchers_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       chart_of_accounts: {
         Row: {
           id: string
@@ -182,6 +300,7 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          cash_flow: string | null
         }
         Insert: {
           id?: string
@@ -193,6 +312,7 @@ export type Database = {
           is_postable?: boolean
           is_active?: boolean
           description?: string | null
+          cash_flow?: string | null
         }
         Update: {
           id?: string
@@ -204,6 +324,7 @@ export type Database = {
           is_postable?: boolean
           is_active?: boolean
           description?: string | null
+          cash_flow?: string | null
         }
         Relationships: [
           {
@@ -806,25 +927,12 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          void_reason: string | null
+          method: Database["public"]["Enums"]["payment_method"] | null
+          reference: string | null
         }
-        Insert: {
-          id?: string
-          employee_id: string
-          advance_date?: string
-          amount: number | string
-          financial_account_id: string
-          reason?: string | null
-          client_request_id?: string | null
-        }
-        Update: {
-          id?: string
-          employee_id?: string
-          advance_date?: string
-          amount?: number | string
-          financial_account_id?: string
-          reason?: string | null
-          client_request_id?: string | null
-        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
         Relationships: [
           {
             foreignKeyName: "employee_advances_employee_id_fkey"
@@ -962,6 +1070,7 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           vehicle_kind: string | null
+          is_payroll: boolean
         }
         Insert: {
           id?: string
@@ -1020,45 +1129,10 @@ export type Database = {
           litres: number | null
           odometer: number | null
           void_reason: string | null
+          no_receipt_reason: string | null
         }
-        Insert: {
-          id?: string
-          expense_date?: string
-          category_id: string
-          amount: number | string
-          financial_account_id: string
-          payee?: string | null
-          description?: string | null
-          vehicle_id?: string | null
-          sol_job_id?: string | null
-          sol_trip_id?: string | null
-          employee_id?: string | null
-          receipt_path?: string | null
-          client_request_id?: string | null
-          method?: Database["public"]["Enums"]["payment_method"] | null
-          reference?: string | null
-          litres?: number | string | null
-          odometer?: number | null
-        }
-        Update: {
-          id?: string
-          expense_date?: string
-          category_id?: string
-          amount?: number | string
-          financial_account_id?: string
-          payee?: string | null
-          description?: string | null
-          vehicle_id?: string | null
-          sol_job_id?: string | null
-          sol_trip_id?: string | null
-          employee_id?: string | null
-          receipt_path?: string | null
-          client_request_id?: string | null
-          method?: Database["public"]["Enums"]["payment_method"] | null
-          reference?: string | null
-          litres?: number | string | null
-          odometer?: number | null
-        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
         Relationships: [
           {
             foreignKeyName: "expenses_category_id_fkey"
@@ -1204,27 +1278,11 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          void_reason: string | null
+          method: Database["public"]["Enums"]["payment_method"] | null
         }
-        Insert: {
-          id?: string
-          transfer_date?: string
-          from_account_id: string
-          to_account_id: string
-          amount: number | string
-          reference?: string | null
-          notes?: string | null
-          client_request_id?: string | null
-        }
-        Update: {
-          id?: string
-          transfer_date?: string
-          from_account_id?: string
-          to_account_id?: string
-          amount?: number | string
-          reference?: string | null
-          notes?: string | null
-          client_request_id?: string | null
-        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
         Relationships: [
           {
             foreignKeyName: "fund_transfers_from_account_id_fkey"
@@ -1563,28 +1621,8 @@ export type Database = {
           net_pay: number | null
           notes: string | null
         }
-        Insert: {
-          id?: string
-          payroll_run_id: string
-          employee_id: string
-          basic_salary?: number | string
-          allowances?: number | string
-          bonus?: number | string
-          deductions?: number | string
-          advance_recovery?: number | string
-          notes?: string | null
-        }
-        Update: {
-          id?: string
-          payroll_run_id?: string
-          employee_id?: string
-          basic_salary?: number | string
-          allowances?: number | string
-          bonus?: number | string
-          deductions?: number | string
-          advance_recovery?: number | string
-          notes?: string | null
-        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
         Relationships: [
           {
             foreignKeyName: "payroll_items_employee_id_fkey"
@@ -1616,17 +1654,10 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          void_reason: string | null
         }
-        Insert: {
-          id?: string
-          period_month: string
-          notes?: string | null
-        }
-        Update: {
-          id?: string
-          period_month?: string
-          notes?: string | null
-        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
         Relationships: [
           {
             foreignKeyName: "payroll_runs_journal_entry_id_fkey"
@@ -2055,27 +2086,10 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          void_reason: string | null
         }
-        Insert: {
-          id?: string
-          payroll_item_id: string
-          payment_date?: string
-          amount: number | string
-          financial_account_id: string
-          method: Database["public"]["Enums"]["payment_method"]
-          reference?: string | null
-          client_request_id?: string | null
-        }
-        Update: {
-          id?: string
-          payroll_item_id?: string
-          payment_date?: string
-          amount?: number | string
-          financial_account_id?: string
-          method?: Database["public"]["Enums"]["payment_method"]
-          reference?: string | null
-          client_request_id?: string | null
-        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
         Relationships: [
           {
             foreignKeyName: "salary_payments_financial_account_id_fkey"
@@ -4091,6 +4105,28 @@ export type Database = {
       }
     }
     Functions: {
+      account_book: {
+        Args: {
+          p_financial_account_id: string
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          entry_id: string
+          entry_date: string
+          doc_no: string
+          source_type: string
+          source_id: string
+          source_no: string
+          is_reversal: boolean
+          description: string
+          party: string
+          party_ur: string
+          debit: number
+          credit: number
+          balance: number
+        }[]
+      }
       admin_assign_role: {
         Args: {
           p_user_id: string
@@ -4173,6 +4209,28 @@ export type Database = {
         }
         Returns: string
       }
+      attach_expense_receipt: {
+        Args: {
+          p_id: string
+          p_path: string
+        }
+        Returns: string
+      }
+      balance_sheet: {
+        Args: {
+          p_as_of: string
+        }
+        Returns: {
+          section: string
+          code: string
+          account_id: string
+          name_en: string
+          name_ur: string
+          system_key: string
+          flipped: boolean
+          amount: number
+        }[]
+      }
       bootstrap_super_admin: {
         Args: {
           p_email: string
@@ -4202,6 +4260,47 @@ export type Database = {
         Args: {
           p_id: string
           p_reason: string
+        }
+        Returns: string
+      }
+      cash_day: {
+        Args: {
+          p_account_id: string
+          p_date: string
+        }
+        Returns: {
+          opened_after: string
+          opening: number
+          receipts: number
+          payments: number
+          expected: number
+        }[]
+      }
+      cash_flow: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          section: string
+          line: string
+          account_id: string
+          code: string
+          name_en: string
+          name_ur: string
+          amount: number
+        }[]
+      }
+      close_cash_day: {
+        Args: {
+          p_account_id: string
+          p_doc: Json
+        }
+        Returns: string
+      }
+      close_period: {
+        Args: {
+          p_id: string
         }
         Returns: string
       }
@@ -4294,6 +4393,12 @@ export type Database = {
           p_date: string
           p_description: string
           p_lines: Json
+        }
+        Returns: string
+      }
+      create_period: {
+        Args: {
+          p_month: string
         }
         Returns: string
       }
@@ -4425,9 +4530,100 @@ export type Database = {
         }
         Returns: string
       }
+      expense_register: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_category_id?: string
+          p_status?: string
+        }
+        Returns: {
+          expense_id: string
+          doc_no: string
+          expense_date: string
+          category_en: string
+          category_ur: string
+          description: string
+          payee: string
+          method: Database["public"]["Enums"]["payment_method"]
+          reference: string
+          account: string
+          vehicle: string
+          job_no: string
+          amount: number
+          has_receipt: boolean
+          status: string
+          recorded_by: string
+          decided_by: string
+          decided_at: string
+          reason: string
+        }[]
+      }
+      general_ledger: {
+        Args: {
+          p_account_id: string
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          entry_id: string
+          entry_date: string
+          doc_no: string
+          source_type: string
+          source_id: string
+          source_no: string
+          is_reversal: boolean
+          description: string
+          party: string
+          party_ur: string
+          debit: number
+          credit: number
+          balance: number
+        }[]
+      }
+      income_statement: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          section: string
+          account_id: string
+          code: string
+          name_en: string
+          name_ur: string
+          system_key: string
+          amount: number
+        }[]
+      }
       inventory_reconciliation: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      journal_lines: {
+        Args: {
+          p_entry_id: string
+        }
+        Returns: {
+          line_no: number
+          account_id: string
+          code: string
+          name_en: string
+          name_ur: string
+          party: string
+          party_ur: string
+          description: string
+          debit: number
+          credit: number
+        }[]
+      }
+      ledger_checks: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          check_code: string
+          ledger: number
+          documents: number
+        }[]
       }
       list_drivers: {
         Args: Record<PropertyKey, never>
@@ -4440,6 +4636,29 @@ export type Database = {
           license_expiry: string
           is_active: boolean
           employee_id: string
+        }[]
+      }
+      list_journal: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_source?: string
+          p_search?: string
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          entry_id: string
+          entry_date: string
+          doc_no: string
+          source_type: string
+          source_id: string
+          source_no: string
+          description: string
+          amount: number
+          reversal_of: string
+          reversed_by: string
+          total_count: number
         }[]
       }
       list_order_takers: {
@@ -4479,9 +4698,52 @@ export type Database = {
           is_active: boolean
         }[]
       }
+      list_voucher_accounts: {
+        Args: {
+          p_kind: string
+        }
+        Returns: {
+          account_id: string
+          code: string
+          name_en: string
+          name_ur: string
+          account_type: Database["public"]["Enums"]["account_type"]
+        }[]
+      }
       my_permissions: {
         Args: Record<PropertyKey, never>
         Returns: string[]
+      }
+      pay_salaries: {
+        Args: {
+          p_run_id: string
+          p_doc: Json
+          p_lines: Json
+        }
+        Returns: number
+      }
+      payroll_employees: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          employee_id: string
+          code: string
+          full_name: string
+          full_name_ur: string
+          job_title: string
+          is_active: boolean
+          base_salary: number
+          advances: number
+          payable: number
+        }[]
+      }
+      period_checklist: {
+        Args: {
+          p_id: string
+        }
+        Returns: {
+          check_code: string
+          found: number
+        }[]
       }
       post_cash_deposit: {
         Args: {
@@ -4528,6 +4790,7 @@ export type Database = {
       post_payroll_run: {
         Args: {
           p_id: string
+          p_date?: string
         }
         Returns: string
       }
@@ -4580,6 +4843,12 @@ export type Database = {
         }
         Returns: string
       }
+      prepare_payroll: {
+        Args: {
+          p_month: string
+        }
+        Returns: string
+      }
       procurement_summary: {
         Args: {
           p_principal: boolean
@@ -4607,7 +4876,27 @@ export type Database = {
         }
         Returns: string
       }
+      record_account_opening: {
+        Args: {
+          p_account_id: string
+          p_amount: number | string
+          p_date?: string
+        }
+        Returns: string
+      }
+      record_advance: {
+        Args: {
+          p_doc: Json
+        }
+        Returns: string
+      }
       record_cash_deposit: {
+        Args: {
+          p_doc: Json
+        }
+        Returns: string
+      }
+      record_cash_voucher: {
         Args: {
           p_doc: Json
         }
@@ -4632,6 +4921,12 @@ export type Database = {
         }
         Returns: string
       }
+      record_fund_transfer: {
+        Args: {
+          p_doc: Json
+        }
+        Returns: string
+      }
       record_sol_payment: {
         Args: {
           p_job_id: string
@@ -4646,10 +4941,31 @@ export type Database = {
         }
         Returns: string
       }
+      reject_expense: {
+        Args: {
+          p_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
       release_sol_payment: {
         Args: {
           p_payment_id: string
           p_job_id: string
+        }
+        Returns: string
+      }
+      reopen_cash_day: {
+        Args: {
+          p_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      reopen_period: {
+        Args: {
+          p_id: string
+          p_reason: string
         }
         Returns: string
       }
@@ -4659,6 +4975,26 @@ export type Database = {
           p_reason: string
         }
         Returns: string
+      }
+      report_cash_accounts: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          account_id: string
+          name: string
+          account_type: Database["public"]["Enums"]["financial_account_type"]
+          is_active: boolean
+          opening: number
+          receipts: number
+          payments: number
+          deposits: number
+          withdrawals: number
+          transfers: number
+          closing: number
+          closed_until: string
+        }[]
       }
       report_collections: {
         Args: {
@@ -4740,6 +5076,21 @@ export type Database = {
           returned_amount: number
         }[]
       }
+      report_expenses: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          category_id: string
+          code: string
+          name_en: string
+          name_ur: string
+          is_payroll: boolean
+          vouchers: number
+          amount: number
+        }[]
+      }
       report_low_stock: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -4781,6 +5132,33 @@ export type Database = {
           collected: number
           pending_collections: number
           cash_held: number
+        }[]
+      }
+      report_payroll: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_employee_id?: string
+        }
+        Returns: {
+          payroll_item_id: string
+          payroll_run_id: string
+          doc_no: string
+          period_month: string
+          status: Database["public"]["Enums"]["document_status"]
+          employee_id: string
+          code: string
+          full_name: string
+          full_name_ur: string
+          basic_salary: number
+          allowances: number
+          bonus: number
+          deductions: number
+          advance_recovery: number
+          gross_pay: number
+          net_pay: number
+          paid: number
+          pending: number
         }[]
       }
       report_product_profitability: {
@@ -5041,6 +5419,25 @@ export type Database = {
           open_orders: number
         }[]
       }
+      report_trial_balance: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          account_id: string
+          code: string
+          name_en: string
+          name_ur: string
+          account_type: Database["public"]["Enums"]["account_type"]
+          opening_debit: number
+          opening_credit: number
+          debit: number
+          credit: number
+          closing_debit: number
+          closing_credit: number
+        }[]
+      }
       report_vehicle_log: {
         Args: {
           p_from: string
@@ -5157,6 +5554,14 @@ export type Database = {
         Args: {
           p_employee_id: string
           p_doc: Json
+        }
+        Returns: string
+      }
+      save_payroll: {
+        Args: {
+          p_id: string
+          p_lines: Json
+          p_notes?: string
         }
         Returns: string
       }
@@ -5304,7 +5709,44 @@ export type Database = {
           balance_credit: number
         }[]
       }
+      update_expense: {
+        Args: {
+          p_id: string
+          p_doc: Json
+        }
+        Returns: string
+      }
+      user_names: {
+        Args: {
+          p_ids: string[]
+        }
+        Returns: {
+          user_id: string
+          full_name: string
+        }[]
+      }
+      void_account_opening: {
+        Args: {
+          p_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      void_advance: {
+        Args: {
+          p_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
       void_cash_deposit: {
+        Args: {
+          p_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      void_cash_voucher: {
         Args: {
           p_id: string
           p_reason: string
@@ -5326,6 +5768,27 @@ export type Database = {
         Returns: string
       }
       void_expense: {
+        Args: {
+          p_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      void_fund_transfer: {
+        Args: {
+          p_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      void_payroll_run: {
+        Args: {
+          p_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      void_salary_payment: {
         Args: {
           p_id: string
           p_reason: string

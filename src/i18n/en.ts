@@ -1,6 +1,7 @@
 import operations from "./modules/operations.en";
 import salesModule from "./modules/sales.en";
 import solModule from "./modules/sol.en";
+import financeModule from "./modules/finance.en";
 
 const en = {
   common: {
@@ -250,7 +251,7 @@ const en = {
       netProfit: "Net profit",
       netProfitHint: "All income less all expenses",
       solRevenue: "SOL revenue",
-      solRevenueHint: "Completed transport jobs",
+      solRevenueHint: "Completed jobs",
       solRouteHint: "Vehicle route sales of {amount} are included in Sales",
     },
     charts: {
@@ -521,6 +522,7 @@ const en = {
   ...operations,
   ...salesModule,
   ...solModule,
+  ...financeModule,
   errors: {
     moreThanHeld: "More than the cash held",
     discountTooHigh: "More than the line amount",
@@ -549,6 +551,11 @@ const en = {
     fileTooLarge: "File is larger than 5 MB",
     fileType: "Use a JPEG, PNG or WebP image",
     invalidDate: "Enter a valid date",
+    receiptTooLarge: "File is larger than 10 MB",
+    receiptType: "Use a JPEG, PNG, WebP or PDF file",
+    notBalanced: "Debit and credit must be equal",
+    oneSide: "Enter either debit or credit",
+    partyRequired: "This account needs a customer or supplier",
     invalidDecimal: "Enter a number with up to 2 decimals",
     futureDate: "The date cannot be in the future",
     dueBeforeStart: "Before the start date",

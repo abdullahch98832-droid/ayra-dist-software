@@ -54,10 +54,13 @@ export function JobForm({ jobId, defaults, customer, lockClient, types, staff, s
         const { errors } = form.formState;
         return (
           <>
-            <FormSection title={s.job} className="lg:grid-cols-3" description={canAddClient && !lockClient ? s.newClient : undefined}>
+            <FormSection title={s.job} className="lg:grid-cols-3">
+              <div className="grid content-start gap-2">
               <Field id="customerId" label={s.client} required error={errors.customerId?.message}>
                 <CustomerPicker id="customerId" value={chosen} disabled={lockClient} onChange={(c) => { setChosen(c); form.setValue("customerId", c.id, { shouldDirty: true, shouldValidate: form.formState.isSubmitted }); }} />
               </Field>
+              {canAddClient && !lockClient && <p className="text-xs text-muted-foreground">{s.newClient} <Link href="/customers/new" className="text-primary hover:underline">{t.customers.add}</Link></p>}
+              </div>
               <Field id="typeId" label={s.type} required error={errors.typeId?.message}>
                 <NativeSelect id="typeId" {...form.register("typeId")}>
                   <option value="">{t.documents.choose}</option>
@@ -83,7 +86,6 @@ export function JobForm({ jobId, defaults, customer, lockClient, types, staff, s
               <Contract />
               <Field id="notes" label={t.documents.notes} optional error={errors.notes?.message}><Textarea id="notes" rows={2} {...form.register("notes")} /></Field>
             </FormSection>
-            {canAddClient && !lockClient && <p className="text-sm"><Link href="/customers/new" className="text-primary hover:underline">{t.customers.add}</Link></p>}
           </>
         );
       }}

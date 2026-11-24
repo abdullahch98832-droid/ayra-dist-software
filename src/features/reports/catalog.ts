@@ -1,4 +1,4 @@
-import { BadgePercent, Banknote, Boxes, CalendarDays, CalendarRange, HandCoins, History, Package, PackageMinus, PackageX, Receipt, Store, Truck, UserCheck, Route, Users, Waypoints, type LucideIcon } from "lucide-react";
+import { BadgePercent, Banknote, Boxes, CalendarDays, CalendarRange, HandCoins, History, Package, PackageMinus, PackageX, Receipt, Store, Truck, UserCheck, Route, Users, Wallet, Waypoints, type LucideIcon } from "lucide-react";
 import type { Dictionary } from "@/i18n";
 import type { Permission } from "@/lib/auth/permissions";
 
@@ -25,6 +25,8 @@ export const REPORTS = {
   solJobs: { slug: "sol-jobs", title: "solJobs", hint: "solJobsHint", icon: Waypoints, permissions: ["sol.view"] },
   vehicles: { slug: "vehicles", title: "vehicles", hint: "vehiclesHint", icon: Truck, permissions: ["vehicles.view"] },
   vehicleTrips: { slug: "vehicle-trips", title: "vehicleTrips", hint: "vehicleTripsHint", icon: Route, permissions: ["vehicles.view"] },
+  expenses: { slug: "expenses", title: "expenses", hint: "expensesHint", icon: Wallet, permissions: ["expenses.view"] },
+  payroll: { slug: "payroll", title: "payroll", hint: "payrollHint", icon: Banknote, permissions: ["payroll.view"] },
   stock: { slug: "stock", title: "stock", hint: "stockHint", icon: Boxes, permissions: ["inventory.view"] },
   purchases: { slug: "purchases", title: "purchases", hint: "purchasesHint", icon: Receipt, permissions: ["purchasing.view"] },
   suppliers: { slug: "suppliers", title: "suppliers", hint: "suppliersHint", icon: Users, permissions: ["payables.view", "company.view"] },

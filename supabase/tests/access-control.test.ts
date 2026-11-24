@@ -121,7 +121,7 @@ describe("data entry users", () => {
     const c = await customer(db);
     const { exp, pay } = await db.as(users.dataEntry, async (q) => {
       const fuel = one(await q("select id from public.expense_categories where code = 'FUEL'")).id;
-      const exp = one(await q("insert into public.expenses (category_id, amount, financial_account_id) values ($1, 1500, $2) returning id", [fuel, cash])).id;
+      const exp = one(await q("select public.record_expense(jsonb_build_object('category_id', $1::uuid, 'amount', 1500, 'financial_account_id', $2::uuid, 'method', 'cash', 'payee', 'Pump', 'description', 'Petrol', 'no_receipt_reason', 'None')) id", [fuel, cash])).id;
       const pay = one(await q("insert into public.customer_payments (customer_id, amount, financial_account_id, method) values ($1, 900, $2, 'cash') returning id", [c, cash])).id;
       return { exp, pay };
     });
@@ -291,7 +291,7 @@ describe("first administrator provisioning", () => {
       await expect(fresh.as(u, (q) => q("select public.bootstrap_super_admin($1)", [email]))).rejects.toMatchObject({ code: "42501" });
       await expect(fresh.sql("select public.bootstrap_super_admin('nobody@example.com')")).rejects.toThrow(/invite the user first/);
       await fresh.sql("select public.bootstrap_super_admin($1)", [String(email).toUpperCase()]);
-      expect((await fresh.as(u, (q) => q("select * from public.my_permissions()"))).length).toBe(64);
+      expect((await fresh.as(u, (q) => q("select * from public.my_permissions()"))).length).toBe(66);
       const other = await fresh.createUser(null);
       const otherEmail = one(await fresh.sql("select email from auth.users where id = $1", [other])).email;
       await expect(fresh.sql("select public.bootstrap_super_admin($1)", [otherEmail])).rejects.toThrow(/already exists/);

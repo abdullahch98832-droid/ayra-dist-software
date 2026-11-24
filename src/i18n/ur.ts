@@ -2,6 +2,7 @@ import type { Dictionary } from "./en";
 import operations from "./modules/operations.ur";
 import salesModule from "./modules/sales.ur";
 import solModule from "./modules/sol.ur";
+import financeModule from "./modules/finance.ur";
 
 const ur: Dictionary = {
   common: {
@@ -251,7 +252,7 @@ const ur: Dictionary = {
       netProfit: "خالص منافع",
       netProfitHint: "کل آمدنی منہا کل اخراجات",
       solRevenue: "ایس او ایل آمدنی",
-      solRevenueHint: "مکمل شدہ ٹرانسپورٹ کام",
+      solRevenueHint: "مکمل کام",
       solRouteHint: "گاڑی کے ذریعے {amount} کی فروخت، فروخت میں شامل ہے",
     },
     charts: {
@@ -522,6 +523,7 @@ const ur: Dictionary = {
   ...operations,
   ...salesModule,
   ...solModule,
+  ...financeModule,
   errors: {
     moreThanHeld: "پاس موجود نقد سے زیادہ",
     discountTooHigh: "لائن کی رقم سے زیادہ",
@@ -550,6 +552,11 @@ const ur: Dictionary = {
     fileTooLarge: "فائل 5 ایم بی سے بڑی ہے",
     fileType: "جے پیگ، پی این جی یا ویب پی تصویر استعمال کریں",
     invalidDate: "درست تاریخ درج کریں",
+    receiptTooLarge: "فائل 10 ایم بی سے بڑی ہے",
+    receiptType: "JPEG، PNG، WebP یا PDF فائل استعمال کریں",
+    notBalanced: "ڈیبٹ اور کریڈٹ برابر ہونے چاہئیں",
+    oneSide: "ڈیبٹ یا کریڈٹ میں سے ایک درج کریں",
+    partyRequired: "اس اکاؤنٹ کے لیے گاہک یا سپلائر ضروری ہے",
     invalidDecimal: "زیادہ سے زیادہ 2 اعشاریہ والا عدد درج کریں",
     futureDate: "تاریخ مستقبل کی نہیں ہو سکتی",
     dueBeforeStart: "آغاز کی تاریخ سے پہلے",

@@ -69,16 +69,16 @@ export const NAVIGATION: NavGroup[] = [
   {
     key: "finance",
     items: [
-      { href: "/cash-bank", label: (t) => t.modules.cash_bank, icon: Landmark, permission: "cash_bank.view" },
+      { href: "/cash-bank", label: (t) => t.modules.cash_bank, icon: Landmark, permission: ["cash_bank.view", "cash_bank.close", "accounting.view"] },
       { href: "/expenses", label: (t) => t.modules.expenses, icon: Wallet, permission: ["expenses.view", "expenses.create", "expenses.post"] },
-      { href: "/accounting", label: (t) => t.modules.accounting, icon: ScrollText, permission: "accounting.view", planned: true },
+      { href: "/accounting", label: (t) => t.modules.accounting, icon: ScrollText, permission: ["accounting.view", "reports.financial", "accounting.close"] },
     ],
   },
   {
     key: "people",
     items: [
       { href: "/employees", label: (t) => t.nav.employees, icon: Users, permission: "employees.view" },
-      { href: "/payroll", label: (t) => t.modules.salaries, icon: Banknote, permission: "payroll.view", planned: true },
+      { href: "/payroll", label: (t) => t.modules.salaries, icon: Banknote, permission: "payroll.view" },
     ],
   },
   {

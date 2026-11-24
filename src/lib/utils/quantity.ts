@@ -55,3 +55,18 @@ export function convertPrice(price: Paisa, fromFactor: bigint, toFactor: bigint)
   const two = BigInt(2);
   return (price * toFactor * two + fromFactor) / (fromFactor * two);
 }
+
+/** Whether a typed whole number is above `max`. False while it is not a number yet. */
+export function wholeAbove(text: string, max: number | string | bigint): boolean {
+  const entered = parseQuantity(text);
+  return entered !== null && entered > BigInt(max);
+}
+
+/** The same for numbers with up to two decimals. */
+export function decimalAbove(text: string, max: string): boolean {
+  try {
+    return text.trim() !== "" && parseRupees(text) > parseRupees(max);
+  } catch {
+    return false;
+  }
+}

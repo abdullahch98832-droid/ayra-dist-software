@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { completeDeliveryAction } from "@/features/sales/actions";
 import { CONDITIONS, deliverySchema, type DeliveryValues } from "@/features/sales/schema";
 import { useI18n } from "@/i18n/context";
+import { wholeAbove } from "@/lib/utils/quantity";
 import { DocumentForm } from "@/components/documents/document-form";
 import { Field, NativeSelect, useMessage } from "@/components/forms/field";
 import { FormSection } from "@/components/forms/form-section";
@@ -24,7 +25,7 @@ export function ConfirmForm({ deliveryId, lines, canReturn }: {
   const s = t.sales;
   const limited = deliverySchema.superRefine((v, ctx) => {
     v.lines.forEach((l, i) => {
-      if (l.quantity !== "" && BigInt(l.quantity) > BigInt(lines[i]?.quantity ?? 0)) ctx.addIssue({ code: "custom", message: "tooMuch", path: ["lines", i, "quantity"] });
+      if (wholeAbove(l.quantity, lines[i]?.quantity ?? 0)) ctx.addIssue({ code: "custom", message: "tooMuch", path: ["lines", i, "quantity"] });
     });
   });
   return (

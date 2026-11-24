@@ -1,6 +1,6 @@
 # Inventory Rules
 
-> **Status:** implemented in `supabase/migrations/…100400_inventory.sql` and `20261125100000_inventory_procurement.sql`; covered by `inventory.test.ts`, `procurement.test.ts`, `sales.test.ts`, `distribution.test.ts` and `concurrency.test.ts`. Screens and workflows: [WAREHOUSE_AND_PROCUREMENT.md](WAREHOUSE_AND_PROCUREMENT.md).
+> **Status:** implemented in `supabase/migrations/…100400_inventory.sql` and `20261125100000_inventory_procurement.sql`; covered by `inventory.test.ts`, `procurement.test.ts`, `sales.test.ts`, `distribution.test.ts`, `sol.test.ts` and `concurrency.test.ts`. Screens and workflows: [WAREHOUSE_AND_PROCUREMENT.md](WAREHOUSE_AND_PROCUREMENT.md).
 
 ## Decisions (confirmed by the business, 2026-11-23)
 
@@ -16,7 +16,7 @@
 
 ## Ledger-based stock
 
-- Stock is never edited directly. Every change is a row in `stock_movements` (immutable): `opening`, `purchase_receipt`, `purchase_return`, `sale`, `sales_return`, `transfer_out/in`, `adjustment_in/out`, `write_off`.
+- Stock is never edited directly. Every change is a row in `stock_movements` (immutable): `opening`, `purchase_receipt`, `purchase_return`, `sale`, `sales_return`, `transfer_out/in`, `adjustment_in/out`, `write_off`, `sol_issue`, `sol_return`.
 - `stock_balances` (per product per warehouse) holds `on_hand` and `reserved`. Negative stock is refused unless the override below applies.
 - `inventory_valuation` (per product) holds total quantity and total value; it always equals the Inventory GL account.
 

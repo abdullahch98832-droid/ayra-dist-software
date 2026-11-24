@@ -1,6 +1,6 @@
 # Security Plan
 
-> **Status:** implemented in migrations `…101000_security.sql` and `…20261124100000_access_control.sql`, the Next.js proxy and server actions. Verified by 165 database tests (`npm run test:db`) and 94 unit tests including server-action authorization (`npm test`). HTTP-level tests against a real Supabase project exist (`npm run test:api`) but have **not been run yet** — they need a separate test project.
+> **Status:** implemented in migrations `…101000_security.sql` and `…20261124100000_access_control.sql`, the Next.js proxy and server actions. Verified by 197 database tests (`npm run test:db`) and 97 unit tests including server-action authorization (`npm test`). HTTP-level tests against a real Supabase project exist (`npm run test:api`) but have **not been run yet** — they need a separate test project.
 
 ## Roles
 
@@ -12,7 +12,7 @@
 | Viewer | system | Read-only operational modules (products, stock quantities, customers, suppliers, sales, SOL, vehicles, reports). No confidential data. |
 | Custom roles | custom | Created by the Super Admin with any permission set. Accountant, Warehouse Staff, Order Taker and Driver are pre-made custom roles that can be edited or deleted. |
 
-System roles cannot be renamed or deleted. There are 62 permissions (`module.action`); changes take effect on the next request.
+System roles cannot be renamed or deleted. There are 66 permissions (`module.action`); changes take effect on the next request.
 
 ## Confidential data
 
@@ -22,6 +22,9 @@ System roles cannot be renamed or deleted. There are 62 permissions (`module.act
 | Purchase prices, cost of sales, stock value, margins | Columns not readable by any client (column privileges); read through `secure_*` views that require `costs.view`; `inventory_valuation` requires `costs.view` |
 | Salaries | Separate table `employee_salaries` (`payroll.view` / `payroll.manage`); payroll tables need `payroll.view` |
 | Customers, orders, invoices, receivables | Without `sales.view_all` or `customers.manage`: assigned customers only. Drivers: assigned deliveries only. Paid and outstanding amounts need a receivables permission |
+| SOL jobs | Without `sol.view_all`: jobs one is responsible for, created or delivers. Expected and actual costs need `costs.view` |
+| Expenses, payroll, vouchers, closings | Written by functions only; a user without `expenses.view` sees their own vouchers and receipts |
+| Account numbers | Full numbers need `cash_bank.view`; elsewhere, and for clients always, only the last four characters |
 | Cash with order takers | `receivables.post`, or `receivables.view` with `sales.view_all`; order takers see their own |
 | Bank information | Separate table `financial_account_bank_details` (`cash_bank.view`); balances need `cash_bank.view` |
 | Company account (Ayra Happiness) | Separate permissions `company.view` / `company.pay`, distinct from other suppliers (`payables.*`) |

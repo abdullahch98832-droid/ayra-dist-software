@@ -77,7 +77,7 @@ export async function loadJob(id: string) {
   const supabase = await createClient();
   const [job, deliveries, report] = await Promise.all([
     supabase.from("sol_jobs").select(
-      "id, doc_no, job_date, start_date, due_date, completion_date, status, contract_value, contact_name, contact_phone, address, description, notes, customer_id, job_type_id, responsible_employee_id, cancel_reason, reopen_reason, created_by, customer:customers!sol_jobs_customer_id_fkey(id, code, name, name_ur, phone, whatsapp, city, order_taker_id), type:sol_job_types!sol_jobs_job_type_id_fkey(name_en, name_ur, uses_services, uses_products, uses_deliveries), journal:journal_entries!sol_jobs_journal_entry_id_fkey(doc_no), sol_job_items(id, line_no, kind, service_id, product_id, unit_id, factor, description, quantity, unit_price, line_total, delivered_quantity, service:sol_services!sol_job_items_service_id_fkey(name_en, name_ur, unit_label, unit_label_ur), product:products!sol_job_items_product_id_fkey(sku, name_en, name_ur), unit:units!sol_job_items_unit_id_fkey(name_en, name_ur))"
+      "id, doc_no, job_date, start_date, due_date, completion_date, completed_at, status, contract_value, contact_name, contact_phone, address, description, notes, customer_id, job_type_id, responsible_employee_id, cancel_reason, reopen_reason, created_by, customer:customers!sol_jobs_customer_id_fkey(id, code, name, name_ur, phone, whatsapp, city, order_taker_id), type:sol_job_types!sol_jobs_job_type_id_fkey(name_en, name_ur, uses_services, uses_products, uses_deliveries), journal:journal_entries!sol_jobs_journal_entry_id_fkey(doc_no), sol_job_items(id, line_no, kind, service_id, product_id, unit_id, factor, description, quantity, unit_price, line_total, delivered_quantity, service:sol_services!sol_job_items_service_id_fkey(name_en, name_ur, unit_label, unit_label_ur), product:products!sol_job_items_product_id_fkey(sku, name_en, name_ur), unit:units!sol_job_items_unit_id_fkey(name_en, name_ur))"
     ).eq("id", id).maybeSingle(),
     supabase.from("sol_deliveries").select("id, doc_no, delivery_date, status, destination, delivered_at, vehicle:vehicles!sol_deliveries_vehicle_id_fkey(registration_no), driver_id").eq("sol_job_id", id).order("created_at"),
     reportSolJobs({ jobId: id }),
@@ -124,7 +124,7 @@ export async function loadSolDelivery(id: string) {
 }
 
 const PAYMENT_COLUMNS =
-  "id, doc_no, payment_date, amount, method, reference, payer_account, status, sol_job_id, account:financial_accounts!customer_payments_financial_account_id_fkey(name), job:sol_jobs!customer_payments_sol_job_id_fkey(id, doc_no, completion_date, status), customer:customers!customer_payments_customer_id_fkey(name, name_ur), customer_payment_allocations(amount, sol_job_id)";
+  "id, doc_no, payment_date, created_at, amount, method, reference, payer_account, status, sol_job_id, account:financial_accounts!customer_payments_financial_account_id_fkey(name), job:sol_jobs!customer_payments_sol_job_id_fkey(id, doc_no, completed_at, status), customer:customers!customer_payments_customer_id_fkey(name, name_ur), customer_payment_allocations(amount, sol_job_id)";
 
 export async function loadSolPayments(filter: ListFilter & { method?: string }) {
   const supabase = await createClient();
@@ -150,6 +150,9 @@ export async function loadJobPayments(job: { id: string; customer_id: string }) 
     .filter((p) => p.left > BigInt(0));
   return { rows: [...rows.values()], unused };
 }
+
+/** Received before the job was completed. */
+export const isAdvance = (payment: { created_at: string }, job: { completed_at: string | null } | null) => !job?.completed_at || payment.created_at < job.completed_at;
 
 /** How much of a payment counts for a job. */
 export const settledFor = (payment: { customer_payment_allocations: { amount: number; sol_job_id: string | null }[] }, jobId: string) =>

@@ -73,6 +73,12 @@ export function SearchPalette({ permissions }: { permissions: ReadonlySet<string
   const actions = [
     { href: "/sales/orders/new", label: t.sales.newOrder, permission: "sales.create" },
     { href: "/receivables/payments/new", label: t.receivables.newPayment, permission: "receivables.collect" },
+    { href: "/sol/jobs/new", label: t.sol.newJob, permission: "sol.manage" },
+    { href: "/expenses/new", label: t.expenses.add, permission: "expenses.create" },
+    { href: "/accounting/journal/new", label: t.accounting.newJournal, permission: "accounting.journal" },
+    { href: "/cash-bank/transfers/new", label: t.cashBank.newTransfer, permission: "cash_bank.transfer" },
+    { href: "/payroll/advances/new", label: t.payroll.newAdvance, permission: "payroll.manage" },
+    { href: "/vehicles/new", label: t.vehicles.add, permission: "vehicles.manage" },
     { href: "/customers/new", label: t.customers.add, permission: "customers.manage" },
     { href: "/products/new", label: t.catalog.add, permission: "products.manage" },
     { href: "/purchasing/company/receipts/new", label: `${t.purchasing.newReceipt} · ${t.purchasing.flows.company}`, permission: "purchasing.create" },
