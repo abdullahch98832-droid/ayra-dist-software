@@ -20,7 +20,7 @@ export async function PageHeader({
   return (
     <div className="mb-6">
       {breadcrumbs && (
-        <nav aria-label={t.common.breadcrumb} className="mb-2">
+        <nav aria-label={t.common.breadcrumb} className="mb-2 print:hidden">
           <ol className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
             {breadcrumbs.map((c) => (
               <li key={c.href} className="flex items-center gap-1">
@@ -37,7 +37,7 @@ export async function PageHeader({
           <h1 className="font-heading text-2xl break-words text-navy sm:text-[1.75rem] sm:leading-9">{title}</h1>
           {description && <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p>}
         </div>
-        {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+        {actions && <div className="flex flex-wrap gap-2 print:hidden">{actions}</div>}
       </div>
     </div>
   );

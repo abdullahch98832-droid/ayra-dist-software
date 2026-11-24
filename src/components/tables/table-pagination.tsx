@@ -20,7 +20,7 @@ export function TablePagination({
   const n = (value: number) => formatNumber(value, locale);
   const range = fill(t.table.range, { from: n((page - 1) * pageSize + 1), to: n(Math.min(page * pageSize, total)), total: n(total) });
   return (
-    <nav aria-label={t.table.pagination} className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+    <nav aria-label={t.table.pagination} className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground print:hidden">
       <p aria-live="polite">{range}</p>
       {pages > 1 && (
         <div className="flex items-center gap-2">

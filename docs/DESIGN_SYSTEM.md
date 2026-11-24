@@ -24,6 +24,11 @@ Never use raw colours (`text-blue-600`, hex) in components. Text meets WCAG AA c
 | Page title, breadcrumbs, actions | `layout/page-header` |
 | Titled surface / one figure / record fields | `shared/section-card`, `shared/stat-card`, `shared/description-list` |
 | Any list | `tables/data-table` (sort, search, paging, phone cards); `tables/url-filters` when the server filters |
+| List described on the server, totals, CSV, print | `tables/spec-table` |
+| Tabs between the pages of a module | `layout/sub-nav` |
+| Document with lines | `documents/document-form` + `documents/line-editor` (or `issue-lines` when stock leaves); `draft-actions`, `action-button` and `document-status` on its page |
+| Choose a customer, settle invoices, show the order steps, print a document | `documents/customer-picker`, `invoice-allocations`, `order-steps`, `print-button` (`.page-portrait` for A4 portrait) |
+| Sales report page | `components/reports/sales-report` |
 | Form | `FormSection` and `FormActions` from `forms/form-section`, `Field` from `forms/field`, `hooks/use-unsaved-changes` |
 | Inputs | `ui/input`, `NativeSelect`, `PasswordInput`, `MoneyInput` (decimal string), `IconInput` |
 | Confirmation | `shared/confirm-dialog` — every destructive or irreversible action |
@@ -34,6 +39,7 @@ Never use raw colours (`text-blue-600`, hex) in components. Text meets WCAG AA c
 | Status | `shared/status-badge` |
 | Phone, email, code, amount inside text | `Ltr` and `Money` from `shared/bidi` |
 | Link that looks like a button | `shared/link-button` |
+| Independently loading part of a page | `dashboard/section` (`DataSection`: skeleton, error and retry per section) |
 | Charts | `charts/bar-list`, `charts/column-chart`, `charts/line-chart` |
 
 Charts take `{ value, display }`: `value` only sizes the mark, `display` is the exact formatted text (for money, from `formatPaisa`). Every chart can be viewed as a table.
@@ -43,7 +49,7 @@ Charts take `{ value, display }`: `value` only sizes the mark, `display` is the 
 - All text comes from `src/i18n/en.ts` and `ur.ts`; `fill()` inserts `{placeholders}`. Tests check that both have the same keys and placeholders.
 - Use logical classes only: `ms-`, `me-`, `ps-`, `pe-`, `start-`, `end-`, `text-start`, `border-s`. Exception: `Sheet` and `Sidebar` take a physical `side`.
 - Mirror direction icons with `rtl:-scale-x-100` (chevrons, arrows). Do not mirror search, check or media icons.
-- Do not put `dir="ltr"` on a table cell; wrap the value in `Ltr`, which keeps the column's alignment. Wrap names placed next to dates or numbers in `<bdi>`.
+- Do not put `dir="ltr"` on a table cell; wrap the value in `Ltr`, which keeps the column's alignment. Wrap names placed next to dates or numbers in `<bdi>`; inside dictionary sentences use `isolate()`.
 - Switching language re-renders in place and keeps unsaved input. To keep it that way: never key a component by locale, never render a different tree per locale, hold form state in React Hook Form or `useState`, and store validation errors as dictionary keys.
 
 ## Responsive rules

@@ -3,20 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/i18n/context";
 import { ChartCard, ChartTooltip } from "./chart-card";
-import { SERIES_COLORS, axisTicks, type ChartPoint, type ChartSeries } from "./types";
+import { SERIES_COLORS, axisScale, formatTick, type ChartPoint, type ChartSeries } from "./types";
 
 const HEIGHT = 208;
 
 /** Change over time. Time runs in the reading direction: right to left in Urdu. */
 export function LineChartCard({
-  title, description, categoryLabel, series, points, formatTick = String,
+  title, description, categoryLabel, series, points, emptyText,
 }: {
   title: string;
   description?: string;
   categoryLabel?: string;
   series: ChartSeries[];
   points: ChartPoint[];
-  formatTick?: (value: number) => string;
+  emptyText?: string;
 }) {
   const { direction } = useI18n();
   const plot = useRef<HTMLDivElement>(null);
@@ -31,14 +31,13 @@ export function LineChartCard({
     return () => observer.disconnect();
   }, []);
 
-  const ticks = axisTicks(Math.max(...points.flatMap((p) => p.values.map((v) => v.value)), 0));
-  const top = ticks[ticks.length - 1] ?? 1;
+  const { ticks, low, high } = axisScale(points.flatMap((p) => p.values.map((v) => v.value)));
   const last = points.length - 1;
   const x = (index: number) => {
     const fromStart = last > 0 ? 6 + (index / last) * Math.max(width - 12, 0) : width / 2;
     return direction === "rtl" ? width - fromStart : fromStart;
   };
-  const y = (value: number) => HEIGHT - (value / top) * HEIGHT;
+  const y = (value: number) => HEIGHT - ((value - low) / (high - low)) * HEIGHT;
 
   const pick = (clientX: number) => {
     const box = plot.current?.getBoundingClientRect();
@@ -50,11 +49,11 @@ export function LineChartCard({
   const current = active === null ? undefined : points[active];
 
   return (
-    <ChartCard title={title} description={description} categoryLabel={categoryLabel} series={series} points={points}>
+    <ChartCard title={title} description={description} categoryLabel={categoryLabel} series={series} points={points} emptyText={emptyText}>
       <div className="flex gap-2">
         <div className="relative w-10 shrink-0 text-xs text-muted-foreground tabular-nums" style={{ height: HEIGHT }} aria-hidden>
           {ticks.map((tick) => (
-            <bdi key={tick} dir="ltr" className="absolute end-0 translate-y-1/2 leading-none" style={{ insetBlockEnd: `${(tick / top) * 100}%` }}>{formatTick(tick)}</bdi>
+            <bdi key={tick} dir="ltr" className="absolute end-0 translate-y-1/2 leading-none" style={{ insetBlockEnd: `${((tick - low) / (high - low)) * 100}%` }}>{formatTick(tick)}</bdi>
           ))}
         </div>
         <div className="min-w-0 flex-1">
@@ -77,7 +76,7 @@ export function LineChartCard({
           >
             {width > 0 && (
               <svg width={width} height={HEIGHT} className="block overflow-visible" aria-hidden>
-                {ticks.map((tick) => <line key={tick} x1={0} x2={width} y1={y(tick)} y2={y(tick)} stroke="var(--border)" />)}
+                {ticks.map((tick) => <line key={tick} x1={0} x2={width} y1={y(tick)} y2={y(tick)} stroke={tick === 0 ? "var(--input)" : "var(--border)"} />)}
                 {active !== null && <line x1={x(active)} x2={x(active)} y1={0} y2={HEIGHT} stroke="var(--input)" />}
                 {series.map((s, i) => (
                   <g key={s.key}>

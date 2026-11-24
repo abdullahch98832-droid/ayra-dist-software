@@ -1,13 +1,14 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
+import { flushSync } from "react-dom";
 import { ArrowDown, ArrowUp, ChevronsUpDown, Search, SearchX, X } from "lucide-react";
 import { useI18n } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 import { StateMessage } from "@/components/shared/states";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TablePagination } from "./table-pagination";
 
 type SortValue = string | number | bigint | null | undefined;
@@ -21,13 +22,31 @@ export interface DataTableColumn<T> {
   /** `end` for amounts and quantities. */
   align?: "start" | "end";
   /** Drop the column from the table below this width; phone cards always show it. */
-  hideBelow?: "lg" | "xl";
+  hideBelow?: "lg" | "xl" | "2xl";
   /** Heading of the phone card. Exactly one column should set it. */
   primary?: boolean;
   className?: string;
+  /** Total shown under the column: of every row the search matches, not only the visible page. */
+  footer?: (rows: readonly T[]) => React.ReactNode;
 }
 
-const HIDE = { lg: "hidden lg:table-cell", xl: "hidden xl:table-cell" } as const;
+const HIDE = { lg: "hidden lg:table-cell print:table-cell", xl: "hidden xl:table-cell print:table-cell", "2xl": "hidden 2xl:table-cell print:table-cell" } as const;
+
+/** True while the browser prints, so the whole list is printed and not only the page on screen. */
+function usePrinting(): boolean {
+  const [printing, setPrinting] = useState(false);
+  useEffect(() => {
+    const before = () => flushSync(() => setPrinting(true));
+    const after = () => setPrinting(false);
+    window.addEventListener("beforeprint", before);
+    window.addEventListener("afterprint", after);
+    return () => {
+      window.removeEventListener("beforeprint", before);
+      window.removeEventListener("afterprint", after);
+    };
+  }, []);
+  return printing;
+}
 
 function compare(a: SortValue, b: SortValue, collator: Intl.Collator): number {
   if (a === b) return 0;
@@ -43,7 +62,7 @@ function compare(a: SortValue, b: SortValue, collator: Intl.Collator): number {
  * survives a language change.
  */
 export function DataTable<T>({
-  rows, columns, rowKey, caption, searchText, searchPlaceholder, toolbar, actions, empty, pageSize = 25, initialSort,
+  rows, columns, rowKey, caption, searchText, searchPlaceholder, toolbar, actions, empty, pageSize = 25, initialSort, paging,
 }: {
   rows: readonly T[];
   columns: DataTableColumn<T>[];
@@ -58,12 +77,15 @@ export function DataTable<T>({
   empty: { title: string; description?: string; action?: React.ReactNode };
   pageSize?: number;
   initialSort?: { id: string; descending?: boolean };
+  /** Replaces the paging controls when the server cuts the list into pages. */
+  paging?: React.ReactNode;
 }) {
   const { t, locale } = useI18n();
   const searchId = useId();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState(initialSort);
   const [page, setPage] = useState(1);
+  const printing = usePrinting();
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase(locale);
@@ -87,7 +109,9 @@ export function DataTable<T>({
 
   const pages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const current = Math.min(page, pages);
-  const visible = sorted.slice((current - 1) * pageSize, current * pageSize);
+  const visible = printing ? sorted : sorted.slice((current - 1) * pageSize, current * pageSize);
+  const totals = columns.map((c) => c.footer?.(filtered));
+  const hasTotals = totals.some((x) => x !== undefined && x !== null);
 
   const primary = columns.find((c) => c.primary) ?? columns[0];
   const details = columns.filter((c) => c !== primary);
@@ -100,7 +124,7 @@ export function DataTable<T>({
   return (
     <div className="grid min-w-0 gap-4">
       {(searchText || toolbar) && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
           {searchText && (
             <div className="relative w-full sm:w-72">
               <label htmlFor={searchId} className="sr-only">{searchPlaceholder ?? t.table.search}</label>
@@ -135,7 +159,7 @@ export function DataTable<T>({
         </div>
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-xl border bg-card shadow-card md:block">
+          <div className="hidden overflow-hidden rounded-xl border bg-card shadow-card md:block print:block print:overflow-visible print:rounded-none print:border-0 print:shadow-none">
             <Table>
               <TableCaption className="sr-only">{caption}</TableCaption>
               <TableHeader>
@@ -181,10 +205,22 @@ export function DataTable<T>({
                   </TableRow>
                 ))}
               </TableBody>
+              {hasTotals && (
+                <TableFooter>
+                  <TableRow>
+                    {columns.map((c, i) => (
+                      <TableCell key={c.id} className={cn("font-semibold text-navy", c.align === "end" && "text-end tabular-nums", c.hideBelow && HIDE[c.hideBelow])}>
+                        {totals[i] ?? (i === 0 ? t.reports.totals : null)}
+                      </TableCell>
+                    ))}
+                    {actions && <TableCell />}
+                  </TableRow>
+                </TableFooter>
+              )}
             </Table>
           </div>
 
-          <ul className="grid gap-3 md:hidden" aria-label={caption}>
+          <ul className="grid gap-3 md:hidden print:hidden" aria-label={caption}>
             {visible.map((row) => (
               <li key={rowKey(row)} className="rounded-xl border bg-card p-4 shadow-card">
                 <div className="flex items-start justify-between gap-3">
@@ -205,7 +241,19 @@ export function DataTable<T>({
             ))}
           </ul>
 
-          <TablePagination page={current} pageSize={pageSize} total={sorted.length} onPageChange={setPage} />
+          {hasTotals && (
+            <dl className="grid gap-2 rounded-xl border bg-muted/50 p-4 text-sm md:hidden print:hidden">
+              <dt className="font-semibold text-navy">{t.reports.totals}</dt>
+              {columns.map((c, i) => totals[i] !== undefined && totals[i] !== null && (
+                <div key={c.id} className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">{c.header}</dt>
+                  <dd className="font-semibold">{totals[i]}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
+          {paging ?? <TablePagination page={current} pageSize={pageSize} total={sorted.length} onPageChange={setPage} />}
         </>
       )}
     </div>

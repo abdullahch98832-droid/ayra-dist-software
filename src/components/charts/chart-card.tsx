@@ -11,13 +11,14 @@ import { SERIES_COLORS, type ChartPoint, type ChartSeries } from "./types";
 
 /** Frame for every chart: title, legend (two or more series) and the same data as a table. */
 export function ChartCard({
-  title, description, categoryLabel, series, points, children,
+  title, description, categoryLabel, series, points, emptyText, children,
 }: {
   title: string;
   description?: string;
   categoryLabel?: string;
   series: ChartSeries[];
   points: ChartPoint[];
+  emptyText?: string;
   children: React.ReactNode;
 }) {
   const { t } = useI18n();
@@ -26,7 +27,7 @@ export function ChartCard({
   const Icon = asTable ? ChartNoAxesColumn : Table2;
   const toggle = asTable ? t.charts.viewChart : t.charts.viewTable;
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle><h2 id={titleId}>{title}</h2></CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
@@ -40,7 +41,7 @@ export function ChartCard({
       </CardHeader>
       <CardContent>
         {points.length === 0 ? (
-          <StateMessage icon={ChartNoAxesColumn} title={t.charts.noData} headingLevel="p" className="py-8" />
+          <StateMessage icon={ChartNoAxesColumn} title={emptyText ?? t.charts.noData} headingLevel="p" className="py-8" />
         ) : asTable ? (
           <div className="overflow-hidden rounded-lg border">
             <Table aria-labelledby={titleId}>

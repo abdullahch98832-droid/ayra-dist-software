@@ -1,116 +1,111 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { CalendarOff, Plus, UserCheck, UserCog, UserRoundX, Users } from "lucide-react";
-import { visibleNavigation } from "@/config/navigation";
-import { loadAccessAudit } from "@/features/audit/access-audit";
-import { loadEmployeeFigures, loadUserFigures } from "@/features/dashboard/queries";
-import { fill } from "@/i18n/format";
+import { hasPerformance, PerformanceView } from "@/components/dashboard/performance";
+import {
+  LowStockCard, MyRecordsCard, OpenWorkCard, OverdueCard, PendingDeliveriesCard, RecentOrdersCard, RecentTransactionsCard,
+} from "@/components/dashboard/lists";
+import { PeriodFrame } from "@/components/dashboard/period-frame";
+import { hasPosition, PositionCards } from "@/components/dashboard/position-cards";
+import { QuickEntry } from "@/components/dashboard/quick-entry";
+import { DataSection } from "@/components/dashboard/section";
+import { dashboardKind } from "@/features/dashboard/layout";
+import { businessToday, daysBetween, parsePeriod } from "@/features/dashboard/period";
+import {
+  loadLowStock, loadMyRecords, loadOpenWork, loadOverdue, loadPendingDeliveries, loadPerformance, loadPosition,
+  loadRecentOrders, loadRecentTransactions,
+} from "@/features/dashboard/queries";
+import { fill, isolate } from "@/i18n/format";
 import { getLocale, getT } from "@/i18n/server";
 import { can, requireActiveSession } from "@/lib/auth/session";
-import { BarListCard } from "@/components/charts/bar-list";
 import { Forbidden } from "@/components/layout/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
-import { formatDateTime, formatNumber } from "@/components/shared/format";
-import { LinkButton } from "@/components/shared/link-button";
-import { SectionCard } from "@/components/shared/section-card";
-import { StatCard } from "@/components/shared/stat-card";
-import { StatusBadge } from "@/components/shared/status-badge";
+import { formatDate } from "@/components/shared/format";
+import { CardsSkeleton, ChartsSkeleton, ListSkeleton } from "@/components/shared/states";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT()).dashboard.title };
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   const ctx = await requireActiveSession();
   if (!can(ctx, "dashboard.view")) return <Forbidden />;
-  const [t, locale] = await Promise.all([getT(), getLocale()]);
-  const [employees, users, audit] = await Promise.all([
-    loadEmployeeFigures(ctx),
-    loadUserFigures(ctx),
-    can(ctx, "audit.view") ? loadAccessAudit(ctx, t, locale, 5) : null,
-  ]);
-  const modules = visibleNavigation(ctx.permissions).flatMap((g) => g.items).filter((i) => i.href !== "/dashboard");
-  const n = (value: number) => formatNumber(value, locale);
+  const [t, locale, params] = await Promise.all([getT(), getLocale(), searchParams]);
+  const d = t.dashboard;
+  const kind = dashboardKind(ctx.role?.code, ctx.permissions);
+  const today = businessToday();
+  const period = parsePeriod(params, today);
+  const days = daysBetween(period.from, period.to) + 1;
+  const common = { t, locale };
+
+  const position = hasPosition(ctx.permissions, kind) && (
+    <section aria-labelledby="dashboard-now" className="grid gap-4">
+      <div>
+        <h2 id="dashboard-now" className="text-lg font-semibold text-navy">{d.now}</h2>
+        <p className="text-sm text-muted-foreground">{fill(d.nowHint, { date: isolate(formatDate(today, locale) ?? "") })}</p>
+      </div>
+      <DataSection name={d.now} skeleton={<CardsSkeleton count={kind === "executive" || kind === "manager" ? 8 : 2} />} load={loadPosition}>
+        {(data) => <PositionCards position={data} kind={kind} {...common} />}
+      </DataSection>
+    </section>
+  );
+
+  const performance = kind !== "entry" && hasPerformance(ctx.permissions) && (
+    <PeriodFrame
+      period={period}
+      today={today}
+      title={d.performance}
+      description={days === 1 ? d.comparedWithDay : fill(d.comparedWith, { days })}
+    >
+      <DataSection name={d.performance} skeleton={<ChartsSkeleton />} load={() => loadPerformance(period)}>
+        {(data) => <PerformanceView performance={data} {...common} />}
+      </DataSection>
+    </PeriodFrame>
+  );
+
+  const openWork = (
+    <DataSection name={d.work.title} skeleton={<ListSkeleton />} load={loadOpenWork}>
+      {(rows) => <OpenWorkCard rows={rows} {...common} />}
+    </DataSection>
+  );
+  const lowStock = can(ctx, "inventory.view") && (
+    <DataSection name={d.alerts.lowStock} skeleton={<ListSkeleton />} load={loadLowStock}>
+      {(data) => <LowStockCard data={data} {...common} />}
+    </DataSection>
+  );
+  const deliveries = can(ctx, "sales.view") && (
+    <DataSection name={d.alerts.deliveries} skeleton={<ListSkeleton />} load={loadPendingDeliveries}>
+      {(rows) => <PendingDeliveriesCard rows={rows} {...common} />}
+    </DataSection>
+  );
+  const overdue = (can(ctx, "receivables.view") || can(ctx, "payables.view") || can(ctx, "company.view")) && (
+    <DataSection name={d.alerts.overdue} skeleton={<ListSkeleton />} load={loadOverdue}>
+      {(data) => <OverdueCard data={data} {...common} />}
+    </DataSection>
+  );
+  const orders = can(ctx, "sales.view") && (
+    <DataSection name={d.lists.orders} skeleton={<ListSkeleton />} load={loadRecentOrders}>
+      {(rows) => <RecentOrdersCard rows={rows} {...common} />}
+    </DataSection>
+  );
+  const transactions = kind !== "entry" && (
+    <DataSection name={d.lists.transactions} skeleton={<ListSkeleton />} load={loadRecentTransactions}>
+      {(rows) => <RecentTransactionsCard rows={rows} {...common} />}
+    </DataSection>
+  );
+  const myRecords = (
+    <DataSection name={d.lists.myRecords} skeleton={<ListSkeleton />} load={loadMyRecords}>
+      {(rows) => <MyRecordsCard rows={rows} {...common} />}
+    </DataSection>
+  );
+  const grid = (...items: React.ReactNode[]) => <div className="grid items-stretch gap-6 lg:grid-cols-2">{items.map((item, i) => item && <div key={i} className="min-w-0">{item}</div>)}</div>;
 
   return (
     <>
-      <PageHeader
-        title={fill(t.dashboard.greeting, { name: ctx.fullName || ctx.email })}
-        description={t.dashboard.subtitle}
-        actions={
-          <>
-            {can(ctx, "users.manage") && <LinkButton variant="outline" href="/admin/users"><UserCog aria-hidden />{t.nav.users}</LinkButton>}
-            {can(ctx, "employees.manage") && <LinkButton href="/employees/new"><Plus aria-hidden />{t.employees.add}</LinkButton>}
-          </>
-        }
-      />
-
-      {(employees || users) && (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {employees && (
-            <>
-              <StatCard label={t.dashboard.employeesActive} value={n(employees.active)} icon={Users} href="/employees?status=active" />
-              <StatCard label={t.dashboard.employeesOnLeave} value={n(employees.onLeave)} icon={CalendarOff} href="/employees?status=on_leave" />
-            </>
-          )}
-          {users && (
-            <>
-              <StatCard label={t.dashboard.usersActive} value={n(users.active)} icon={UserCheck} href="/admin/users" />
-              <StatCard
-                label={t.dashboard.usersNoRole} value={n(users.withoutRole)} icon={UserRoundX} href="/admin/users"
-                tone={users.withoutRole > 0 ? "attention" : "default"}
-              />
-            </>
-          )}
-        </div>
-      )}
-
-      <div className="mt-6 grid items-start gap-6 lg:grid-cols-2">
-        {employees?.byDepartment && (
-          <BarListCard
-            title={t.dashboard.byDepartment}
-            description={t.dashboard.byDepartmentHint}
-            categoryLabel={t.employees.department}
-            series={{ key: "employees", label: t.employees.title }}
-            points={employees.byDepartment.map((d) => ({
-              label: d.department ?? t.dashboard.noDepartment,
-              values: [{ value: d.count, display: n(d.count) }],
-            }))}
-          />
-        )}
-        {audit && (
-          <SectionCard
-            title={t.dashboard.recentAccess}
-            action={<LinkButton variant="ghost" size="sm" href="/admin/audit">{t.dashboard.viewAll}</LinkButton>}
-          >
-            {audit.length === 0 ? <p className="text-sm text-muted-foreground">{t.common.noResults}</p> : (
-              <ul className="grid gap-4">
-                {audit.map((row) => (
-                  <li key={row.id} className="flex gap-3 text-sm">
-                    <span className="mt-2 size-2 shrink-0 rounded-full bg-primary" aria-hidden />
-                    <div className="min-w-0">
-                      <p className="break-words"><bdi className="font-medium">{row.subject || row.action}</bdi>{row.subject && <span className="text-muted-foreground"> — {row.action}</span>}</p>
-                      <p className="text-xs text-muted-foreground"><bdi>{row.actor}</bdi> · <bdi>{formatDateTime(row.occurredAt, locale)}</bdi></p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </SectionCard>
-        )}
-        <SectionCard title={t.dashboard.modules} description={t.dashboard.modulesHint} className="lg:col-span-2">
-          <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-            {modules.map((item) => (
-              <li key={item.href}>
-                <Link href={item.href} className="flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors outline-none hover:border-primary/40 hover:bg-accent/50 focus-visible:ring-3 focus-visible:ring-ring/40">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground"><item.icon className="size-4.5" aria-hidden /></span>
-                  <span className="min-w-0 flex-1 text-sm font-medium">{item.label(t)}</span>
-                  <StatusBadge tone={item.planned ? "gray" : "green"} dot={!item.planned}>{item.planned ? t.nav.planned : t.dashboard.available}</StatusBadge>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </SectionCard>
+      <PageHeader title={fill(d.greeting, { name: isolate(ctx.fullName || ctx.email) })} description={d.subtitles[kind]} />
+      <div className="grid gap-8">
+        {kind === "executive" && <>{position}{performance}{grid(openWork, lowStock, deliveries, overdue)}{grid(orders, transactions)}</>}
+        {kind === "manager" && <>{grid(openWork, deliveries)}{position}{performance}{grid(lowStock, overdue)}{grid(orders, transactions)}</>}
+        {kind === "entry" && <><QuickEntry permissions={ctx.permissions} t={t} />{grid(openWork, myRecords)}{position}{grid(lowStock, deliveries)}{grid(orders)}</>}
+        {kind === "viewer" && <>{position}{performance}{grid(lowStock, deliveries)}{grid(orders, transactions)}</>}
       </div>
     </>
   );

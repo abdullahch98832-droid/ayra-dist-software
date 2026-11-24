@@ -57,7 +57,7 @@ async function introspect(client) {
                    join pg_attribute a on a.attrelid = con.conrelid and a.attnum = k.attnum order by k.ord) as cols,
            array(select a.attname::text from unnest(con.confkey) with ordinality k(attnum, ord)
                    join pg_attribute a on a.attrelid = con.confrelid and a.attnum = k.attnum order by k.ord) as ref_cols,
-           exists (select 1 from pg_index i where i.indrelid = con.conrelid and i.indisunique
+           exists (select 1 from pg_index i where i.indrelid = con.conrelid and i.indisunique and i.indpred is null
                      and (i.indkey::int2[])::int2[] @> con.conkey and cardinality(i.indkey::int2[]) = cardinality(con.conkey)) as one_to_one
       from pg_constraint con
       join pg_class src on src.oid = con.conrelid

@@ -7,7 +7,7 @@ import { useI18n } from "@/i18n/context";
 export function Footer() {
   const { t } = useI18n();
   return (
-    <footer className="border-t bg-card">
+    <footer className="border-t bg-card print:hidden">
       <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-3 text-sm text-muted-foreground">
         <span>
           {t.footer.developedBy} <bdi className="font-latin font-medium text-foreground">{t.footer.developerName}</bdi>

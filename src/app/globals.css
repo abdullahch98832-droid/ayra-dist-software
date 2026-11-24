@@ -219,3 +219,35 @@ input[lang="ur"] {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Printing: the page content only, on white, without clipped tables. */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+  @page portrait {
+    size: A4 portrait;
+    margin: 14mm;
+  }
+  .page-portrait {
+    page: portrait;
+  }
+  body {
+    background: #fff;
+  }
+  [data-slot="sidebar"],
+  [data-slot="sidebar-gap"],
+  [data-slot="sidebar-container"] {
+    display: none !important;
+  }
+  [data-slot="table-container"] {
+    overflow: visible !important;
+  }
+  thead {
+    display: table-header-group;
+  }
+  tr {
+    break-inside: avoid;
+  }
+}

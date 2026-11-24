@@ -5,17 +5,18 @@ import type { ChartPoint, ChartSeries } from "./types";
 
 /** Ranked horizontal bars for one measure. Bars grow from the reading-start edge. */
 export function BarListCard({
-  title, description, categoryLabel, series, points,
+  title, description, categoryLabel, series, points, emptyText,
 }: {
   title: string;
   description?: string;
   categoryLabel?: string;
   series: ChartSeries;
   points: ChartPoint[];
+  emptyText?: string;
 }) {
   const max = Math.max(...points.map((p) => p.values[0]?.value ?? 0), 0);
   return (
-    <ChartCard title={title} description={description} categoryLabel={categoryLabel} series={[series]} points={points}>
+    <ChartCard title={title} description={description} categoryLabel={categoryLabel} series={[series]} points={points} emptyText={emptyText}>
       <ul className="grid gap-3.5">
         {points.map((p) => {
           const value = p.values[0]?.value ?? 0;

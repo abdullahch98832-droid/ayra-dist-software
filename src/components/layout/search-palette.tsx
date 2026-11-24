@@ -2,13 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Plus, Search, UserRound } from "lucide-react";
+import { Building2, ClipboardList, Package, Plus, Search, ShoppingCart, Truck, UserRound, Waypoints } from "lucide-react";
 import { visibleNavigation } from "@/config/navigation";
-import { searchRecordsAction, type SearchHit } from "@/features/search/actions";
+import { searchRecordsAction } from "@/features/search/actions";
+import { SEARCH_GROUPS, type SearchHits } from "@/features/search/types";
 import { useI18n } from "@/i18n/context";
 import { Ltr } from "@/components/shared/bidi";
 import { Button } from "@/components/ui/button";
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+
+const NO_HITS: SearchHits = { customers: [], orders: [], solJobs: [], vehicles: [], products: [], suppliers: [], employees: [] };
+const HIT_ICON = { customers: Building2, orders: ShoppingCart, solJobs: Waypoints, vehicles: Truck, products: Package, suppliers: ClipboardList, employees: UserRound } as const;
 
 type Status = "idle" | "loading" | "failed";
 
@@ -18,7 +22,7 @@ export function SearchPalette({ permissions }: { permissions: ReadonlySet<string
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<SearchHit[]>([]);
+  const [hits, setHits] = useState<SearchHits>(NO_HITS);
   const [status, setStatus] = useState<Status>("idle");
   const request = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -42,7 +46,7 @@ export function SearchPalette({ permissions }: { permissions: ReadonlySet<string
     clearTimeout(timer.current);
     const id = ++request.current;
     if (value.trim().length < 2) {
-      setHits([]);
+      setHits(NO_HITS);
       setStatus("idle");
       return;
     }
@@ -50,7 +54,7 @@ export function SearchPalette({ permissions }: { permissions: ReadonlySet<string
     timer.current = setTimeout(async () => {
       const result = await searchRecordsAction(value).catch(() => ({ ok: false as const }));
       if (request.current !== id) return; // a newer search has started
-      setHits(result.ok ? result.employees : []);
+      setHits(result.ok ? result.hits : NO_HITS);
       setStatus(result.ok ? "idle" : "failed");
     }, 250);
   };
@@ -67,6 +71,15 @@ export function SearchPalette({ permissions }: { permissions: ReadonlySet<string
     .flatMap((g) => g.items.map((item) => ({ item, label: item.label(t), group: t.nav.groups[g.key] })))
     .filter(({ label, group, item }) => matches(`${label} ${group} ${item.href}`));
   const actions = [
+    { href: "/sales/orders/new", label: t.sales.newOrder, permission: "sales.create" },
+    { href: "/receivables/payments/new", label: t.receivables.newPayment, permission: "receivables.collect" },
+    { href: "/customers/new", label: t.customers.add, permission: "customers.manage" },
+    { href: "/products/new", label: t.catalog.add, permission: "products.manage" },
+    { href: "/purchasing/company/receipts/new", label: `${t.purchasing.newReceipt} · ${t.purchasing.flows.company}`, permission: "purchasing.create" },
+    { href: "/purchasing/suppliers/receipts/new", label: `${t.purchasing.newReceipt} · ${t.purchasing.flows.suppliers}`, permission: "purchasing.create" },
+    { href: "/inventory/transfers/new", label: t.stock.newTransfer, permission: "inventory.transfer" },
+    { href: "/inventory/counts/new", label: t.stock.newCount, permission: "inventory.count" },
+    { href: "/suppliers/new", label: t.suppliers.add, permission: "suppliers.manage" },
     { href: "/employees/new", label: t.employees.add, permission: "employees.manage" },
   ].filter((a) => permissions.has(a.permission) && matches(a.label));
 
@@ -90,17 +103,20 @@ export function SearchPalette({ permissions }: { permissions: ReadonlySet<string
             {status === "loading" && <p role="status" className="px-3 py-2 text-sm text-muted-foreground">{t.search.searching}</p>}
             {status === "failed" && <p role="alert" className="px-3 py-2 text-sm text-destructive">{t.search.failed}</p>}
             {status === "idle" && <CommandEmpty className="text-muted-foreground">{t.search.empty}</CommandEmpty>}
-            {hits.length > 0 && (
-              <CommandGroup heading={t.search.employees}>
-                {hits.map((hit) => (
-                  <CommandItem key={hit.id} value={`employee-${hit.id}`} onSelect={() => go(hit.href)}>
-                    <UserRound aria-hidden />
-                    <span className="min-w-0 truncate">{locale === "ur" && hit.titleUr ? hit.titleUr : hit.title}</span>
-                    <Ltr className="text-xs text-muted-foreground">{hit.detail}</Ltr>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
+            {SEARCH_GROUPS.map((group) => {
+              const Icon = HIT_ICON[group];
+              return hits[group].length > 0 && (
+                <CommandGroup key={group} heading={t.search[group]}>
+                  {hits[group].map((hit) => (
+                    <CommandItem key={hit.id} value={`${group}-${hit.id}`} onSelect={() => go(hit.href)}>
+                      <Icon aria-hidden />
+                      <span className="min-w-0 truncate">{locale === "ur" && hit.titleUr ? hit.titleUr : hit.title}</span>
+                      <Ltr className="text-xs text-muted-foreground">{hit.detail}</Ltr>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              );
+            })}
             {actions.length > 0 && (
               <CommandGroup heading={t.search.actions}>
                 {actions.map((a) => (

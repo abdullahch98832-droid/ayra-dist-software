@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { NAV_ITEMS } from "@/config/navigation";
+import { itemPermissions, NAV_ITEMS } from "@/config/navigation";
 import { fill } from "@/i18n/format";
 import { getT } from "@/i18n/server";
 import { can, requireActiveSession } from "@/lib/auth/session";
@@ -21,7 +21,7 @@ export default async function PlannedModulePage({ params }: PageProps<"/[module]
   const ctx = await requireActiveSession();
   const item = plannedModule((await params).module);
   if (!item) notFound();
-  if (!can(ctx, item.permission)) return <Forbidden />;
+  if (!itemPermissions(item).some((p) => can(ctx, p))) return <Forbidden />;
   const t = await getT();
   const title = item.label(t);
   return (

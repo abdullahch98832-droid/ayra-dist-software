@@ -4,14 +4,16 @@ import { cn } from "@/lib/utils";
 
 /** One headline figure. `value` must come from the database; pass "—" when it is unknown. */
 export function StatCard({
-  label, value, icon: Icon, href, tone = "default", hint,
+  label, value, icon: Icon, href, tone = "default", hint, footer,
 }: {
   label: string;
   value: React.ReactNode;
   icon: LucideIcon;
   href?: string;
   tone?: "default" | "attention";
-  hint?: string;
+  hint?: React.ReactNode;
+  /** Extra line under the hint, such as a comparison. */
+  footer?: React.ReactNode;
 }) {
   const body = (
     <>
@@ -24,8 +26,9 @@ export function StatCard({
           <Icon className="size-4.5" aria-hidden />
         </span>
       </div>
-      <p className="font-latin mt-2 text-3xl font-semibold text-navy">{value}</p>
+      <p className="font-latin mt-2 text-2xl font-semibold break-words text-navy">{value}</p>
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
+      {footer && <div className="mt-2">{footer}</div>}
     </>
   );
   const classes = "block rounded-xl border bg-card p-5 shadow-card";

@@ -1,9 +1,11 @@
 "use client";
 
+import { APP_CONFIG } from "@/config/app";
 import type { NotificationResult } from "@/features/notifications/types";
 import { useI18n } from "@/i18n/context";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./app-sidebar";
+import { DatabaseUpdateBanner, DatabaseUpdateProvider, type DatabaseUpdate } from "./database-update";
 import { Footer } from "./footer";
 import { LanguageMenu } from "./language-menu";
 import { NotificationsMenu } from "./notifications-menu";
@@ -11,12 +13,13 @@ import { SearchPalette } from "./search-palette";
 import { UserMenu, type ShellUser } from "./user-menu";
 
 export function AppShell({
-  user, permissions, notifications, sidebarOpen, children,
+  user, permissions, notifications, sidebarOpen, databaseUpdate, children,
 }: {
   user: ShellUser;
   permissions: string[];
   notifications: Promise<NotificationResult>;
   sidebarOpen: boolean;
+  databaseUpdate: DatabaseUpdate;
   children: React.ReactNode;
 }) {
   const { t } = useI18n();
@@ -29,7 +32,7 @@ export function AppShell({
       </a>
       <AppSidebar permissions={permissionSet} />
       <SidebarInset className="min-w-0">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b bg-card/95 px-3 backdrop-blur sm:gap-3 sm:px-5">
+        <header className="print:hidden sticky top-0 z-20 flex h-16 items-center gap-2 border-b bg-card/95 px-3 backdrop-blur sm:gap-3 sm:px-5">
           <SidebarTrigger className="size-9 shrink-0" />
           <div className="flex min-w-0 flex-1"><SearchPalette permissions={permissionSet} /></div>
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
@@ -38,7 +41,13 @@ export function AppShell({
             <UserMenu user={user} />
           </div>
         </header>
-        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-[90rem] flex-1 px-4 py-6 outline-none sm:px-6 lg:px-8">{children}</main>
+        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-[90rem] flex-1 px-4 py-6 outline-none sm:px-6 lg:px-8 print:max-w-none print:p-0">
+          <p className="hidden font-heading text-lg text-navy print:block">{APP_CONFIG.name}</p>
+          <DatabaseUpdateProvider value={databaseUpdate}>
+            <DatabaseUpdateBanner />
+            {children}
+          </DatabaseUpdateProvider>
+        </main>
         <Footer />
       </SidebarInset>
     </SidebarProvider>

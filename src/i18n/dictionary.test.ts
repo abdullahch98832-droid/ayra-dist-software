@@ -30,7 +30,10 @@ describe("dictionaries", () => {
 
   it("are translated: Urdu text contains Urdu letters", () => {
     const latinOnly = new Set(["footer.developerName"]);
-    for (const [key, text] of urdu) if (!latinOnly.has(key)) expect(text, key).toMatch(/[؀-ۿ]/);
+    for (const [key, text] of urdu) {
+      const words = text.replace(/\{\w+\}/g, "");
+      if (!latinOnly.has(key) && /\p{L}/u.test(words)) expect(text, key).toMatch(/\p{Script=Arabic}/u);
+    }
   });
 });
 

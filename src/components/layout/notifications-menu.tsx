@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Suspense, use, useState } from "react";
-import { Bell, CircleCheck, TriangleAlert, UserCog } from "lucide-react";
+import { Banknote, Bell, CircleCheck, ClipboardCheck, HandCoins, PackageCheck, TriangleAlert, Truck, UserCog, Wallet } from "lucide-react";
 import { useI18n } from "@/i18n/context";
 import { fill } from "@/i18n/format";
 import type { AppNotification, NotificationResult } from "@/features/notifications/types";
@@ -10,7 +10,7 @@ import { StateMessage } from "@/components/shared/states";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 
-const ICON = { usersWithoutRole: UserCog } satisfies Record<AppNotification["kind"], unknown>;
+const ICON = { usersWithoutRole: UserCog, ordersToApprove: ClipboardCheck, ordersToDispatch: PackageCheck, paymentsToPost: Banknote, depositsToConfirm: HandCoins, solDeliveries: Truck, expensesToPost: Wallet } satisfies Record<AppNotification["kind"], unknown>;
 
 export function NotificationsMenu({ result }: { result: Promise<NotificationResult> }) {
   const { t } = useI18n();

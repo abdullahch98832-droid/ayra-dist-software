@@ -1,6 +1,6 @@
 # Database Design
 
-> **Status:** implemented as migrations in `supabase/migrations/` and verified by 68 automated tests on PostgreSQL 17 (`npm run test:db`). **Not yet applied to a Supabase project.** See [SUPABASE_SETUP.md](SUPABASE_SETUP.md).
+> **Status:** implemented as migrations in `supabase/migrations/` and verified by 165 automated tests on PostgreSQL 17 (`npm run test:db`). See [SUPABASE_SETUP.md](SUPABASE_SETUP.md).
 
 ## Conventions
 
@@ -31,16 +31,23 @@
 | `…101000_security` | RLS policies, column privileges, audit/updated triggers, storage buckets |
 | `…101100_reference_data` | permissions, roles, units, chart of accounts, expense categories, numbering, settings, default warehouses, main company |
 | `20261124100000_access_control` | Super Admin / Manager / Data Entry / Viewer roles, company-account and costs permissions, user lifecycle functions, manager limit, confidential column restrictions and `secure_*` views, salary and bank-detail tables, employee codes |
+| `20261124110000_explicit_grants` | explicit table grants (projects that do not expose tables automatically) |
+| `20261124120000_dashboard` | dashboard functions |
+| `20261125100000_inventory_procurement` | brands, product details and images, receiving with damaged and rejected quantities, closing orders, save functions for every document, negative-stock override, stock-count guard, reports, Pakistan business day for document dates |
+
+| `20261126100000_sales_distribution` | customer details and notes, order takers, order workflow with picking, delivery confirmation with returns, held cash, deposits and counts, customer statement, sales reports, assigned-customer access |
+
+With every new migration, set `app_settings.schema_version` and update `src/config/database.ts` (a test enforces it). Until that migration has been applied, administrators see a notice naming the file and affected pages say the database needs an update.
 
 ## Table catalogue
 
 **Identity & system:** `profiles`, `roles`, `permissions`, `role_permissions`, `employees`, `employee_salaries` (confidential), `app_settings`, `document_sequences`, `audit_logs`
-**Catalog:** `units`, `product_categories`, `products`, `product_units`
+**Catalog:** `units`, `product_categories`, `brands`, `products`, `product_units`
 **Parties:** `customers`, `suppliers`, `supplier_contacts`
 **Fleet:** `vehicles`, `drivers`
 **Inventory:** `warehouses`, `stock_balances`, `inventory_valuation`, `stock_movements`, `stock_adjustments(+_items)`, `stock_counts(+_items)`, `stock_transfers(+_items)`
 **Purchasing:** `purchase_orders(+_items)`, `goods_receipts(+_items)`, `supplier_invoices`, `supplier_invoice_receipts`, `supplier_payments`, `supplier_payment_allocations`, `supplier_returns(+_items)`
-**Sales:** `sales_orders(+_items)`, `deliveries`, `delivery_items`, `sales_invoices(+_items)`, `customer_returns(+_items)`, `customer_payments`, `customer_payment_allocations`
+**Sales:** `order_takers`, `customer_notes`, `cash_deposits`, `cash_reconciliations`, `sales_orders(+_items)`, `deliveries`, `delivery_items`, `sales_invoices(+_items)`, `customer_returns(+_items)`, `customer_payments`, `customer_payment_allocations`
 **SOL:** `sol_jobs`, `sol_trips`
 **Finance:** `chart_of_accounts`, `financial_accounts` (cash + bank), `financial_account_bank_details` (confidential), `accounting_periods`, `journal_entries`, `journal_entry_lines`, `fund_transfers`, `expense_categories`, `expenses`, `employee_advances`, `payroll_runs`, `payroll_items`, `salary_payments`
 
@@ -49,7 +56,6 @@ Requested items that are **views or roles rather than tables**:
 - *Supplier / customer ledgers* → `v_supplier_ledger`, `v_customer_ledger` (+ balances views)
 - *SOL payments* → customer payments allocated to a job (`customer_payment_allocations.sol_job_id`), summarised in `v_sol_job_summary`
 - *Cash accounts / bank accounts* → one table `financial_accounts` with `account_type`
-- *Order takers* → employees linked from `customers.order_taker_id` / `sales_orders.order_taker_id`, with the `order_taker` role
 
 ## Entity relationship diagrams
 
@@ -119,6 +125,11 @@ erDiagram
 erDiagram
   customers ||--o{ sales_orders : ""
   employees |o--o{ sales_orders : "order taker"
+  employees ||--o| order_takers : "is"
+  employees ||--o{ cash_deposits : "hands over"
+  employees ||--o{ cash_reconciliations : "counted"
+  customers ||--o{ customer_notes : ""
+  sales_invoices |o--o{ customer_notes : "credited by"
   sales_orders ||--|{ sales_order_items : ""
   sales_orders ||--o{ deliveries : ""
   deliveries ||--|{ delivery_items : ""
@@ -177,11 +188,13 @@ Clients insert and edit **drafts** directly (RLS + column privileges). Every sta
 | `post_supplier_invoice` | Matches receipts; posts any price difference to inventory variance |
 | `post_supplier_payment`, `allocate_supplier_payment`, `void_supplier_payment` | Payables, partial payments |
 | `post_supplier_return` | Stock out at average cost; payable reduced by agreed credit |
-| `submit_sales_order`, `approve_sales_order`, `cancel_sales_order` | Approval reserves stock and checks credit limit |
-| `dispatch_delivery`, `confirm_delivery` | Dispatch creates + posts the sales invoice and releases the reservation |
+| `save_sales_order`, `submit_sales_order`, `send_back_sales_order`, `approve_sales_order`, `start_picking`, `cancel_sales_order`, `close_sales_order` | Approval reserves stock and checks credit limit |
+| `dispatch_delivery`, `complete_delivery` | Dispatch creates + posts the sales invoice and releases the reservation; completion posts goods brought back |
 | `post_sales_invoice` | Direct (counter/vehicle) invoices |
 | `post_customer_return` | Stock back at original cost (damaged → quarantine); credit note |
-| `post_customer_payment`, `allocate_customer_payment`, `allocate_payment_to_sol_job`, `void_customer_payment` | Receivables, partial payments |
+| `save_customer`, `record_customer_note`, `void_customer_note` | Customers, opening balances, credit and debit notes |
+| `record_cash_deposit`, `post_cash_deposit`, `void_cash_deposit`, `reconcile_collector_cash` | Cash with order takers |
+| `record_customer_payment`, `settle_invoices`, `post_customer_payment`, `allocate_customer_payment`, `allocate_payment_to_sol_job`, `void_customer_payment` | Receivables, partial payments |
 | `post_stock_adjustment`, `post_stock_count`, `post_stock_transfer` | Opening stock, write-offs, count differences, transfers |
 | `set_sol_job_status`, `complete_sol_job`, `close_sol_trip` | SOL |
 | `post_expense`, `void_expense`, `post_employee_advance`, `post_payroll_run`, `post_salary_payment` | Expenses and payroll |

@@ -60,7 +60,7 @@ describe("schema safety", () => {
   it("checks a permission in every public SECURITY DEFINER RPC", async () => {
     const rows = await db.sql(
       `select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-        where n.nspname = 'public' and p.prosecdef and p.prosrc not like '%require_permission%'
+        where n.nspname = 'public' and p.prosecdef and p.prosrc not like '%require_permission%' and p.prosrc not like '%private.sales_scope()%'
           and p.proname not in ('my_permissions', 'bootstrap_super_admin')`
     );
     expect(rows).toEqual([]);
@@ -69,7 +69,7 @@ describe("schema safety", () => {
 
 describe("reference data", () => {
   it("seeds roles and permissions", async () => {
-    expect(Number(one(await db.sql("select count(*) c from public.permissions")).c)).toBe(59);
+    expect(Number(one(await db.sql("select count(*) c from public.permissions")).c)).toBe(64);
     const roles = await db.sql("select code from public.roles order by code");
     expect(roles.map((r) => r.code)).toEqual(["accountant", "data_entry", "driver", "manager", "order_taker", "super_admin", "viewer", "warehouse"]);
     const system = await db.sql("select code from public.roles where is_system order by code");

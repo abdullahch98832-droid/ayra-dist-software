@@ -1,7 +1,7 @@
 /** Text is built on the client from the dictionary so it follows the current language. */
 export interface AppNotification {
   id: string;
-  kind: "usersWithoutRole";
+  kind: "usersWithoutRole" | "ordersToApprove" | "ordersToDispatch" | "paymentsToPost" | "depositsToConfirm" | "solDeliveries" | "expensesToPost";
   count: number;
   href: string;
 }

@@ -13,7 +13,7 @@ import { ActionError } from "@/components/forms/action-error";
  * a click outside does not dismiss it, and the server's refusal is shown in place.
  */
 export function ConfirmDialog({
-  open, onOpenChange, title, description, subject, confirmLabel, cancelLabel, tone = "danger", pending = false, error, onConfirm,
+  open, onOpenChange, title, description, subject, confirmLabel, cancelLabel, tone = "danger", pending = false, error, onConfirm, children,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,6 +27,8 @@ export function ConfirmDialog({
   pending?: boolean;
   error?: ActionResult<unknown> | null;
   onConfirm: () => void;
+  /** Extra input, such as a reason. */
+  children?: React.ReactNode;
 }) {
   const { t } = useI18n();
   const Icon = tone === "danger" ? TriangleAlert : CircleHelp;
@@ -46,6 +48,7 @@ export function ConfirmDialog({
             <AlertDialogDescription>{description}</AlertDialogDescription>
           </div>
         </div>
+        {children}
         <ActionError result={error} />
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" disabled={pending} autoFocus onClick={() => onOpenChange(false)}>{cancelLabel ?? t.common.cancel}</Button>

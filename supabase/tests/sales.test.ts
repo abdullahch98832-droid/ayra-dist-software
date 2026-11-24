@@ -27,6 +27,12 @@ async function order(q: Query, customerId: string, lines: { product: string; uni
   return { so, ids };
 }
 
+const approve = async (q: Query, so: string) => {
+  await q("select public.submit_sales_order($1)", [so]);
+  await q("select public.approve_sales_order($1)", [so]);
+};
+const pick = (q: Query, so: string) => q("select public.start_picking($1)", [so]);
+
 async function deliver(q: Query, so: string, lines: [string, number][]) {
   const d = one(await q("insert into public.deliveries (sales_order_id) values ($1) returning id", [so])).id;
   for (const [item, qty] of lines) {
@@ -42,11 +48,13 @@ describe("sales orders, reservations and deliveries", () => {
     await openingStock(db, b, p, 100, "5.00");
     const { so, ids } = await db.as(b.admin, async (q) => {
       const r = await order(q, c, [{ product: p, unit: b.units.BOX, qty: 2, price: "120.00" }, { product: p, unit: b.units.PCS, qty: 10, price: "11.00" }]);
-      await q("select public.approve_sales_order($1)", [r.so]);
+      await approve(q, r.so);
       return r;
     });
     expect(await stock(db, p, b.mainWarehouse)).toEqual({ onHand: 100, reserved: 34 });
 
+    await expect(db.as(b.admin, (q) => deliver(q, so, [[ids[0]!, 1]]))).rejects.toThrow(/start picking before dispatch/);
+    await db.as(b.admin, (q) => pick(q, so));
     const inv = await db.as(b.admin, (q) => deliver(q, so, [[ids[0]!, 1]]));
     expect(await stock(db, p, b.mainWarehouse)).toEqual({ onHand: 88, reserved: 22 });
     expect(one(await db.sql("select status from public.sales_orders where id = $1", [so])).status).toBe("partially_dispatched");
@@ -56,7 +64,7 @@ describe("sales orders, reservations and deliveries", () => {
     await db.as(b.admin, (q) => deliver(q, so, [[ids[0]!, 1], [ids[1]!, 10]]));
     expect(await stock(db, p, b.mainWarehouse)).toEqual({ onHand: 66, reserved: 0 });
     expect(one(await db.sql("select status from public.sales_orders where id = $1", [so])).status).toBe("dispatched");
-    await expect(db.as(b.admin, (q) => deliver(q, so, [[ids[1]!, 1]]))).rejects.toThrow(/not approved for dispatch/);
+    await expect(db.as(b.admin, (q) => deliver(q, so, [[ids[1]!, 1]]))).rejects.toThrow(/is dispatched; start picking/);
   });
 
   it("does not let reserved stock be promised twice or written off", async () => {
@@ -65,11 +73,11 @@ describe("sales orders, reservations and deliveries", () => {
     await openingStock(db, b, p, 40, "5.00");
     await db.as(b.admin, async (q) => {
       const { so } = await order(q, c, [{ product: p, unit: b.units.PCS, qty: 34, price: "9.00" }]);
-      await q("select public.approve_sales_order($1)", [so]);
+      await approve(q, so);
     });
     await expect(db.as(b.admin, async (q) => {
       const { so } = await order(q, c, [{ product: p, unit: b.units.PCS, qty: 7, price: "9.00" }]);
-      await q("select public.approve_sales_order($1)", [so]);
+      await approve(q, so);
     })).rejects.toThrow(/Insufficient available stock/);
     await expect(directSale(db, b, c, p, 7, b.units.PCS, "9.00")).rejects.toThrow(/reserved for approved orders/);
   });
@@ -80,7 +88,7 @@ describe("sales orders, reservations and deliveries", () => {
     await openingStock(db, b, p, 10, "5.00");
     await db.as(b.admin, async (q) => {
       const { so } = await order(q, c, [{ product: p, unit: b.units.PCS, qty: 10, price: "9.00" }]);
-      await q("select public.approve_sales_order($1)", [so]);
+      await approve(q, so);
       await q("select public.cancel_sales_order($1)", [so]);
     });
     expect(await stock(db, p, b.mainWarehouse)).toEqual({ onHand: 10, reserved: 0 });
@@ -92,7 +100,8 @@ describe("sales orders, reservations and deliveries", () => {
     await openingStock(db, b, p, 36, "5.00");
     const discounts = await db.as(b.admin, async (q) => {
       const { so, ids } = await order(q, c, [{ product: p, unit: b.units.BOX, qty: 3, price: "100.00", discount: "10.00" }]);
-      await q("select public.approve_sales_order($1)", [so]);
+      await approve(q, so);
+      await pick(q, so);
       const out: unknown[] = [];
       for (let i = 0; i < 3; i++) {
         const inv = await deliver(q, so, [[ids[0]!, 1]]);
@@ -110,6 +119,7 @@ describe("credit limits and tax", () => {
     await openingStock(db, b, p, 100, "5.00");
     const c = await customer(db, { creditLimit: "1000.00" });
     const so = await db.as(b.admin, async (q) => (await order(q, c, [{ product: p, unit: b.units.PCS, qty: 60, price: "20.00" }])).so);
+    await db.as(b.admin, (q) => q("select public.submit_sales_order($1)", [so]));
     await expect(db.as(b.admin, (q) => q("select public.approve_sales_order($1)", [so]))).rejects.toThrow(/Credit limit exceeded/);
     await db.as(b.admin, (q) => q("select public.approve_sales_order($1, true)", [so]));
     expect(one(await db.sql("select status from public.sales_orders where id = $1", [so])).status).toBe("approved");
@@ -177,11 +187,11 @@ describe("customer returns and payments", () => {
 });
 
 describe("SOL", () => {
-  it("books transport job revenue on completion and tracks payments and profit", async () => {
+  it("books job revenue on completion and tracks payments and profit", async () => {
     const client = await customer(db);
     const vehicle = one(await db.sql("insert into public.vehicles (registration_no, name) values ('LES-101', 'Truck') returning id")).id;
     const job = await db.as(b.admin, async (q) =>
-      one(await q("insert into public.sol_jobs (customer_id, vehicle_id, contract_value, pickup_location, delivery_location) values ($1, $2, 25000, 'Lahore', 'Multan') returning id", [client, vehicle])).id as string);
+      one(await q("select public.save_sol_job(null, jsonb_build_object('customer_id', $1::uuid, 'job_type_id', (select id from public.sol_job_types limit 1), 'contract_value', 25000), '[]') id", [client])).id as string);
     await expect(db.as(b.admin, (q) => q("select public.complete_sol_job($1)", [job]))).rejects.toThrow(/is draft/);
     await db.as(b.admin, async (q) => {
       await q("select public.set_sol_job_status($1, 'confirmed')", [job]);
@@ -195,8 +205,8 @@ describe("SOL", () => {
     });
     expect(one(await db.as(b.admin, (q) => q("select received_amount, pending_amount from public.v_sol_job_summary where sol_job_id = $1", [job]))))
       .toEqual({ received_amount: "15000.00", pending_amount: "10000.00" });
-    expect(one(await db.as(b.admin, (q) => q("select expenses, profit from public.secure_sol_job_profitability where sol_job_id = $1", [job]))))
-      .toEqual({ expenses: "6000.00", profit: "19000.00" });
+    expect(one(await db.as(b.admin, (q) => q("select direct_costs, vehicle_expenses, profit from public.report_sol_jobs(p_job_id => $1)", [job]))))
+      .toEqual({ direct_costs: "0", vehicle_expenses: "6000.00", profit: "19000.00" });
     expect(one(await db.sql("select balance from public.v_customer_balances where customer_id = $1", [client])).balance).toBe("10000.00");
   });
 

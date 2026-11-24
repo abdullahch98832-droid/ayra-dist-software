@@ -1,9 +1,10 @@
 import {
   Banknote, BarChart3, Boxes, Building2, ClipboardList, CreditCard, Factory, HandCoins, History, Landmark, LayoutDashboard,
-  Package, Receipt, ScrollText, Settings, ShieldCheck, ShoppingCart, Truck, UserCog, Users, Wallet, Warehouse, Waypoints,
+  Package, Receipt, ScrollText, Settings, ShieldCheck, ShoppingCart, Truck, UserCheck, UserCog, Users, Wallet, Warehouse, Waypoints,
   type LucideIcon,
 } from "lucide-react";
 import type { Dictionary } from "@/i18n";
+import { FLOW_ACCESS } from "@/features/purchasing/flow";
 import type { Permission } from "@/lib/auth/permissions";
 
 export type NavGroupKey = keyof Dictionary["nav"]["groups"];
@@ -12,7 +13,8 @@ export interface NavItem {
   href: string;
   label: (t: Dictionary) => string;
   icon: LucideIcon;
-  permission: Permission;
+  /** Any one of these shows the item. */
+  permission: Permission | readonly Permission[];
   /** No screen exists yet: the route renders the planned-module page. Remove when the module is built. */
   planned?: true;
 }
@@ -24,7 +26,7 @@ export interface NavGroup {
 
 /**
  * The single source for the sidebar, the search palette, breadcrumbs and the
- * planned-module route. Items are shown only to users holding `permission`.
+ * planned-module route. Items are shown only to users holding a listed `permission`.
  */
 export const NAVIGATION: NavGroup[] = [
   {
@@ -34,40 +36,41 @@ export const NAVIGATION: NavGroup[] = [
   {
     key: "sales",
     items: [
-      { href: "/customers", label: (t) => t.modules.customers, icon: Building2, permission: "customers.view", planned: true },
-      { href: "/sales", label: (t) => t.modules.sales, icon: ShoppingCart, permission: "sales.view", planned: true },
-      { href: "/receivables", label: (t) => t.modules.receivables, icon: HandCoins, permission: "receivables.view", planned: true },
+      { href: "/sales", label: (t) => t.modules.sales, icon: ShoppingCart, permission: ["sales.view", "sales.view_all"] },
+      { href: "/customers", label: (t) => t.modules.customers, icon: Building2, permission: "customers.view" },
+      { href: "/order-takers", label: (t) => t.takers.title, icon: UserCheck, permission: ["sales.team", "sales.view_all"] },
+      { href: "/receivables", label: (t) => t.modules.receivables, icon: HandCoins, permission: ["receivables.view", "receivables.collect", "receivables.post", "receivables.adjust"] },
     ],
   },
   {
     key: "procurement",
     items: [
-      { href: "/company", label: (t) => t.modules.company, icon: Factory, permission: "company.view", planned: true },
-      { href: "/suppliers", label: (t) => t.modules.suppliers, icon: ClipboardList, permission: "suppliers.view", planned: true },
-      { href: "/purchasing", label: (t) => t.modules.purchasing, icon: Receipt, permission: "purchasing.view", planned: true },
-      { href: "/payables", label: (t) => t.modules.payables, icon: CreditCard, permission: "payables.view", planned: true },
+      { href: "/purchasing/company", label: (t) => t.purchasing.flows.company, icon: Factory, permission: FLOW_ACCESS.company },
+      { href: "/purchasing/suppliers", label: (t) => t.purchasing.flows.suppliers, icon: Receipt, permission: FLOW_ACCESS.suppliers },
+      { href: "/suppliers", label: (t) => t.modules.suppliers, icon: ClipboardList, permission: "suppliers.view" },
+      { href: "/payables", label: (t) => t.modules.payables, icon: CreditCard, permission: ["payables.view", "company.view"] },
     ],
   },
   {
     key: "stock",
     items: [
-      { href: "/products", label: (t) => t.modules.products, icon: Package, permission: "products.view", planned: true },
-      { href: "/warehouses", label: (t) => t.modules.warehouses, icon: Warehouse, permission: "warehouses.view", planned: true },
-      { href: "/inventory", label: (t) => t.modules.inventory, icon: Boxes, permission: "inventory.view", planned: true },
+      { href: "/products", label: (t) => t.modules.products, icon: Package, permission: "products.view" },
+      { href: "/warehouses", label: (t) => t.modules.warehouses, icon: Warehouse, permission: "warehouses.view" },
+      { href: "/inventory", label: (t) => t.modules.inventory, icon: Boxes, permission: ["inventory.view", "sales.dispatch"] },
     ],
   },
   {
     key: "sol",
     items: [
-      { href: "/sol", label: (t) => t.modules.sol, icon: Waypoints, permission: "sol.view", planned: true },
-      { href: "/vehicles", label: (t) => t.modules.vehicles, icon: Truck, permission: "vehicles.view", planned: true },
+      { href: "/sol", label: (t) => t.modules.sol, icon: Waypoints, permission: ["sol.view", "sol.manage"] },
+      { href: "/vehicles", label: (t) => t.modules.vehicles, icon: Truck, permission: "vehicles.view" },
     ],
   },
   {
     key: "finance",
     items: [
-      { href: "/cash-bank", label: (t) => t.modules.cash_bank, icon: Landmark, permission: "cash_bank.view", planned: true },
-      { href: "/expenses", label: (t) => t.modules.expenses, icon: Wallet, permission: "expenses.view", planned: true },
+      { href: "/cash-bank", label: (t) => t.modules.cash_bank, icon: Landmark, permission: "cash_bank.view" },
+      { href: "/expenses", label: (t) => t.modules.expenses, icon: Wallet, permission: ["expenses.view", "expenses.create", "expenses.post"] },
       { href: "/accounting", label: (t) => t.modules.accounting, icon: ScrollText, permission: "accounting.view", planned: true },
     ],
   },
@@ -80,7 +83,7 @@ export const NAVIGATION: NavGroup[] = [
   },
   {
     key: "insights",
-    items: [{ href: "/reports", label: (t) => t.modules.reports, icon: BarChart3, permission: "reports.view", planned: true }],
+    items: [{ href: "/reports", label: (t) => t.modules.reports, icon: BarChart3, permission: "reports.view" }],
   },
   {
     key: "administration",
@@ -88,15 +91,17 @@ export const NAVIGATION: NavGroup[] = [
       { href: "/admin/users", label: (t) => t.nav.users, icon: UserCog, permission: "users.view" },
       { href: "/admin/roles", label: (t) => t.nav.roles, icon: ShieldCheck, permission: "users.view" },
       { href: "/admin/audit", label: (t) => t.nav.accessHistory, icon: History, permission: "audit.view" },
-      { href: "/settings", label: (t) => t.modules.settings, icon: Settings, permission: "settings.manage", planned: true },
+      { href: "/settings", label: (t) => t.modules.settings, icon: Settings, permission: "settings.manage" },
     ],
   },
 ];
 
 export const NAV_ITEMS: NavItem[] = NAVIGATION.flatMap((group) => group.items);
 
+export const itemPermissions = (item: NavItem): readonly Permission[] => (typeof item.permission === "string" ? [item.permission] : item.permission);
+
 export function visibleNavigation(permissions: ReadonlySet<string>): NavGroup[] {
-  return NAVIGATION.map((group) => ({ ...group, items: group.items.filter((item) => permissions.has(item.permission)) }))
+  return NAVIGATION.map((group) => ({ ...group, items: group.items.filter((item) => itemPermissions(item).some((p) => permissions.has(p))) }))
     .filter((group) => group.items.length > 0);
 }
 

@@ -87,3 +87,32 @@ export function FormSkeleton() {
     </div>
   );
 }
+
+export function ListSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <div className="h-full rounded-xl border bg-card p-5 shadow-card">
+      <Skeleton className="h-5 w-40" />
+      <div className="mt-5 grid gap-4">
+        {Array.from({ length: rows }, (_, i) => (
+          <div key={i} className="flex items-center justify-between gap-6">
+            <div className="grid flex-1 gap-1.5"><Skeleton className="h-4 w-3/5" /><Skeleton className="h-3 w-2/5" /></div>
+            <Skeleton className="h-4 w-20" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ChartsSkeleton() {
+  return (
+    <div className="grid gap-6">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-80 rounded-xl" />)}
+      </div>
+    </div>
+  );
+}

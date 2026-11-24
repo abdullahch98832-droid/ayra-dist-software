@@ -76,6 +76,7 @@ describe("concurrent stock updates", () => {
     const orders = await Promise.all(Array.from({ length: 4 }, async () => {
       const so = one(await db.sql("insert into public.sales_orders (customer_id, warehouse_id) values ($1, $2) returning id", [c, b.mainWarehouse])).id as string;
       await db.sql("insert into public.sales_order_items (sales_order_id, product_id, unit_id, quantity, unit_price) values ($1, $2, $3, 30, 10)", [so, p, b.units.PCS]);
+      await db.as(b.admin, (q) => q("select public.submit_sales_order($1)", [so]));
       return so;
     }));
     const results = await settle(orders.map((id) => db.as(b.admin, (q) => q("select public.approve_sales_order($1)", [id]))));

@@ -70,6 +70,102 @@ export type Database = {
         Update: { [key: string]: never }
         Relationships: []
       }
+      brands: {
+        Row: {
+          id: string
+          name_en: string
+          name_ur: string | null
+          is_active: boolean
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          name_en: string
+          name_ur?: string | null
+          is_active?: boolean
+        }
+        Update: {
+          id?: string
+          name_en?: string
+          name_ur?: string | null
+          is_active?: boolean
+        }
+        Relationships: []
+      }
+      cash_deposits: {
+        Row: {
+          id: string
+          doc_no: string
+          employee_id: string
+          deposit_date: string
+          amount: number
+          financial_account_id: string
+          reference: string | null
+          notes: string | null
+          status: Database["public"]["Enums"]["document_status"]
+          void_reason: string | null
+          journal_entry_id: string | null
+          posted_at: string | null
+          posted_by: string | null
+          client_request_id: string | null
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
+        Relationships: [
+          {
+            foreignKeyName: "cash_deposits_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "order_takers"
+            referencedColumns: ["employee_id"]
+          },
+          {
+            foreignKeyName: "cash_deposits_financial_account_id_fkey"
+            columns: ["financial_account_id"]
+            isOneToOne: false
+            referencedRelation: "financial_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_deposits_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      cash_reconciliations: {
+        Row: {
+          id: string
+          employee_id: string
+          reconciled_on: string
+          expected_amount: number
+          counted_amount: number
+          difference: number | null
+          notes: string | null
+          created_at: string
+          created_by: string | null
+        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
+        Relationships: [
+          {
+            foreignKeyName: "cash_reconciliations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "order_takers"
+            referencedColumns: ["employee_id"]
+          }
+        ]
+      }
       chart_of_accounts: {
         Row: {
           id: string
@@ -119,6 +215,53 @@ export type Database = {
           }
         ]
       }
+      customer_notes: {
+        Row: {
+          id: string
+          doc_no: string
+          kind: Database["public"]["Enums"]["customer_note_kind"]
+          customer_id: string
+          sales_invoice_id: string | null
+          note_date: string
+          amount: number
+          reason: string | null
+          status: Database["public"]["Enums"]["document_status"]
+          void_reason: string | null
+          journal_entry_id: string | null
+          posted_at: string | null
+          posted_by: string | null
+          client_request_id: string | null
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
+        Relationships: [
+          {
+            foreignKeyName: "customer_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_notes_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_notes_sales_invoice_id_fkey"
+            columns: ["sales_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "sales_invoices"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       customer_payment_allocations: {
         Row: {
           id: string
@@ -162,7 +305,7 @@ export type Database = {
           customer_id: string
           payment_date: string
           amount: number
-          financial_account_id: string
+          financial_account_id: string | null
           method: Database["public"]["Enums"]["payment_method"]
           reference: string | null
           collected_by: string | null
@@ -176,30 +319,36 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          requested_allocations: Json | null
+          void_reason: string | null
+          sol_job_id: string | null
+          payer_account: string | null
         }
         Insert: {
           id?: string
           customer_id: string
           payment_date?: string
           amount: number | string
-          financial_account_id: string
+          financial_account_id?: string | null
           method: Database["public"]["Enums"]["payment_method"]
           reference?: string | null
           collected_by?: string | null
           notes?: string | null
           client_request_id?: string | null
+          payer_account?: string | null
         }
         Update: {
           id?: string
           customer_id?: string
           payment_date?: string
           amount?: number | string
-          financial_account_id?: string
+          financial_account_id?: string | null
           method?: Database["public"]["Enums"]["payment_method"]
           reference?: string | null
           collected_by?: string | null
           notes?: string | null
           client_request_id?: string | null
+          payer_account?: string | null
         }
         Relationships: [
           {
@@ -229,6 +378,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "journal_entries"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_payments_sol_job_id_fkey"
+            columns: ["sol_job_id"]
+            isOneToOne: false
+            referencedRelation: "sol_jobs"
+            referencedColumns: ["id"]
           }
         ]
       }
@@ -244,10 +400,11 @@ export type Database = {
           base_quantity: number | null
           unit_price: number
           tax_rate: number
-          line_net: number | null
-          tax_amount: number | null
-          line_total: number | null
+          tax_amount: number
           condition: Database["public"]["Enums"]["item_condition"]
+          discount_amount: number
+          line_net: number | null
+          line_total: number | null
         }
         Insert: {
           id?: string
@@ -322,6 +479,7 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          delivery_id: string | null
         }
         Insert: {
           id?: string
@@ -356,6 +514,13 @@ export type Database = {
             columns: ["damaged_warehouse_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_returns_delivery_id_fkey"
+            columns: ["delivery_id"]
+            isOneToOne: false
+            referencedRelation: "deliveries"
             referencedColumns: ["id"]
           },
           {
@@ -401,6 +566,10 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          whatsapp: string | null
+          city: string | null
+          payment_terms_days: number | null
+          is_sol_client: boolean
         }
         Insert: {
           id?: string
@@ -417,6 +586,9 @@ export type Database = {
           order_taker_id?: string | null
           is_active?: boolean
           notes?: string | null
+          whatsapp?: string | null
+          city?: string | null
+          payment_terms_days?: number | null
         }
         Update: {
           id?: string
@@ -433,6 +605,9 @@ export type Database = {
           order_taker_id?: string | null
           is_active?: boolean
           notes?: string | null
+          whatsapp?: string | null
+          city?: string | null
+          payment_terms_days?: number | null
         }
         Relationships: [
           {
@@ -463,6 +638,9 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          delivered_by: string | null
+          received_by: string | null
+          delivery_note: string | null
         }
         Insert: {
           id?: string
@@ -519,6 +697,7 @@ export type Database = {
           delivery_id: string
           sales_order_item_id: string
           quantity: number
+          returned_quantity: number
         }
         Insert: {
           id?: string
@@ -782,6 +961,7 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          vehicle_kind: string | null
         }
         Insert: {
           id?: string
@@ -790,6 +970,7 @@ export type Database = {
           name_ur: string
           gl_account_id: string
           is_active?: boolean
+          vehicle_kind?: string | null
         }
         Update: {
           id?: string
@@ -798,6 +979,7 @@ export type Database = {
           name_ur?: string
           gl_account_id?: string
           is_active?: boolean
+          vehicle_kind?: string | null
         }
         Relationships: [
           {
@@ -833,6 +1015,11 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          method: Database["public"]["Enums"]["payment_method"] | null
+          reference: string | null
+          litres: number | null
+          odometer: number | null
+          void_reason: string | null
         }
         Insert: {
           id?: string
@@ -848,6 +1035,10 @@ export type Database = {
           employee_id?: string | null
           receipt_path?: string | null
           client_request_id?: string | null
+          method?: Database["public"]["Enums"]["payment_method"] | null
+          reference?: string | null
+          litres?: number | string | null
+          odometer?: number | null
         }
         Update: {
           id?: string
@@ -863,6 +1054,10 @@ export type Database = {
           employee_id?: string | null
           receipt_path?: string | null
           client_request_id?: string | null
+          method?: Database["public"]["Enums"]["payment_method"] | null
+          reference?: string | null
+          litres?: number | string | null
+          odometer?: number | null
         }
         Relationships: [
           {
@@ -1066,8 +1261,10 @@ export type Database = {
           quantity: number
           base_quantity: number | null
           unit_cost: number
-          line_total: number | null
           notes: string | null
+          damaged_quantity: number
+          rejected_quantity: number
+          line_total: number | null
         }
         Insert: {
           id?: string
@@ -1079,6 +1276,8 @@ export type Database = {
           quantity: number
           unit_cost: number | string
           notes?: string | null
+          damaged_quantity?: number
+          rejected_quantity?: number
         }
         Update: {
           id?: string
@@ -1090,6 +1289,8 @@ export type Database = {
           quantity?: number
           unit_cost?: number | string
           notes?: string | null
+          damaged_quantity?: number
+          rejected_quantity?: number
         }
         Relationships: [
           {
@@ -1142,6 +1343,7 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          damaged_warehouse_id: string | null
         }
         Insert: {
           id?: string
@@ -1152,6 +1354,7 @@ export type Database = {
           supplier_reference?: string | null
           notes?: string | null
           client_request_id?: string | null
+          damaged_warehouse_id?: string | null
         }
         Update: {
           id?: string
@@ -1162,8 +1365,16 @@ export type Database = {
           supplier_reference?: string | null
           notes?: string | null
           client_request_id?: string | null
+          damaged_warehouse_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "goods_receipts_damaged_warehouse_id_fkey"
+            columns: ["damaged_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "goods_receipts_journal_entry_id_fkey"
             columns: ["journal_entry_id"]
@@ -1201,6 +1412,7 @@ export type Database = {
           total_value: number
           avg_unit_cost: number | null
           updated_at: string
+          last_unit_cost: number | null
         }
         Insert: { [key: string]: never }
         Update: { [key: string]: never }
@@ -1300,6 +1512,39 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      order_takers: {
+        Row: {
+          employee_id: string
+          territory: string | null
+          is_active: boolean
+          notes: string | null
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          employee_id: string
+          territory?: string | null
+          is_active?: boolean
+          notes?: string | null
+        }
+        Update: {
+          employee_id?: string
+          territory?: string | null
+          is_active?: boolean
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_takers_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           }
         ]
@@ -1506,6 +1751,9 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          brand_id: string | null
+          default_supplier_id: string | null
+          image_path: string | null
         }
         Insert: {
           id?: string
@@ -1519,6 +1767,9 @@ export type Database = {
           reorder_level?: number
           is_active?: boolean
           notes?: string | null
+          brand_id?: string | null
+          default_supplier_id?: string | null
+          image_path?: string | null
         }
         Update: {
           id?: string
@@ -1532,6 +1783,9 @@ export type Database = {
           reorder_level?: number
           is_active?: boolean
           notes?: string | null
+          brand_id?: string | null
+          default_supplier_id?: string | null
+          image_path?: string | null
         }
         Relationships: [
           {
@@ -1542,10 +1796,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "products_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "product_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_default_supplier_id_fkey"
+            columns: ["default_supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
             referencedColumns: ["id"]
           }
         ]
@@ -1668,6 +1936,9 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          closed_at: string | null
+          closed_by: string | null
+          close_reason: string | null
         }
         Insert: {
           id?: string
@@ -2067,6 +2338,19 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          submitted_at: string | null
+          submitted_by: string | null
+          sent_back_reason: string | null
+          picking_at: string | null
+          picking_by: string | null
+          delivered_at: string | null
+          completed_at: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          cancel_reason: string | null
+          closed_at: string | null
+          closed_by: string | null
+          close_reason: string | null
         }
         Insert: {
           id?: string
@@ -2112,6 +2396,183 @@ export type Database = {
           }
         ]
       }
+      sol_deliveries: {
+        Row: {
+          id: string
+          doc_no: string
+          sol_job_id: string
+          vehicle_id: string | null
+          driver_id: string | null
+          warehouse_id: string | null
+          delivery_date: string
+          destination: string
+          status: Database["public"]["Enums"]["delivery_status"]
+          dispatched_at: string | null
+          dispatched_by: string | null
+          delivered_at: string | null
+          delivered_by: string | null
+          received_by: string | null
+          delivery_note: string | null
+          odometer_start: number | null
+          odometer_end: number | null
+          notes: string | null
+          journal_entry_id: string | null
+          client_request_id: string | null
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
+        Relationships: [
+          {
+            foreignKeyName: "sol_deliveries_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sol_deliveries_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sol_deliveries_sol_job_id_fkey"
+            columns: ["sol_job_id"]
+            isOneToOne: false
+            referencedRelation: "sol_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sol_deliveries_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sol_deliveries_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      sol_delivery_items: {
+        Row: {
+          id: string
+          sol_delivery_id: string
+          sol_job_item_id: string
+          quantity: number
+          returned_quantity: number
+        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
+        Relationships: [
+          {
+            foreignKeyName: "sol_delivery_items_sol_delivery_id_fkey"
+            columns: ["sol_delivery_id"]
+            isOneToOne: false
+            referencedRelation: "sol_deliveries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sol_delivery_items_sol_job_item_id_fkey"
+            columns: ["sol_job_item_id"]
+            isOneToOne: false
+            referencedRelation: "sol_job_items"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      sol_job_items: {
+        Row: {
+          id: string
+          sol_job_id: string
+          line_no: number
+          kind: string
+          service_id: string | null
+          product_id: string | null
+          unit_id: string | null
+          factor: number
+          description: string | null
+          quantity: number
+          unit_price: number
+          line_total: number | null
+          delivered_quantity: number
+        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
+        Relationships: [
+          {
+            foreignKeyName: "sol_job_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sol_job_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "sol_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sol_job_items_sol_job_id_fkey"
+            columns: ["sol_job_id"]
+            isOneToOne: false
+            referencedRelation: "sol_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sol_job_items_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      sol_job_types: {
+        Row: {
+          id: string
+          name_en: string
+          name_ur: string | null
+          uses_services: boolean
+          uses_products: boolean
+          uses_deliveries: boolean
+          is_active: boolean
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          name_en: string
+          name_ur?: string | null
+          uses_services?: boolean
+          uses_products?: boolean
+          uses_deliveries?: boolean
+          is_active?: boolean
+        }
+        Update: {
+          id?: string
+          name_en?: string
+          name_ur?: string | null
+          uses_services?: boolean
+          uses_products?: boolean
+          uses_deliveries?: boolean
+          is_active?: boolean
+        }
+        Relationships: []
+      }
       sol_jobs: {
         Row: {
           id: string
@@ -2135,35 +2596,20 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          job_type_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          address: string | null
+          description: string | null
+          responsible_employee_id: string | null
+          start_date: string | null
+          due_date: string | null
+          completion_date: string | null
+          cancel_reason: string | null
+          reopen_reason: string | null
         }
-        Insert: {
-          id?: string
-          customer_id: string
-          job_date?: string
-          vehicle_id?: string | null
-          driver_id?: string | null
-          pickup_location?: string | null
-          delivery_location?: string | null
-          cargo_description?: string | null
-          contract_value: number | string
-          proof_path?: string | null
-          notes?: string | null
-          client_request_id?: string | null
-        }
-        Update: {
-          id?: string
-          customer_id?: string
-          job_date?: string
-          vehicle_id?: string | null
-          driver_id?: string | null
-          pickup_location?: string | null
-          delivery_location?: string | null
-          cargo_description?: string | null
-          contract_value?: number | string
-          proof_path?: string | null
-          notes?: string | null
-          client_request_id?: string | null
-        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
         Relationships: [
           {
             foreignKeyName: "sol_jobs_customer_id_fkey"
@@ -2180,10 +2626,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sol_jobs_job_type_id_fkey"
+            columns: ["job_type_id"]
+            isOneToOne: false
+            referencedRelation: "sol_job_types"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "sol_jobs_journal_entry_id_fkey"
             columns: ["journal_entry_id"]
             isOneToOne: false
             referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sol_jobs_responsible_employee_id_fkey"
+            columns: ["responsible_employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
           {
@@ -2194,6 +2654,107 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      }
+      sol_return_items: {
+        Row: {
+          id: string
+          sol_return_id: string
+          sol_delivery_item_id: string
+          quantity: number
+        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
+        Relationships: [
+          {
+            foreignKeyName: "sol_return_items_sol_delivery_item_id_fkey"
+            columns: ["sol_delivery_item_id"]
+            isOneToOne: false
+            referencedRelation: "sol_delivery_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sol_return_items_sol_return_id_fkey"
+            columns: ["sol_return_id"]
+            isOneToOne: false
+            referencedRelation: "sol_returns"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      sol_returns: {
+        Row: {
+          id: string
+          doc_no: string
+          sol_delivery_id: string
+          warehouse_id: string | null
+          return_date: string
+          reason: string
+          journal_entry_id: string | null
+          client_request_id: string | null
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: { [key: string]: never }
+        Update: { [key: string]: never }
+        Relationships: [
+          {
+            foreignKeyName: "sol_returns_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sol_returns_sol_delivery_id_fkey"
+            columns: ["sol_delivery_id"]
+            isOneToOne: false
+            referencedRelation: "sol_deliveries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sol_returns_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      sol_services: {
+        Row: {
+          id: string
+          name_en: string
+          name_ur: string | null
+          unit_label: string | null
+          unit_label_ur: string | null
+          default_price: number | null
+          is_active: boolean
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          name_en: string
+          name_ur?: string | null
+          unit_label?: string | null
+          unit_label_ur?: string | null
+          default_price?: number | string | null
+          is_active?: boolean
+        }
+        Update: {
+          id?: string
+          name_en?: string
+          name_ur?: string | null
+          unit_label?: string | null
+          unit_label_ur?: string | null
+          default_price?: number | string | null
+          is_active?: boolean
+        }
+        Relationships: []
       }
       sol_trips: {
         Row: {
@@ -2488,6 +3049,7 @@ export type Database = {
           notes: string | null
           created_at: string
           created_by: string | null
+          negative_override: boolean
         }
         Insert: { [key: string]: never }
         Update: { [key: string]: never }
@@ -2649,7 +3211,7 @@ export type Database = {
           {
             foreignKeyName: "supplier_contacts_supplier_id_fkey"
             columns: ["supplier_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "suppliers"
             referencedColumns: ["id"]
           }
@@ -3053,6 +3615,11 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          make: string | null
+          model: string | null
+          driver_id: string | null
+          fuel_type: string | null
+          status: string
         }
         Insert: {
           id?: string
@@ -3061,8 +3628,12 @@ export type Database = {
           vehicle_type?: string | null
           capacity?: string | null
           ownership?: Database["public"]["Enums"]["vehicle_ownership"]
-          is_active?: boolean
           notes?: string | null
+          make?: string | null
+          model?: string | null
+          driver_id?: string | null
+          fuel_type?: string | null
+          status?: string
         }
         Update: {
           id?: string
@@ -3071,10 +3642,22 @@ export type Database = {
           vehicle_type?: string | null
           capacity?: string | null
           ownership?: Database["public"]["Enums"]["vehicle_ownership"]
-          is_active?: boolean
           notes?: string | null
+          make?: string | null
+          model?: string | null
+          driver_id?: string | null
+          fuel_type?: string | null
+          status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       warehouses: {
         Row: {
@@ -3164,16 +3747,11 @@ export type Database = {
         }
         Relationships: []
       }
-      secure_sol_job_profitability: {
+      secure_sol_item_costs: {
         Row: {
+          sol_job_item_id: string | null
           sol_job_id: string | null
-          doc_no: string | null
-          customer_id: string | null
-          job_date: string | null
-          status: Database["public"]["Enums"]["sol_job_status"] | null
-          contract_value: number | null
-          expenses: number | null
-          profit: number | null
+          unit_cost: number | null
         }
         Relationships: []
       }
@@ -3343,6 +3921,24 @@ export type Database = {
         }
         Relationships: []
       }
+      v_purchase_order_progress: {
+        Row: {
+          purchase_order_item_id: string | null
+          purchase_order_id: string | null
+          product_id: string | null
+          unit_id: string | null
+          factor: number | null
+          ordered_quantity: number | null
+          ordered_base: number | null
+          unit_price: number | null
+          line_total: number | null
+          accepted_base: number | null
+          damaged_base: number | null
+          rejected_base: number | null
+          remaining_base: number | null
+        }
+        Relationships: []
+      }
       v_purchase_receipt_discrepancies: {
         Row: {
           goods_receipt_id: string | null
@@ -3353,6 +3949,8 @@ export type Database = {
           expected_quantity: number | null
           received_quantity: number | null
           difference: number | null
+          damaged_quantity: number | null
+          rejected_quantity: number | null
         }
         Relationships: []
       }
@@ -3380,6 +3978,8 @@ export type Database = {
           returned_amount: number | null
           outstanding: number | null
           payment_status: string | null
+          credited_amount: number | null
+          sales_order_id: string | null
         }
         Relationships: []
       }
@@ -3390,8 +3990,6 @@ export type Database = {
           customer_id: string | null
           job_date: string | null
           status: Database["public"]["Enums"]["sol_job_status"] | null
-          vehicle_id: string | null
-          driver_id: string | null
           contract_value: number | null
           received_amount: number | null
           pending_amount: number | null
@@ -3442,6 +4040,28 @@ export type Database = {
         }
         Relationships: []
       }
+      v_supplier_invoice_status: {
+        Row: {
+          supplier_invoice_id: string | null
+          doc_no: string | null
+          supplier_id: string | null
+          supplier_name: string | null
+          supplier_name_ur: string | null
+          is_principal: boolean | null
+          invoice_number: string | null
+          invoice_date: string | null
+          due_date: string | null
+          amount: number | null
+          receipts_total: number | null
+          variance: number | null
+          status: Database["public"]["Enums"]["document_status"] | null
+          notes: string | null
+          created_at: string | null
+          paid_amount: number | null
+          outstanding: number | null
+        }
+        Relationships: []
+      }
       v_supplier_ledger: {
         Row: {
           supplier_id: string | null
@@ -3454,6 +4074,18 @@ export type Database = {
           debit: number | null
           credit: number | null
           running_balance: number | null
+        }
+        Relationships: []
+      }
+      v_unbilled_receipts: {
+        Row: {
+          goods_receipt_id: string | null
+          doc_no: string | null
+          receipt_date: string | null
+          supplier_id: string | null
+          supplier_reference: string | null
+          total_amount: number | null
+          is_principal: boolean | null
         }
         Relationships: []
       }
@@ -3556,6 +4188,34 @@ export type Database = {
       cancel_sales_order: {
         Args: {
           p_id: string
+          p_reason?: string
+        }
+        Returns: string
+      }
+      cancel_sol_delivery: {
+        Args: {
+          p_id: string
+        }
+        Returns: string
+      }
+      cancel_sol_job: {
+        Args: {
+          p_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      close_purchase_order: {
+        Args: {
+          p_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      close_sales_order: {
+        Args: {
+          p_id: string
+          p_reason: string
         }
         Returns: string
       }
@@ -3565,9 +4225,61 @@ export type Database = {
         }
         Returns: string
       }
+      collector_cash: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          employee_id: string
+          full_name: string
+          full_name_ur: string
+          is_active: boolean
+          held: number
+          waiting_collections: number
+          waiting_deposits: number
+          last_deposit: string
+          last_count: string
+          last_counted: number
+          last_difference: number
+        }[]
+      }
+      collector_statement: {
+        Args: {
+          p_employee_id: string
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          entry_date: string
+          kind: string
+          source_id: string
+          doc_no: string
+          party: string
+          party_ur: string
+          is_reversal: boolean
+          received: number
+          handed_over: number
+          balance: number
+        }[]
+      }
+      complete_delivery: {
+        Args: {
+          p_id: string
+          p_doc?: Json
+          p_returns?: Json
+        }
+        Returns: string
+      }
+      complete_sol_delivery: {
+        Args: {
+          p_id: string
+          p_doc?: Json
+          p_returns?: Json
+        }
+        Returns: string
+      }
       complete_sol_job: {
         Args: {
           p_id: string
+          p_date?: string
         }
         Returns: string
       }
@@ -3585,15 +4297,197 @@ export type Database = {
         }
         Returns: string
       }
+      customer_statement: {
+        Args: {
+          p_customer_id: string
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          entry_date: string
+          kind: string
+          source_id: string
+          doc_no: string
+          journal_no: string
+          description: string
+          is_reversal: boolean
+          debit: number
+          credit: number
+          balance: number
+        }[]
+      }
+      customer_summary: {
+        Args: {
+          p_customer_id: string
+        }
+        Returns: Json
+      }
+      dashboard_low_stock: {
+        Args: {
+          p_limit?: number
+        }
+        Returns: Json
+      }
+      dashboard_my_records: {
+        Args: {
+          p_limit?: number
+        }
+        Returns: {
+          kind: string
+          doc_no: string
+          status: string
+          record_date: string
+          created_at: string
+        }[]
+      }
+      dashboard_open_work: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          scope: string
+          kind: string
+          waiting: number
+        }[]
+      }
+      dashboard_overdue: {
+        Args: {
+          p_limit?: number
+        }
+        Returns: Json
+      }
+      dashboard_pending_deliveries: {
+        Args: {
+          p_limit?: number
+        }
+        Returns: {
+          doc_no: string
+          delivery_date: string
+          status: Database["public"]["Enums"]["delivery_status"]
+          order_no: string
+          customer: string
+          customer_ur: string
+          vehicle: string
+          total_count: number
+        }[]
+      }
+      dashboard_performance: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
+        Returns: Json
+      }
+      dashboard_position: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      dashboard_recent_orders: {
+        Args: {
+          p_limit?: number
+        }
+        Returns: {
+          doc_no: string
+          order_date: string
+          status: Database["public"]["Enums"]["sales_order_status"]
+          total_amount: number
+          customer: string
+          customer_ur: string
+        }[]
+      }
+      dashboard_recent_transactions: {
+        Args: {
+          p_limit?: number
+        }
+        Returns: {
+          kind: string
+          doc_no: string
+          txn_date: string
+          amount: number
+          party: string
+          party_ur: string
+          posted_at: string
+        }[]
+      }
+      delete_sol_job: {
+        Args: {
+          p_id: string
+        }
+        Returns: string
+      }
       dispatch_delivery: {
         Args: {
           p_id: string
         }
         Returns: string
       }
+      dispatch_sol_delivery: {
+        Args: {
+          p_id: string
+        }
+        Returns: string
+      }
+      inventory_reconciliation: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      list_drivers: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          driver_id: string
+          full_name: string
+          full_name_ur: string
+          license_number: string
+          phone: string
+          license_expiry: string
+          is_active: boolean
+          employee_id: string
+        }[]
+      }
+      list_order_takers: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          employee_id: string
+          code: string
+          full_name: string
+          full_name_ur: string
+          phone: string
+          whatsapp: string
+          photo_path: string
+          territory: string
+          employment_status: Database["public"]["Enums"]["employment_status"]
+          is_active: boolean
+          notes: string
+          customers: number
+        }[]
+      }
+      list_payment_accounts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          account_id: string
+          name: string
+          account_type: Database["public"]["Enums"]["financial_account_type"]
+          masked: string
+          is_active: boolean
+        }[]
+      }
+      list_staff: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          employee_id: string
+          code: string
+          full_name: string
+          full_name_ur: string
+          is_active: boolean
+        }[]
+      }
       my_permissions: {
         Args: Record<PropertyKey, never>
         Returns: string[]
+      }
+      post_cash_deposit: {
+        Args: {
+          p_id: string
+        }
+        Returns: string
       }
       post_customer_payment: {
         Args: {
@@ -3686,6 +4580,12 @@ export type Database = {
         }
         Returns: string
       }
+      procurement_summary: {
+        Args: {
+          p_principal: boolean
+        }
+        Returns: Json
+      }
       profit_and_loss: {
         Args: {
           p_from: string
@@ -3699,6 +4599,510 @@ export type Database = {
           amount: number
         }[]
       }
+      reconcile_collector_cash: {
+        Args: {
+          p_employee_id: string
+          p_counted: number | string
+          p_notes?: string
+        }
+        Returns: string
+      }
+      record_cash_deposit: {
+        Args: {
+          p_doc: Json
+        }
+        Returns: string
+      }
+      record_customer_note: {
+        Args: {
+          p_doc: Json
+        }
+        Returns: string
+      }
+      record_customer_payment: {
+        Args: {
+          p_doc: Json
+          p_allocations?: Json
+        }
+        Returns: string
+      }
+      record_expense: {
+        Args: {
+          p_doc: Json
+        }
+        Returns: string
+      }
+      record_sol_payment: {
+        Args: {
+          p_job_id: string
+          p_doc: Json
+        }
+        Returns: string
+      }
+      record_supplier_payment: {
+        Args: {
+          p_doc: Json
+          p_allocations?: Json
+        }
+        Returns: string
+      }
+      release_sol_payment: {
+        Args: {
+          p_payment_id: string
+          p_job_id: string
+        }
+        Returns: string
+      }
+      reopen_sol_job: {
+        Args: {
+          p_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      report_collections: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_collector_id?: string
+          p_method?: string
+        }
+        Returns: {
+          payment_id: string
+          doc_no: string
+          payment_date: string
+          customer_id: string
+          customer: string
+          customer_ur: string
+          method: Database["public"]["Enums"]["payment_method"]
+          reference: string
+          collector_en: string
+          collector_ur: string
+          destination: string
+          held: boolean
+          amount: number
+          settled: number
+          on_account: number
+          invoices: string
+        }[]
+      }
+      report_damaged_stock: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          product_id: string
+          sku: string
+          name_en: string
+          name_ur: string
+          unit_en: string
+          unit_ur: string
+          on_hand: number
+          stock_value: number
+          received_damaged: number
+          customer_returns: number
+          moved_in: number
+          written_off: number
+          returned_to_supplier: number
+        }[]
+      }
+      report_deliveries: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_status?: string
+        }
+        Returns: {
+          delivery_id: string
+          doc_no: string
+          delivery_date: string
+          status: Database["public"]["Enums"]["delivery_status"]
+          order_id: string
+          order_no: string
+          customer: string
+          customer_ur: string
+          city: string
+          taker_en: string
+          taker_ur: string
+          vehicle: string
+          driver_en: string
+          driver_ur: string
+          dispatched_at: string
+          delivered_at: string
+          received_by: string
+          lines: number
+          dispatched_quantity: number
+          returned_quantity: number
+          invoice_id: string
+          invoice_no: string
+          amount: number
+          returned_amount: number
+        }[]
+      }
+      report_low_stock: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          product_id: string
+          sku: string
+          name_en: string
+          name_ur: string
+          unit_en: string
+          unit_ur: string
+          available: number
+          reorder_level: number
+          shortage: number
+          on_order: number
+          supplier_en: string
+          supplier_ur: string
+          last_received: string
+        }[]
+      }
+      report_order_takers: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          employee_id: string
+          code: string
+          full_name: string
+          full_name_ur: string
+          territory: string
+          employment_status: Database["public"]["Enums"]["employment_status"]
+          is_active: boolean
+          customers: number
+          orders: number
+          order_value: number
+          delivered_orders: number
+          cancelled_orders: number
+          open_orders: number
+          total_sales: number
+          collected: number
+          pending_collections: number
+          cash_held: number
+        }[]
+      }
+      report_product_profitability: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          product_id: string
+          sku: string
+          name_en: string
+          name_ur: string
+          unit_en: string
+          unit_ur: string
+          quantity: number
+          net_sales: number
+          cost: number
+          gross_profit: number
+          margin_percent: number
+        }[]
+      }
+      report_purchases: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_supplier_id?: string
+          p_principal?: boolean
+        }
+        Returns: {
+          goods_receipt_id: string
+          doc_no: string
+          receipt_date: string
+          supplier_en: string
+          supplier_ur: string
+          is_principal: boolean
+          order_no: string
+          ordered_base: number
+          received_base: number
+          accepted_base: number
+          damaged_base: number
+          rejected_base: number
+          total_cost: number
+          invoice_no: string
+          invoice_amount: number
+          paid_amount: number
+          remaining: number
+        }[]
+      }
+      report_receivables: {
+        Args: {
+          p_as_of: string
+          p_order_taker_id?: string
+        }
+        Returns: {
+          customer_id: string
+          code: string
+          name: string
+          name_ur: string
+          phone: string
+          area: string
+          city: string
+          taker_en: string
+          taker_ur: string
+          credit_limit: number
+          balance: number
+          days_30: number
+          days_60: number
+          days_90: number
+          older: number
+          advance: number
+          overdue: number
+          last_payment: string
+        }[]
+      }
+      report_sales: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_bucket?: string
+        }
+        Returns: {
+          period: string
+          invoices: number
+          gross: number
+          discounts: number
+          net: number
+          tax: number
+          returns: number
+          credit_notes: number
+          debit_notes: number
+          net_sales: number
+          collected: number
+        }[]
+      }
+      report_sales_by_customer: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_order_taker_id?: string
+        }
+        Returns: {
+          customer_id: string
+          code: string
+          name: string
+          name_ur: string
+          city: string
+          taker_en: string
+          taker_ur: string
+          orders: number
+          invoices: number
+          net: number
+          tax: number
+          returns: number
+          notes: number
+          net_sales: number
+          collected: number
+          balance: number
+        }[]
+      }
+      report_sales_by_product: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_category_id?: string
+        }
+        Returns: {
+          product_id: string
+          sku: string
+          name_en: string
+          name_ur: string
+          unit_en: string
+          unit_ur: string
+          category_en: string
+          category_ur: string
+          invoices: number
+          quantity: number
+          gross: number
+          discounts: number
+          net: number
+          returned_quantity: number
+          returns: number
+          net_quantity: number
+          net_sales: number
+        }[]
+      }
+      report_sol_jobs: {
+        Args: {
+          p_from?: string
+          p_to?: string
+          p_status?: string
+          p_customer_id?: string
+          p_type_id?: string
+          p_job_id?: string
+        }
+        Returns: {
+          job_id: string
+          doc_no: string
+          job_date: string
+          customer_id: string
+          customer: string
+          customer_ur: string
+          type_en: string
+          type_ur: string
+          responsible_en: string
+          responsible_ur: string
+          status: Database["public"]["Enums"]["sol_job_status"]
+          start_date: string
+          due_date: string
+          completion_date: string
+          contract_value: number
+          received: number
+          pending: number
+          estimated_cost: number
+          product_costs: number
+          other_costs: number
+          direct_costs: number
+          vehicle_expenses: number
+          profit: number
+        }[]
+      }
+      report_stock: {
+        Args: {
+          p_warehouse_id?: string
+          p_category_id?: string
+        }
+        Returns: {
+          product_id: string
+          sku: string
+          barcode: string
+          name_en: string
+          name_ur: string
+          category_en: string
+          category_ur: string
+          brand_en: string
+          brand_ur: string
+          unit_en: string
+          unit_ur: string
+          on_hand: number
+          reserved: number
+          available: number
+          damaged: number
+          reorder_level: number
+          unit_cost: number
+          stock_value: number
+        }[]
+      }
+      report_stock_movements: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_product_id?: string
+          p_warehouse_id?: string
+          p_type?: string
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          id: number
+          movement_date: string
+          product_id: string
+          sku: string
+          name_en: string
+          name_ur: string
+          unit_en: string
+          unit_ur: string
+          warehouse_en: string
+          warehouse_ur: string
+          movement_type: Database["public"]["Enums"]["stock_movement_type"]
+          quantity: number
+          balance_after: number
+          value_change: number
+          negative_override: boolean
+          source_type: string
+          doc_no: string
+          created_at: string
+          created_by_name: string
+          total_count: number
+        }[]
+      }
+      report_suppliers: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          supplier_id: string
+          code: string
+          name: string
+          name_ur: string
+          is_principal: boolean
+          opening: number
+          purchases: number
+          bill_differences: number
+          returns: number
+          payments: number
+          other: number
+          closing: number
+          open_orders: number
+        }[]
+      }
+      report_vehicle_log: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_vehicle_id?: string
+        }
+        Returns: {
+          kind: string
+          delivery_id: string
+          doc_no: string
+          delivery_date: string
+          vehicle_id: string
+          registration_no: string
+          driver_en: string
+          driver_ur: string
+          source_id: string
+          source_no: string
+          client: string
+          client_ur: string
+          destination: string
+          status: Database["public"]["Enums"]["delivery_status"]
+          dispatched_at: string
+          delivered_at: string
+          odometer_start: number
+          odometer_end: number
+        }[]
+      }
+      report_vehicles: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_vehicle_id?: string
+        }
+        Returns: {
+          vehicle_id: string
+          registration_no: string
+          name: string
+          vehicle_type: string
+          status: string
+          driver_en: string
+          driver_ur: string
+          jobs: number
+          sol_deliveries: number
+          sales_deliveries: number
+          distance: number
+          fuel: number
+          litres: number
+          maintenance: number
+          repairs: number
+          other: number
+          total: number
+          for_jobs: number
+        }[]
+      }
+      return_sol_goods: {
+        Args: {
+          p_delivery_id: string
+          p_doc: Json
+          p_lines: Json
+        }
+        Returns: string
+      }
       reverse_manual_journal: {
         Args: {
           p_entry_id: string
@@ -3707,10 +5111,175 @@ export type Database = {
         }
         Returns: string
       }
+      sales_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      save_customer: {
+        Args: {
+          p_id: string
+          p_doc: Json
+        }
+        Returns: string
+      }
+      save_customer_return: {
+        Args: {
+          p_id: string
+          p_doc: Json
+          p_lines: Json
+        }
+        Returns: string
+      }
+      save_delivery: {
+        Args: {
+          p_order_id: string
+          p_doc: Json
+          p_lines: Json
+        }
+        Returns: string
+      }
+      save_financial_account: {
+        Args: {
+          p_id: string
+          p_doc: Json
+        }
+        Returns: string
+      }
+      save_goods_receipt: {
+        Args: {
+          p_id: string
+          p_doc: Json
+          p_lines: Json
+        }
+        Returns: string
+      }
+      save_order_taker: {
+        Args: {
+          p_employee_id: string
+          p_doc: Json
+        }
+        Returns: string
+      }
+      save_product: {
+        Args: {
+          p_id: string
+          p_doc: Json
+          p_units: Json
+        }
+        Returns: string
+      }
+      save_purchase_order: {
+        Args: {
+          p_id: string
+          p_doc: Json
+          p_lines: Json
+        }
+        Returns: string
+      }
+      save_sales_order: {
+        Args: {
+          p_id: string
+          p_doc: Json
+          p_lines: Json
+        }
+        Returns: string
+      }
+      save_sol_delivery: {
+        Args: {
+          p_id: string
+          p_job_id: string
+          p_doc: Json
+          p_lines: Json
+        }
+        Returns: string
+      }
+      save_sol_job: {
+        Args: {
+          p_id: string
+          p_doc: Json
+          p_lines: Json
+        }
+        Returns: string
+      }
+      save_stock_adjustment: {
+        Args: {
+          p_id: string
+          p_doc: Json
+          p_lines: Json
+        }
+        Returns: string
+      }
+      save_stock_count: {
+        Args: {
+          p_id: string
+          p_doc: Json
+          p_lines: Json
+        }
+        Returns: string
+      }
+      save_stock_transfer: {
+        Args: {
+          p_id: string
+          p_doc: Json
+          p_lines: Json
+        }
+        Returns: string
+      }
+      save_supplier: {
+        Args: {
+          p_id: string
+          p_doc: Json
+          p_contacts: Json
+        }
+        Returns: string
+      }
+      save_supplier_invoice: {
+        Args: {
+          p_id: string
+          p_doc: Json
+          p_receipts: Json
+        }
+        Returns: string
+      }
+      save_supplier_return: {
+        Args: {
+          p_id: string
+          p_doc: Json
+          p_lines: Json
+        }
+        Returns: string
+      }
+      send_back_sales_order: {
+        Args: {
+          p_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
       set_sol_job_status: {
         Args: {
           p_id: string
           p_status: Database["public"]["Enums"]["sol_job_status"]
+        }
+        Returns: string
+      }
+      settle_invoices: {
+        Args: {
+          p_payment_id: string
+          p_allocations: Json
+        }
+        Returns: string
+      }
+      sol_summary: {
+        Args: {
+          p_from: string
+          p_to: string
+        }
+        Returns: Json
+      }
+      start_picking: {
+        Args: {
+          p_id: string
         }
         Returns: string
       }
@@ -3734,6 +5303,20 @@ export type Database = {
           balance_debit: number
           balance_credit: number
         }[]
+      }
+      void_cash_deposit: {
+        Args: {
+          p_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      void_customer_note: {
+        Args: {
+          p_id: string
+          p_reason: string
+        }
+        Returns: string
       }
       void_customer_payment: {
         Args: {
@@ -3760,6 +5343,7 @@ export type Database = {
     Enums: {
       account_type: "asset" | "liability" | "equity" | "income" | "expense"
       adjustment_kind: "opening" | "count" | "write_off" | "other"
+      customer_note_kind: "opening" | "credit" | "debit"
       delivery_status: "draft" | "dispatched" | "delivered" | "cancelled"
       document_status: "draft" | "posted" | "void"
       employment_status: "active" | "on_leave" | "terminated"
@@ -3769,10 +5353,10 @@ export type Database = {
       payment_method: "cash" | "bank_transfer" | "cheque" | "online" | "other"
       period_status: "open" | "closed"
       purchase_order_status: "draft" | "approved" | "partially_received" | "received" | "cancelled"
-      sales_order_status: "draft" | "submitted" | "approved" | "partially_dispatched" | "dispatched" | "cancelled"
+      sales_order_status: "draft" | "submitted" | "approved" | "picking" | "partially_dispatched" | "dispatched" | "delivered" | "completed" | "cancelled"
       sol_job_status: "draft" | "confirmed" | "in_progress" | "completed" | "cancelled"
       sol_trip_status: "open" | "closed"
-      stock_movement_type: "opening" | "purchase_receipt" | "purchase_return" | "sale" | "sales_return" | "transfer_out" | "transfer_in" | "adjustment_in" | "adjustment_out" | "write_off"
+      stock_movement_type: "opening" | "purchase_receipt" | "purchase_return" | "sale" | "sales_return" | "transfer_out" | "transfer_in" | "adjustment_in" | "adjustment_out" | "write_off" | "sol_issue" | "sol_return"
       vehicle_ownership: "owned" | "rented"
       warehouse_type: "main" | "vehicle" | "damaged"
     }
@@ -3797,6 +5381,7 @@ export const Constants = {
     Enums: {
       account_type: ["asset","liability","equity","income","expense"],
       adjustment_kind: ["opening","count","write_off","other"],
+      customer_note_kind: ["opening","credit","debit"],
       delivery_status: ["draft","dispatched","delivered","cancelled"],
       document_status: ["draft","posted","void"],
       employment_status: ["active","on_leave","terminated"],
@@ -3806,10 +5391,10 @@ export const Constants = {
       payment_method: ["cash","bank_transfer","cheque","online","other"],
       period_status: ["open","closed"],
       purchase_order_status: ["draft","approved","partially_received","received","cancelled"],
-      sales_order_status: ["draft","submitted","approved","partially_dispatched","dispatched","cancelled"],
+      sales_order_status: ["draft","submitted","approved","picking","partially_dispatched","dispatched","delivered","completed","cancelled"],
       sol_job_status: ["draft","confirmed","in_progress","completed","cancelled"],
       sol_trip_status: ["open","closed"],
-      stock_movement_type: ["opening","purchase_receipt","purchase_return","sale","sales_return","transfer_out","transfer_in","adjustment_in","adjustment_out","write_off"],
+      stock_movement_type: ["opening","purchase_receipt","purchase_return","sale","sales_return","transfer_out","transfer_in","adjustment_in","adjustment_out","write_off","sol_issue","sol_return"],
       vehicle_ownership: ["owned","rented"],
       warehouse_type: ["main","vehicle","damaged"],
     },

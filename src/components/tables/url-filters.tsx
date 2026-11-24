@@ -4,8 +4,10 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LoaderCircle, Search } from "lucide-react";
 import { useI18n } from "@/i18n/context";
+import { cn } from "@/lib/utils";
 import { NativeSelect } from "@/components/forms/field";
 import { Input } from "@/components/ui/input";
+import { TablePagination } from "./table-pagination";
 
 function useUrlParam(param: string) {
   const router = useRouter();
@@ -16,6 +18,7 @@ function useUrlParam(param: string) {
     const next = new URLSearchParams(params);
     if (value) next.set(param, value);
     else next.delete(param);
+    if (param !== "page") next.delete("page"); // a new filter starts at its first page
     const query = next.toString();
     startTransition(() => router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false }));
   };
@@ -48,12 +51,29 @@ export function UrlSearch({ param = "q", placeholder }: { param?: string; placeh
   );
 }
 
-export function UrlSelect({ param, label, options }: { param: string; label: string; options: { value: string; label: string }[] }) {
+export function UrlSelect({ param, label, options, className }: { param: string; label: string; options: { value: string; label: string }[]; className?: string }) {
   const { value, set, pending } = useUrlParam(param);
   return (
-    <NativeSelect aria-label={label} value={value} disabled={pending} onChange={(e) => set(e.target.value)} className="w-full sm:w-48">
+    <NativeSelect aria-label={label} value={value} disabled={pending} onChange={(e) => set(e.target.value)} className={cn("w-full sm:w-48", className)}>
       <option value="">{label}</option>
       {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
     </NativeSelect>
+  );
+}
+
+/** Paging for lists that the server cuts into pages: writes `?page=`. */
+export function UrlPagination({ page, pageSize, total }: { page: number; pageSize: number; total: number }) {
+  const { set } = useUrlParam("page");
+  return total > 0 ? <TablePagination page={page} pageSize={pageSize} total={total} onPageChange={(p) => set(p > 1 ? String(p) : "")} /> : null;
+}
+
+/** One date in the address; `fallback` is shown when there is none. */
+export function UrlDate({ param, label, max, fallback }: { param: string; label: string; max?: string; fallback: string }) {
+  const { value, set, pending } = useUrlParam(param);
+  return (
+    <label className="flex w-full items-center gap-2 text-sm text-muted-foreground sm:w-auto">
+      {label}
+      <Input type="date" dir="ltr" value={value || fallback} max={max} disabled={pending} onChange={(e) => set(e.target.value === fallback ? "" : e.target.value)} className="w-full sm:w-40" />
+    </label>
   );
 }

@@ -18,6 +18,24 @@ export async function getNotifications(ctx: SessionContext): Promise<Notificatio
       if (error) throw error;
       if (count) items.push({ id: "users-without-role", kind: "usersWithoutRole", count, href: "/admin/users" });
     }
+    const work = ["sales.approve", "sales.dispatch", "receivables.post", "sol.dispatch", "expenses.post"] as const;
+    if (work.some((p) => can(ctx, p))) {
+      const supabase = await createClient();
+      // Counts only what this user may act on; the database applies their permissions.
+      const { data, error } = await supabase.rpc("dashboard_open_work");
+      if (error) throw error;
+      const waiting = new Map(data.filter((r) => r.scope === "review").map((r) => [r.kind, Number(r.waiting)]));
+      const add = (kind: AppNotification["kind"], source: string, href: string) => {
+        const count = waiting.get(source);
+        if (count) items.push({ id: source, kind, count, href });
+      };
+      add("ordersToApprove", "sales_order", "/sales/orders?status=submitted");
+      add("ordersToDispatch", "dispatch", "/inventory/dispatch");
+      add("paymentsToPost", "customer_payment", "/receivables/payments?status=draft");
+      add("solDeliveries", "sol_delivery", "/sol/deliveries?status=draft");
+      add("expensesToPost", "expense", "/expenses?status=draft");
+      add("depositsToConfirm", "cash_deposit", "/receivables/cash?status=draft");
+    }
     return { ok: true, items };
   } catch (error) {
     console.error(error);

@@ -51,6 +51,38 @@ Phase 3 brief (2026-11-24):
 - "Company accounts" is interpreted as the **main company (Ayra Happiness) account** and gets its own permissions (`company.view`, `company.pay`). (ASSUMPTION — confirm; cash and bank accounts have separate permissions.)
 - Confidential for non-managers: purchase costs, profit margins, salaries, bank information, financial reports, user administration.
 
+Phase 5 brief (2026-11-24), dashboard definitions (ASSUMPTION — confirm; see DASHBOARD.md):
+- Gross profit = sales less returns less everything under Cost of Sales (including stock variances and write-offs). SOL transport revenue and other income are outside gross profit and inside net profit.
+- Sales are shown before sales tax. Purchases are the value of goods received, not supplier invoices.
+- Pending SOL payments count completed jobs only.
+- Low stock compares the reorder level with available stock in all warehouses except damaged.
+- Only invoices with a due date can be overdue; due dates are not set automatically (depends on question 6, credit terms).
+- "Assigned tasks" for data entry are their own drafts and documents awaiting them. A task-assignment feature would be new scope.
+- The business day is Pakistan time. Document dates default to Pakistan's date in the database (fixed in `20261125100000`) and entry screens always send the date.
+
+Phase 6 brief (2026-11-24), inventory and procurement (ASSUMPTION — confirm; see WAREHOUSE_AND_PROCUREMENT.md):
+- "Approved costing method" is the weighted average confirmed on 2026-11-23.
+- Goods damaged on arrival are kept in the damaged warehouse, valued and payable, until returned to the supplier or written off. Rejected goods are sent back at the door: not in stock, not payable, and still due on the order.
+- Receiving more than was ordered is allowed, with a warning. A partly received order can be closed short with a reason.
+- A bill may differ from its receipts; the difference goes to inventory variance.
+- A supplier return is credited at the agreed price; the difference from average cost goes to inventory variance.
+- The negative-stock override is off, needs its own permission (Super Admin only by default) and never applies to reserved stock, adjustments or counts.
+- A physical count cannot be posted after its products moved; it must be checked and saved again.
+- Receiving at a new price does not change the purchase cost stored on the product.
+- Data entry users prepare drafts; approving and posting needs `purchasing.approve` / `purchasing.post`. They do not see approved orders, so they receive goods without linking an order unless given `purchasing.view`.
+
+Phase 7 brief (2026-11-24), sales and distribution (ASSUMPTION — confirm; see SALES_AND_DISTRIBUTION.md):
+- Order takers see only customers assigned to them.
+- Cash recorded by an order taker posts at once and stays in their name until the office confirms a deposit. Other methods wait for the office.
+- Completed means delivered and every invoice settled.
+- Picking is required before dispatch, and only submitted orders can be approved.
+- The price on an order may differ from the list price; the approver sees the difference.
+- Credit notes reduce and debit notes increase net sales, without sales tax.
+- The due date of an invoice follows the customer's payment terms.
+- Pending collections of an order taker are the balances of the customers assigned to them today.
+- A driver confirms their own deliveries; recording goods brought back needs `sales.return`.
+- A cash count records a shortage without posting it. **OPEN** — should a shortage be recovered from salary, or expensed?
+
 ## Open Questions
 
 Items marked ASSUMPTION are implemented as safe, configurable defaults and can be changed without restructuring.

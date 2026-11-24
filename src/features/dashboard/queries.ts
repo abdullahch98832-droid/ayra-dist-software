@@ -1,44 +1,61 @@
 import "server-only";
-import { can, type SessionContext } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { lowStockSchema, overdueSchema, performanceSchema, positionSchema, type LowStock, type Overdue, type Performance, type Position } from "./schema";
+import type { Period } from "./period";
 
-export interface EmployeeFigures {
-  active: number;
-  onLeave: number;
-  /** Null when the list is longer than one API page, so a partial count is never shown. */
-  byDepartment: { department: string | null; count: number }[] | null;
+// One database call each, run in parallel by the page. Permissions are enforced inside
+// the functions (totals) or by row level security (lists).
+
+export async function loadPosition(): Promise<Position> {
+  const { data, error } = await (await createClient()).rpc("dashboard_position");
+  if (error) throw error;
+  return positionSchema.parse(data);
 }
 
-export async function loadEmployeeFigures(ctx: SessionContext): Promise<EmployeeFigures | null> {
-  if (!can(ctx, "employees.view")) return null;
-  const supabase = await createClient();
-  const [active, onLeave, departments] = await Promise.all([
-    supabase.from("employees").select("id", { count: "exact", head: true }).eq("status", "active"),
-    supabase.from("employees").select("id", { count: "exact", head: true }).eq("status", "on_leave"),
-    supabase.from("employees").select("department").eq("status", "active"),
-  ]);
-  for (const r of [active, onLeave, departments]) if (r.error) throw r.error;
-
-  const rows = departments.data ?? [];
-  const counts = new Map<string | null, number>();
-  for (const { department } of rows) {
-    const key = department?.trim() || null;
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-  return {
-    active: active.count ?? 0,
-    onLeave: onLeave.count ?? 0,
-    byDepartment: rows.length === (active.count ?? 0)
-      ? [...counts].map(([department, count]) => ({ department, count })).sort((a, b) => b.count - a.count)
-      : null,
-  };
+export async function loadPerformance({ from, to }: Pick<Period, "from" | "to">): Promise<Performance> {
+  const { data, error } = await (await createClient()).rpc("dashboard_performance", { p_from: from, p_to: to });
+  if (error) throw error;
+  return performanceSchema.parse(data);
 }
 
-export async function loadUserFigures(ctx: SessionContext): Promise<{ active: number; withoutRole: number } | null> {
-  if (!can(ctx, "users.view")) return null;
-  const supabase = await createClient();
-  const base = () => supabase.from("profiles").select("id", { count: "exact", head: true }).eq("is_active", true).is("removed_at", null);
-  const [active, withoutRole] = await Promise.all([base().not("role_id", "is", null), base().is("role_id", null)]);
-  for (const r of [active, withoutRole]) if (r.error) throw r.error;
-  return { active: active.count ?? 0, withoutRole: withoutRole.count ?? 0 };
+export async function loadOverdue(): Promise<Overdue> {
+  const { data, error } = await (await createClient()).rpc("dashboard_overdue", { p_limit: 5 });
+  if (error) throw error;
+  return overdueSchema.parse(data);
+}
+
+export async function loadLowStock(): Promise<LowStock> {
+  const { data, error } = await (await createClient()).rpc("dashboard_low_stock", { p_limit: 6 });
+  if (error) throw error;
+  return lowStockSchema.parse(data);
+}
+
+export async function loadPendingDeliveries() {
+  const { data, error } = await (await createClient()).rpc("dashboard_pending_deliveries", { p_limit: 6 });
+  if (error) throw error;
+  return data;
+}
+
+export async function loadRecentOrders() {
+  const { data, error } = await (await createClient()).rpc("dashboard_recent_orders", { p_limit: 6 });
+  if (error) throw error;
+  return data;
+}
+
+export async function loadRecentTransactions() {
+  const { data, error } = await (await createClient()).rpc("dashboard_recent_transactions", { p_limit: 8 });
+  if (error) throw error;
+  return data;
+}
+
+export async function loadMyRecords() {
+  const { data, error } = await (await createClient()).rpc("dashboard_my_records", { p_limit: 8 });
+  if (error) throw error;
+  return data;
+}
+
+export async function loadOpenWork() {
+  const { data, error } = await (await createClient()).rpc("dashboard_open_work");
+  if (error) throw error;
+  return data;
 }
