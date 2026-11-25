@@ -46,7 +46,7 @@ export default async function ClosingPage({ searchParams }: PageProps<"/cash-ban
             {boxes.map((b) => {
               const x = until.get(b.id);
               return (
-                <li key={b.id} className="grid gap-3 rounded-xl border bg-card p-5 shadow-card">
+                <li key={b.id} className="grid gap-3 rounded-2xl border bg-card p-5 shadow-card">
                   <div><p className="font-medium break-words text-navy">{b.name}</p><p className="text-xs text-muted-foreground">{x?.closed_until ? <>{c.closedUntil}: <bdi>{formatDate(x.closed_until, locale)}</bdi></> : c.neverClosed}</p></div>
                   <p className="text-2xl font-semibold text-navy"><Money amount={toPaisa(x?.closing ?? 0)} locale={locale} /></p>
                   {closer && x?.closed_until !== today && <LinkButton href={`/cash-bank/closing/new?account=${b.id}`} className="justify-self-start"><Lock aria-hidden />{c.closeDay}</LinkButton>}
@@ -57,7 +57,7 @@ export default async function ClosingPage({ searchParams }: PageProps<"/cash-ban
         )}
         {boxes.length > 1 && <UrlSelect param="account" label={c.chooseAccount} options={boxes.map((b) => ({ value: b.id, label: b.name }))} />}
         {rows.length === 0 ? <EmptyState title={c.closingEmpty} description={boxes.length === 0 ? c.noCash : undefined} /> : (
-          <ul className="divide-y rounded-xl border bg-card shadow-card">
+          <ul className="divide-y rounded-2xl border bg-card shadow-card">
             {rows.map((r) => {
               const diff = toPaisa(r.difference ?? 0);
               const word = diff === BigInt(0) ? c.exact : diff > BigInt(0) ? c.over : c.short;

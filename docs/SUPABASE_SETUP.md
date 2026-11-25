@@ -73,3 +73,7 @@ Create a second Supabase project for testing only, push the migrations to it, an
 ## Checking the database
 
 `supabase/verify-schema.sql` is read-only. Run it in the SQL Editor: `ok` means the database matches the migrations; otherwise it lists what differs or is missing.
+
+## Clearing all entered data
+
+By hand, only when a fresh start is wanted; it cannot be undone. Take a backup, run `supabase/maintenance/clear-all-data-preview.sql` (reads only), then `clear-all-data.sql` with `CLEAR` written in `v_confirm`. Only the active Super Admin login stays. Uploaded files are not in the database: empty the buckets `employee-photos`, `product-images` and `attachments` under Storage. A new table must be added to `v_stay`, `v_clear` or `v_delete` in the script; `supabase/tests/clear-data.test.ts` fails until it is.

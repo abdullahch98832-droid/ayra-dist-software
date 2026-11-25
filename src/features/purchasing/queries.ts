@@ -20,7 +20,7 @@ export async function loadSummary(flow: Flow) {
   }).parse(data);
 }
 
-/** Suppliers of one workflow: the main company alone, or every active external supplier. */
+/** Suppliers of one workflow: the Ayra company alone, or every active external supplier. */
 export async function loadFlowSuppliers(flow: Flow, includeInactive = false) {
   const supabase = await createClient();
   let query = supabase.from("suppliers").select("id, name, name_ur, payment_terms_days").eq("is_principal", isPrincipal(flow)).order("name");
@@ -65,7 +65,7 @@ export async function loadOrder(id: string) {
   const supabase = await createClient();
   const [order, progress, receipts] = await Promise.all([
     supabase.from("purchase_orders").select(
-      "id, doc_no, order_date, expected_date, status, total_amount, notes, closed_at, close_reason, supplier_id, warehouse_id, supplier:suppliers!purchase_orders_supplier_id_fkey(name, name_ur, is_principal), warehouse:warehouses!purchase_orders_warehouse_id_fkey(name_en, name_ur), purchase_order_items(id, product_id, unit_id, factor, quantity, unit_price, line_total, product:products!purchase_order_items_product_id_fkey(sku, name_en, name_ur), unit:units!purchase_order_items_unit_id_fkey(name_en, name_ur))"
+      "id, doc_no, order_date, expected_date, status, total_amount, notes, closed_at, close_reason, sol_job_id, supplier_id, warehouse_id, supplier:suppliers!purchase_orders_supplier_id_fkey(name, name_ur, is_principal), warehouse:warehouses!purchase_orders_warehouse_id_fkey(name_en, name_ur), purchase_order_items(id, product_id, unit_id, factor, quantity, unit_price, line_total, product:products!purchase_order_items_product_id_fkey(sku, name_en, name_ur), unit:units!purchase_order_items_unit_id_fkey(name_en, name_ur))"
     ).eq("id", id).maybeSingle(),
     supabase.from("v_purchase_order_progress").select("purchase_order_item_id, accepted_base, damaged_base, rejected_base, remaining_base").eq("purchase_order_id", id),
     supabase.from("goods_receipts").select("id, doc_no, receipt_date, status, total_amount").eq("purchase_order_id", id).order("created_at"),

@@ -48,7 +48,7 @@ export default async function VouchersPage({ searchParams }: PageProps<"/cash-ba
           <UrlSelect param="status" label={t.documents.allStatuses} options={STATUSES.map((s) => ({ value: s, label: t.purchasing.statuses[s] }))} />
         </div>
         {rows.length === 0 ? <EmptyState title={c.voucherEmpty} /> : (
-          <ul className="divide-y rounded-xl border bg-card shadow-card">
+          <ul className="divide-y rounded-2xl border bg-card shadow-card">
             {rows.map((x) => (
               <li key={x.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                 <div className="min-w-0">

@@ -48,7 +48,7 @@ export function InvoiceAllocations({ control, setValue, register, errors, invoic
   };
 
   return (
-    <section className="rounded-xl border bg-card shadow-card">
+    <section className="rounded-2xl border bg-card shadow-card">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4">
         <div>
           <h2 className="text-base font-semibold text-navy">{r.invoices}</h2>

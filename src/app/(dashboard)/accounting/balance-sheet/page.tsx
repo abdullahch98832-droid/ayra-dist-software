@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { Printer } from "lucide-react";
 import { loadBalanceSheet, seesLedgers, seesStatements } from "@/features/accounting/queries";
 import { businessToday } from "@/features/dashboard/period";
 import { fill } from "@/i18n/format";
 import { getT } from "@/i18n/server";
 import { pageContext } from "@/lib/page-context";
 import { sumPaisa, toPaisa } from "@/lib/utils/money";
+import { DocumentLink } from "@/components/documents/document-link";
 import { Statement, type StatementRow } from "@/components/accounting/statement";
-import { PrintButton } from "@/components/documents/print-button";
 import { FormAlert } from "@/components/forms/field";
 import { Forbidden } from "@/components/layout/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
@@ -40,7 +39,7 @@ export default async function BalanceSheetPage({ searchParams }: PageProps<"/acc
   const ok = total(assets) === right;
   return (
     <>
-      <PageHeader title={a.tabs.balance} description={<>{a.asOf}: <bdi>{formatDate(date, locale)}</bdi></>} actions={<><UrlDate param="date" label={a.asOf} max={today} fallback={today} /><PrintButton label={t.sales.print} icon={<Printer aria-hidden />} /></>} />
+      <PageHeader title={a.tabs.balance} description={<>{a.asOf}: <bdi>{formatDate(date, locale)}</bdi></>} actions={<><UrlDate param="date" label={a.asOf} max={today} fallback={today} /><DocumentLink kind="balance_sheet" params={{ date }} label={t.docs.pdf} /></>} />
       <div className="grid gap-6">
         <FormAlert tone={ok ? "success" : "error"}>{ok ? a.balanced : a.differs}</FormAlert>
         <div className="grid items-start gap-6 lg:grid-cols-2">

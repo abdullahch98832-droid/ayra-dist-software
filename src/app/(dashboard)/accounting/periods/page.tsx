@@ -40,7 +40,7 @@ export default async function PeriodsPage() {
       <div className="grid gap-6">
         {close && <AddPeriod month={businessToday().slice(0, 7)} />}
         {periods.length === 0 ? <EmptyState title={a.periodEmpty} /> : (
-          <ul className="divide-y rounded-xl border bg-card shadow-card">
+          <ul className="divide-y rounded-2xl border bg-card shadow-card">
             {periods.map((p) => {
               const x = totals.parse(p.closing_totals);
               return (

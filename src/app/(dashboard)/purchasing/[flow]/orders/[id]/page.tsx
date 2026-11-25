@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Ban, CheckCheck, Lock, PackageCheck, Pencil, Trash2 } from "lucide-react";
 import { approveOrderAction, cancelOrderAction, closeOrderAction, deletePurchasingDraftAction } from "@/features/purchasing/actions";
@@ -7,6 +8,7 @@ import { purchasingPage } from "@/features/purchasing/page-context";
 import { loadOrder } from "@/features/purchasing/queries";
 import { can } from "@/lib/auth/session";
 import { ActionButton } from "@/components/documents/action-button";
+import { DocumentLink } from "@/components/documents/document-link";
 import { DocumentStatus } from "@/components/documents/document-status";
 import { PageHeader } from "@/components/layout/page-header";
 import { DescriptionList } from "@/components/shared/description-list";
@@ -36,6 +38,7 @@ export default async function OrderPage({ params }: PageProps<"/purchasing/[flow
         description={<span className="flex flex-wrap items-center gap-3"><DocumentStatus status={order.status} closed={!!order.closed_at} t={t} /><bdi>{local(order.supplier.name, order.supplier.name_ur)}</bdi></span>}
         actions={
           <>
+            <DocumentLink kind="purchase_order" params={{ id }} label={t.docs.pdf} />
             {order.status === "draft" && can(ctx, "purchasing.create") && (
               <>
                 <ActionButton label={d.deleteDraft} icon={<Trash2 aria-hidden />} variant="outline" action={deletePurchasingDraftAction.bind(null, "purchase_orders", id)} success={d.deleted} redirectTo={base} confirm={{ title: d.confirmDeleteTitle, description: d.confirmDelete, tone: "danger" }} />
@@ -62,6 +65,7 @@ export default async function OrderPage({ params }: PageProps<"/purchasing/[flow
             { label: p.expectedDate, value: formatDate(order.expected_date, locale) },
             { label: d.warehouse, value: local(order.warehouse.name_en, order.warehouse.name_ur) },
             { label: d.notes, value: order.notes },
+            ...(order.sol_job_id ? [{ label: t.distributor.forOrder, value: can(ctx, "sol.view") ? <Link href={`/sol/orders/${order.sol_job_id}`} className="text-primary hover:underline">{t.distributor.order}</Link> : t.distributor.order }] : []),
             ...(order.close_reason ? [{ label: p.closed, value: order.close_reason }] : []),
           ]} />
         </SectionCard>

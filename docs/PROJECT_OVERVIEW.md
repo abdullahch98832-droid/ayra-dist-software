@@ -2,19 +2,18 @@
 
 ## About
 
-AYRA HAPPINESS Distribution Management System (DMS) is a production-grade enterprise application built for a distribution business that:
+AYRA HAPPINESS Distribution Management System (DMS) is a production-grade enterprise application built for a **distributor** of Ayra Happiness products. The owner of the software is not the Ayra company. The distributor:
 
-- Receives goods from a main company (Ayra Happiness) and external suppliers
+- Takes goods from the Ayra company, at its prices, and from external suppliers
 - Stores products in a warehouse with full inventory tracking
-- Sells and distributes products to shops and customers
-- Manages order takers, deliveries, and collections
-- Operates SOL activities: transport jobs for outside clients, and selling stock from vehicles on routes
+- Supplies shops with what its order takers bring as orders, and collects the payments
+- In SOL, supplies distributors of other cities: a call brings the order, the goods are ordered from Ayra for it, received, supplied and paid. Other SOL jobs stay beside these orders
 - Tracks all financial transactions, expenses, and profitability
 
 ## Business Entity
 
-- **Business Name:** AYRA HAPPINESS
-- **Type:** Distribution company
+- **Shown name:** AYRA HAPPINESS, with "Distributor" under it
+- **Type:** Distributor of Ayra Happiness products
 - **Operations:** Purchase → Warehouse → Sales → Delivery → Collection
 - **Software Developer:** Webcore Solutions
 
@@ -35,14 +34,14 @@ AYRA HAPPINESS Distribution Management System (DMS) is a production-grade enterp
 | 2 | Products | Product catalog with unit management |
 | 3 | Warehouse | Stock in/out, damaged goods, reconciliation |
 | 4 | Inventory | Real-time stock levels and valuation |
-| 5 | Purchases | Main company and supplier purchases |
-| 6 | Company Ledger | Ayra Happiness account tracking |
+| 5 | Purchases | Purchases from the Ayra company and suppliers |
+| 6 | Ayra account | What is owed to the Ayra company |
 | 7 | Suppliers | Supplier profiles, invoices, payments |
 | 8 | Customers | Shop profiles, credit limits, areas |
 | 9 | Sales & Orders | Order creation, approval, invoicing |
 | 10 | Order Takers | Field sales staff management |
 | 11 | Deliveries | Dispatch, delivery confirmation, returns |
-| 12 | SOL | Transport jobs (contract value, payments, costs) and vehicle stock-selling trips |
+| 12 | SOL | Orders of distributors of other cities; jobs with contract, payments and costs |
 | 13 | Vehicles | Fleet management |
 | 14 | Expenses | Business expense tracking |
 | 15 | Employees | HR profiles and status |

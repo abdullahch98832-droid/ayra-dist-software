@@ -3,7 +3,7 @@ import { Banknote } from "lucide-react";
 import { loadPayments, seesAllCollections } from "@/features/receivables/queries";
 import { PAYMENT_METHODS } from "@/features/receivables/schema";
 import { documentOptions } from "@/features/sales/status";
-import { loadTakers, takerNames } from "@/features/takers/queries";
+import { loadCollectors, takerNames } from "@/features/takers/queries";
 import { getT } from "@/i18n/server";
 import { can } from "@/lib/auth/session";
 import { LIST_PAGE, listParams } from "@/lib/list-params";
@@ -29,7 +29,7 @@ export default async function PaymentsPage({ searchParams }: PageProps<"/receiva
   const method = PAYMENT_METHODS.find((m) => m === query.method) ?? "";
   const filter = { ...listParams(query, STATUSES), customerId: uuidParam(query.customer), takerId: uuidParam(query.taker), method };
   const all = seesAllCollections(ctx);
-  const [{ rows, total }, takers, names] = await Promise.all([loadPayments(filter), all ? loadTakers() : [], takerNames()]);
+  const [{ rows, total }, takers, names] = await Promise.all([loadPayments(filter), all ? loadCollectors() : [], takerNames()]);
   const add = can(ctx, "receivables.collect") && <LinkButton href="/receivables/payments/new"><Banknote aria-hidden />{r.newPayment}</LinkButton>;
   return (
     <>
@@ -60,7 +60,7 @@ export default async function PaymentsPage({ searchParams }: PageProps<"/receiva
             <UrlSearch placeholder={t.documents.searchNumber} />
             <UrlSelect param="status" label={t.documents.allStatuses} options={STATUSES.map((x) => ({ value: x, label: t.purchasing.statuses[x] }))} />
             <UrlSelect param="method" label={r.allMethods} options={PAYMENT_METHODS.map((m) => ({ value: m, label: t.purchasing.methods[m] }))} />
-            {takers.length > 0 && <UrlSelect param="taker" label={t.customers.allOrderTakers} options={takers.map((x) => ({ value: x.id, label: local(x.nameEn, x.nameUr) }))} />}
+            {takers.length > 0 && <UrlSelect param="taker" label={t.receivables.collectedBy} options={takers.map((x) => ({ value: x.id, label: local(x.nameEn, x.nameUr) }))} />}
           </>
         }
         empty={{ title: r.paymentEmpty, description: t.documents.emptyHint, action: add }}

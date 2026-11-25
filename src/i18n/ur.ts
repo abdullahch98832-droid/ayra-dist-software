@@ -3,11 +3,15 @@ import operations from "./modules/operations.ur";
 import salesModule from "./modules/sales.ur";
 import solModule from "./modules/sol.ur";
 import financeModule from "./modules/finance.ur";
+import documentsModule from "./modules/documents.ur";
+import analyticsModule from "./modules/analytics.ur";
+import distributorModule from "./modules/distributor.ur";
+import supplyModule from "./modules/supply.ur";
 
 const ur: Dictionary = {
   common: {
     appName: "آئرا ہیپینیس",
-    subtitle: "ڈسٹری بیوشن مینجمنٹ سسٹم",
+    subtitle: "ڈسٹری بیوٹر مینجمنٹ سسٹم",
     loading: "لوڈ ہو رہا ہے...",
     save: "محفوظ کریں",
     saving: "محفوظ ہو رہا ہے...",
@@ -56,7 +60,7 @@ const ur: Dictionary = {
   },
   auth: {
     brandHeadline: "خریداری سے ترسیل تک، ایک ہی کھاتے میں۔",
-    brandText: "آئرا ہیپینیس کے لیے اسٹاک، فروخت، ترسیل، ایس او ایل اور حسابات۔",
+    brandText: "آئرا ہیپینیس کی مصنوعات کے ڈسٹری بیوٹر کے لیے: آئرا سے مال، دکانوں اور ڈسٹری بیوٹرز کے آرڈر، ترسیل، ادائیگیاں اور حسابات۔",
     signIn: "سائن ان",
     signingIn: "سائن ان ہو رہا ہے...",
     signOut: "سائن آؤٹ",
@@ -120,7 +124,7 @@ const ur: Dictionary = {
     solJobs: "ایس او ایل کام",
     vehicles: "گاڑیاں",
     products: "مصنوعات",
-    suppliers: "سپلائرز",
+    suppliers: "وینڈرز",
     employees: "ملازمین",
     searching: "تلاش جاری ہے...",
     empty: "تلاش سے کچھ نہیں ملا",
@@ -233,10 +237,10 @@ const ur: Dictionary = {
       bank: "بینک بیلنس",
       receivables: "گاہکوں سے وصول طلب",
       receivablesHint: "ایس او ایل کلائنٹس سمیت",
-      supplierPayables: "سپلائرز کو واجب الادا",
-      supplierPayablesHint: "مرکزی کمپنی کے علاوہ",
-      companyOutstanding: "مرکزی کمپنی کے واجبات",
-      companyOutstandingHint: "آئرا ہیپینیس کو ادا کرنے ہیں",
+      supplierPayables: "وینڈرز کو واجب الادا",
+      supplierPayablesHint: "آئرا کمپنی کے علاوہ",
+      companyOutstanding: "آئرا کمپنی کے واجبات",
+      companyOutstandingHint: "آئرا کمپنی سے لیے گئے مال کے لیے",
       solPending: "ایس او ایل کی باقی ادائیگیاں",
       solPendingHint: "مکمل کام جن کی پوری ادائیگی نہیں ہوئی: {count}",
       sales: "فروخت",
@@ -282,6 +286,8 @@ const ur: Dictionary = {
         yesterday: "گزشتہ کل",
         last7: "پچھلے 7 دن",
         last30: "پچھلے 30 دن",
+        thisWeek: "یہ ہفتہ",
+        thisYear: "یہ سال",
         thisMonth: "یہ مہینہ",
         lastMonth: "پچھلا مہینہ",
         last12Months: "پچھلے 12 مہینے",
@@ -298,7 +304,7 @@ const ur: Dictionary = {
       deliveriesEmpty: "کوئی ڈلیوری منتظر نہیں",
       overdue: "تاخیر شدہ بیلنس",
       overdueReceivables: "گاہکوں سے",
-      overduePayables: "سپلائرز کو",
+      overduePayables: "وینڈرز کو",
       overdueEmpty: "کوئی رقم تاخیر کا شکار نہیں",
       overdueHint: "وہ انوائس جن کی مقررہ تاریخ گزر چکی، مختص ادائیگیوں کے بعد۔ مقررہ تاریخ کے بغیر انوائس شمار نہیں ہوتیں۔",
       daysLate: "{days} دن تاخیر",
@@ -323,6 +329,7 @@ const ur: Dictionary = {
     },
     quick: {
       salesOrder: "سیلز آرڈر",
+      distributorOrder: "ڈسٹری بیوٹر آرڈر",
       goodsReceipt: "مال کی وصولی",
       collection: "گاہک سے وصولی",
       expense: "خرچ",
@@ -335,10 +342,10 @@ const ur: Dictionary = {
       sales_order: "سیلز آرڈر",
       purchase_order: "خریداری آرڈر",
       goods_receipt: "مال کی وصولی",
-      supplier_invoice: "سپلائر انوائس",
+      supplier_invoice: "کمپنی کا بل",
       cash_deposit: "نقد جمع",
       customer_payment: "گاہک کی ادائیگی",
-      supplier_payment: "سپلائر کو ادائیگی",
+      supplier_payment: "کمپنی کو ادائیگی",
       sales_invoice: "سیلز انوائس",
       customer_return: "گاہک کی واپسی",
       expense: "خرچ",
@@ -440,6 +447,10 @@ const ur: Dictionary = {
       name_ur: "نام (اردو)",
       description: "تفصیل",
       permission_code: "اجازت",
+      format: "فارمیٹ",
+      from: "سے",
+      to: "تک",
+      date: "تاریخ",
     },
     yes: "ہاں",
     no: "نہیں",
@@ -447,6 +458,7 @@ const ur: Dictionary = {
       profiles: "صارف اکاؤنٹ",
       roles: "کردار",
       role_permissions: "کردار کی اجازت",
+      report_exports: "رپورٹ کی برآمد",
     },
     actions: {
       INSERT: "بنایا گیا",
@@ -504,8 +516,8 @@ const ur: Dictionary = {
     sales: "فروخت",
     customers: "گاہک",
     receivables: "وصولیاں",
-    suppliers: "سپلائرز",
-    payables: "سپلائر ادائیگیاں",
+    suppliers: "وینڈرز",
+    payables: "وینڈر ادائیگیاں",
     company: "کمپنی اکاؤنٹ",
     sol: "ایس او ایل",
     vehicles: "گاڑیاں",
@@ -524,6 +536,10 @@ const ur: Dictionary = {
   ...salesModule,
   ...solModule,
   ...financeModule,
+  docs: documentsModule,
+  analytics: analyticsModule,
+  distributor: distributorModule,
+  supply: supplyModule,
   errors: {
     moreThanHeld: "پاس موجود نقد سے زیادہ",
     discountTooHigh: "لائن کی رقم سے زیادہ",
@@ -556,7 +572,7 @@ const ur: Dictionary = {
     receiptType: "JPEG، PNG، WebP یا PDF فائل استعمال کریں",
     notBalanced: "ڈیبٹ اور کریڈٹ برابر ہونے چاہئیں",
     oneSide: "ڈیبٹ یا کریڈٹ میں سے ایک درج کریں",
-    partyRequired: "اس اکاؤنٹ کے لیے گاہک یا سپلائر ضروری ہے",
+    partyRequired: "اس اکاؤنٹ کے لیے گاہک یا کمپنی ضروری ہے",
     invalidDecimal: "زیادہ سے زیادہ 2 اعشاریہ والا عدد درج کریں",
     futureDate: "تاریخ مستقبل کی نہیں ہو سکتی",
     dueBeforeStart: "آغاز کی تاریخ سے پہلے",

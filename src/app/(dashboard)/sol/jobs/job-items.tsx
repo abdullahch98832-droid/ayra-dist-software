@@ -21,16 +21,18 @@ const amount = (l: Line) => decimalAmount(l.quantity, l.price === "" ? "0" : l.p
 export const itemsTotal = (lines: Line[]): Paisa => lines.reduce((sum, l) => sum + (amount(l) ?? ZERO), ZERO);
 
 /** Services, products and other items of a job, one card per line. */
-export function JobItems({ services, products: initial, seesCosts, usesServices, usesProducts, delivered }: {
+export function JobItems({ services, products: initial, seesCosts, usesServices, usesProducts, delivered, order = false }: {
   services: Service[];
   products: ProductOption[];
   seesCosts: boolean;
   usesServices: boolean;
   usesProducts: boolean;
   delivered: string[];
+  order?: boolean;
 }) {
   const { t, locale } = useI18n();
   const s = t.sol;
+  const o = t.distributor;
   const message = useMessage();
   const { control, register, setValue, formState: { errors } } = useFormContext<JobValues>();
   const { fields, append, remove } = useFieldArray({ control, name: "lines", keyName: "key" });
@@ -51,16 +53,16 @@ export function JobItems({ services, products: initial, seesCosts, usesServices,
   };
 
   return (
-    <section className="rounded-xl border bg-card shadow-card">
+    <section className="rounded-2xl border bg-card shadow-card">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4">
-        <h2 className="text-base font-semibold text-navy">{s.items}</h2>
+        <h2 className="text-base font-semibold text-navy">{order ? o.products : s.items}</h2>
         <div className="flex flex-wrap gap-2">
           {usesServices && services.some((x) => x.isActive) && <Button type="button" variant="outline" onClick={addService}><Wrench aria-hidden />{s.addService}</Button>}
           {usesProducts && <ProductPicker onPick={addProduct} />}
-          <Button type="button" variant="outline" onClick={() => append(blank, focus)}><Plus aria-hidden />{s.addOther}</Button>
+          {!order && <Button type="button" variant="outline" onClick={() => append(blank, focus)}><Plus aria-hidden />{s.addOther}</Button>}
         </div>
       </header>
-      {fields.length === 0 && <p className="px-5 py-10 text-center text-sm text-muted-foreground">{s.noItems}</p>}
+      {fields.length === 0 && <p className="px-5 py-10 text-center text-sm text-muted-foreground">{order ? o.noProducts : s.noItems}</p>}
       <ol className="divide-y">
         {fields.map((field, i) => {
           const line = lines[i] ?? field;
@@ -122,8 +124,8 @@ export function JobItems({ services, products: initial, seesCosts, usesServices,
                   </div>
                 )}
                 {cell("quantity", s.quantity, "ltr")}
-                {cell("price", s.unitPrice, "ltr")}
-                {seesCosts && cell("cost", s.unitCost, "ltr")}
+                {cell("price", order ? o.salePrice : s.unitPrice, "ltr")}
+                {seesCosts && cell("cost", order ? o.ayraPrice : s.unitCost, "ltr")}
               </div>
               <div className="flex items-center justify-between gap-3 xl:flex-col xl:items-end">
                 <p className="text-sm"><span className="block text-xs text-muted-foreground xl:text-end">{s.lineTotal}</span><Ltr className="font-semibold tabular-nums">{total === null ? "—" : formatPaisa(total, locale)}</Ltr></p>
@@ -137,7 +139,7 @@ export function JobItems({ services, products: initial, seesCosts, usesServices,
       </ol>
       {fields.length > 0 && (
         <footer className="flex items-center justify-between gap-4 border-t bg-muted/50 px-5 py-4">
-          <span className="text-sm text-muted-foreground">{s.itemsTotal}</span>
+          <span className="text-sm text-muted-foreground">{order ? o.amount : s.itemsTotal}</span>
           <Ltr className="text-lg font-semibold text-navy tabular-nums">{formatPaisa(itemsTotal(lines), locale)}</Ltr>
         </footer>
       )}

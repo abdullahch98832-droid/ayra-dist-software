@@ -34,9 +34,10 @@ export async function reportSolJobs(filter: JobReportFilter) {
   }).range(start, end));
 }
 
+/** Types of jobs; the type of distributor orders is kept apart. */
 export async function loadJobTypes() {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("sol_job_types").select("id, name_en, name_ur, uses_services, uses_products, uses_deliveries, is_active").order("name_en");
+  const { data, error } = await supabase.from("sol_job_types").select("id, name_en, name_ur, uses_services, uses_products, uses_deliveries, is_active").eq("is_order", false).order("name_en");
   if (error) throw error;
   return data.map((x) => ({ id: x.id, nameEn: x.name_en, nameUr: x.name_ur, usesServices: x.uses_services, usesProducts: x.uses_products, usesDeliveries: x.uses_deliveries, isActive: x.is_active }));
 }
@@ -61,10 +62,11 @@ export async function loadStaff() {
 }
 export type Staff = Awaited<ReturnType<typeof loadStaff>>[number];
 
-export async function loadJobs(filter: ListFilter & { typeId?: string | null; responsibleId?: string | null; overdueBefore?: string }) {
+export async function loadJobs(filter: ListFilter & { typeId?: string | null; responsibleId?: string | null; overdueBefore?: string; orders?: boolean }) {
   const supabase = await createClient();
   let query = supabase.from("sol_jobs").select(
-    "id, doc_no, job_date, due_date, status, contract_value, description, responsible_employee_id, customer:customers!sol_jobs_customer_id_fkey(name, name_ur), type:sol_job_types!sol_jobs_job_type_id_fkey(name_en, name_ur)", { count: "exact" });
+    "id, doc_no, job_date, due_date, status, contract_value, description, responsible_employee_id, customer:customers!sol_jobs_customer_id_fkey(name, name_ur), type:sol_job_types!sol_jobs_job_type_id_fkey!inner(name_en, name_ur, is_order)", { count: "exact" });
+  if (filter.orders !== undefined) query = query.eq("type.is_order", filter.orders);
   if (filter.status === "pending") query = query.in("status", OPEN_JOB_STATUSES);
   else if (filter.status) query = query.eq("status", filter.status as JobStatus);
   if (filter.typeId) query = query.eq("job_type_id", filter.typeId);
@@ -77,7 +79,7 @@ export async function loadJob(id: string) {
   const supabase = await createClient();
   const [job, deliveries, report] = await Promise.all([
     supabase.from("sol_jobs").select(
-      "id, doc_no, job_date, start_date, due_date, completion_date, completed_at, status, contract_value, contact_name, contact_phone, address, description, notes, customer_id, job_type_id, responsible_employee_id, cancel_reason, reopen_reason, created_by, customer:customers!sol_jobs_customer_id_fkey(id, code, name, name_ur, phone, whatsapp, city, order_taker_id), type:sol_job_types!sol_jobs_job_type_id_fkey(name_en, name_ur, uses_services, uses_products, uses_deliveries), journal:journal_entries!sol_jobs_journal_entry_id_fkey(doc_no), sol_job_items(id, line_no, kind, service_id, product_id, unit_id, factor, description, quantity, unit_price, line_total, delivered_quantity, service:sol_services!sol_job_items_service_id_fkey(name_en, name_ur, unit_label, unit_label_ur), product:products!sol_job_items_product_id_fkey(sku, name_en, name_ur), unit:units!sol_job_items_unit_id_fkey(name_en, name_ur))"
+      "id, doc_no, job_date, start_date, due_date, completion_date, completed_at, status, contract_value, contact_name, contact_phone, address, description, notes, customer_id, job_type_id, responsible_employee_id, cancel_reason, reopen_reason, created_by, customer:customers!sol_jobs_customer_id_fkey(id, code, name, name_ur, phone, whatsapp, city, order_taker_id), type:sol_job_types!sol_jobs_job_type_id_fkey(name_en, name_ur, uses_services, uses_products, uses_deliveries, is_order), journal:journal_entries!sol_jobs_journal_entry_id_fkey(doc_no), sol_job_items(id, line_no, kind, service_id, product_id, unit_id, factor, description, quantity, unit_price, line_total, delivered_quantity, service:sol_services!sol_job_items_service_id_fkey(name_en, name_ur, unit_label, unit_label_ur), product:products!sol_job_items_product_id_fkey(sku, name_en, name_ur), unit:units!sol_job_items_unit_id_fkey(name_en, name_ur))"
     ).eq("id", id).maybeSingle(),
     supabase.from("sol_deliveries").select("id, doc_no, delivery_date, status, destination, delivered_at, vehicle:vehicles!sol_deliveries_vehicle_id_fkey(registration_no), driver_id").eq("sol_job_id", id).order("created_at"),
     reportSolJobs({ jobId: id }),
@@ -164,4 +166,28 @@ export async function loadJobChoices(statuses: JobStatus[]) {
   const { data, error } = await supabase.from("sol_jobs").select("id, doc_no, customer:customers!sol_jobs_customer_id_fkey(name, name_ur)").in("status", statuses).order("doc_no", { ascending: false }).limit(300);
   if (error) throw error;
   return data.map((j) => ({ id: j.id, number: j.doc_no, nameEn: j.customer?.name ?? "", nameUr: j.customer?.name_ur ?? null }));
+}
+
+/** The fixed type of distributor orders. */
+export async function loadOrderTypeId(): Promise<string> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("sol_job_types").select("id").eq("is_order", true).single();
+  if (error) throw error;
+  return data.id;
+}
+
+export async function reportSolOrders(filter: { from?: string; to?: string; status?: string; jobId?: string }) {
+  const supabase = await createClient();
+  return fetchAll((start, end) => supabase.rpc("report_sol_orders", {
+    p_from: sqlNull(filter.from ?? null), p_to: sqlNull(filter.to ?? null), p_status: sqlNull(filter.status || null), p_job_id: sqlNull(filter.jobId ?? null),
+  }).range(start, end));
+}
+
+/** Purchase orders placed at Ayra for an order, as far as the user sees purchasing. */
+export async function loadOrderPurchases(jobId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("purchase_orders")
+    .select("id, doc_no, order_date, expected_date, status, closed_at, total_amount, purchase_order_items(product_id, base_quantity)").eq("sol_job_id", jobId).order("created_at");
+  if (error) throw error;
+  return data;
 }

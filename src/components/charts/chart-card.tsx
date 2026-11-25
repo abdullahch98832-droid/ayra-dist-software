@@ -85,7 +85,7 @@ export function ChartCard({
 /** Tooltip shared by all charts: value first, then the series name. */
 export function ChartTooltip({ point, series, className, style }: { point: ChartPoint; series: ChartSeries[]; className?: string; style?: React.CSSProperties }) {
   return (
-    <div role="status" style={style} className={`pointer-events-none absolute z-10 grid w-max max-w-56 gap-1 rounded-lg border bg-popover px-3 py-2 text-xs shadow-overlay ${className ?? ""}`}>
+    <div role="status" style={style} className={`pointer-events-none absolute z-10 grid w-max max-w-56 gap-1 rounded-xl border bg-popover/95 px-3.5 py-2.5 text-xs shadow-overlay backdrop-blur ${className ?? ""}`}>
       <p className="text-muted-foreground">{point.label}</p>
       {series.map((s, i) => (
         <p key={s.key} className="flex items-center gap-2">

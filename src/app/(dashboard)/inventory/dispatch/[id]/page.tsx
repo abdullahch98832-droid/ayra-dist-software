@@ -72,7 +72,7 @@ export default async function DispatchOrderPage({ params }: PageProps<"/inventor
           <div className="print:hidden">
             <DispatchForm
               lines={lines} {...choices}
-              defaults={{ orderId: id, date: businessToday(), vehicleId: "", driverId: "", notes: "", requestId: crypto.randomUUID(), lines: lines.map((l) => ({ itemId: l.itemId, quantity: String(l.remaining) })) }}
+              defaults={{ orderId: id, date: businessToday(), vehicleId: "", driverId: "", suppliedBy: "", notes: "", requestId: crypto.randomUUID(), lines: lines.map((l) => ({ itemId: l.itemId, quantity: String(l.remaining) })) }}
             />
           </div>
         )}

@@ -5,6 +5,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Off because the development log would print server action arguments, including passwords.
   logging: { serverFunctions: false },
+  // HarfBuzz is WebAssembly: it is loaded from node_modules, and traced together with the fonts of the documents.
+  serverExternalPackages: ["harfbuzzjs"],
+  outputFileTracingIncludes: {
+    "/documents/**": ["./src/lib/pdf/fonts/*.ttf", "./node_modules/harfbuzzjs/dist/*"],
+  },
   experimental: {
     serverActions: {
       // Employee photos are limited to 5 MB by the storage bucket; leave room for multipart overhead.

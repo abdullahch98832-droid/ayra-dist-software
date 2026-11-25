@@ -34,7 +34,7 @@ export type AdjustmentValues = z.infer<typeof adjustmentSchema>;
 export const storedQuantity = (kind: AdjustmentKind, quantity: string) => (kind === "write_off" ? `-${quantity}` : quantity);
 
 export const dispatchSchema = z.object({
-  orderId: requiredId, date: isoDate, vehicleId: optionalId, driverId: optionalId, notes: text(500), requestId,
+  orderId: requiredId, date: isoDate, vehicleId: optionalId, driverId: optionalId, suppliedBy: optionalId, notes: text(500), requestId,
   lines: z.array(z.object({ itemId: z.uuid(), quantity: optionalQuantity })),
 }).refine((v) => v.lines.some((l) => /[1-9]/.test(l.quantity)), { message: "nothingToDispatch", path: ["lines"] });
 export type DispatchValues = z.infer<typeof dispatchSchema>;

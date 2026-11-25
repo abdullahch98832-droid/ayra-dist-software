@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { Printer } from "lucide-react";
 import { loadCashFlow, seesStatements } from "@/features/accounting/queries";
 import { businessToday, parsePeriod } from "@/features/dashboard/period";
 import { getT } from "@/i18n/server";
 import { pageContext } from "@/lib/page-context";
 import { sumPaisa, toPaisa } from "@/lib/utils/money";
+import { DocumentLink } from "@/components/documents/document-link";
 import { Statement, type StatementRow } from "@/components/accounting/statement";
-import { PrintButton } from "@/components/documents/print-button";
 import { PeriodFrame } from "@/components/dashboard/period-frame";
 import { Forbidden } from "@/components/layout/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
@@ -37,8 +36,8 @@ export default async function CashFlowPage({ searchParams }: PageProps<"/account
   const change = parts.reduce((sum, p) => sum + total(p.rows), BigInt(0));
   return (
     <>
-      <PageHeader title={a.tabs.cash} actions={<PrintButton label={t.sales.print} icon={<Printer aria-hidden />} />} />
-      <PeriodFrame key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={a.tabs.cash} description={a.subtitle}>
+      <PageHeader title={a.tabs.cash} actions={<DocumentLink kind="cash_flow" params={{ range: "custom", from: period.from, to: period.to }} label={t.docs.pdf} />} />
+      <PeriodFrame compact key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={a.tabs.cash} description={a.subtitle}>
         <Statement caption={a.tabs.cash} locale={locale} sections={[
           { key: "opening", rows: [], total: { label: a.cashStart, amount: one("opening") }, strong: true },
           ...(opened !== BigInt(0) ? [{ key: "opened", rows: [], total: { label: a.openingBalances, amount: opened } }] : []),

@@ -6,6 +6,7 @@ import { Building2, ClipboardList, Package, Plus, Search, ShoppingCart, Truck, U
 import { visibleNavigation } from "@/config/navigation";
 import { searchRecordsAction } from "@/features/search/actions";
 import { SEARCH_GROUPS, type SearchHits } from "@/features/search/types";
+import { OTHER_VENDORS } from "@/config/vendors";
 import { useI18n } from "@/i18n/context";
 import { Ltr } from "@/components/shared/bidi";
 import { Button } from "@/components/ui/button";
@@ -82,10 +83,10 @@ export function SearchPalette({ permissions }: { permissions: ReadonlySet<string
     { href: "/customers/new", label: t.customers.add, permission: "customers.manage" },
     { href: "/products/new", label: t.catalog.add, permission: "products.manage" },
     { href: "/purchasing/company/receipts/new", label: `${t.purchasing.newReceipt} · ${t.purchasing.flows.company}`, permission: "purchasing.create" },
-    { href: "/purchasing/suppliers/receipts/new", label: `${t.purchasing.newReceipt} · ${t.purchasing.flows.suppliers}`, permission: "purchasing.create" },
+    ...(OTHER_VENDORS ? [{ href: "/purchasing/suppliers/receipts/new", label: `${t.purchasing.newReceipt} · ${t.purchasing.flows.suppliers}`, permission: "purchasing.create" } as const] : []),
     { href: "/inventory/transfers/new", label: t.stock.newTransfer, permission: "inventory.transfer" },
     { href: "/inventory/counts/new", label: t.stock.newCount, permission: "inventory.count" },
-    { href: "/suppliers/new", label: t.suppliers.add, permission: "suppliers.manage" },
+    ...(OTHER_VENDORS ? [{ href: "/suppliers/new", label: t.suppliers.add, permission: "suppliers.manage" } as const] : []),
     { href: "/employees/new", label: t.employees.add, permission: "employees.manage" },
   ].filter((a) => permissions.has(a.permission) && matches(a.label));
 
@@ -96,7 +97,7 @@ export function SearchPalette({ permissions }: { permissions: ReadonlySet<string
         onClick={() => setOpen(true)}
         aria-label={t.search.title}
         aria-keyshortcuts="Control+K Meta+K"
-        className="size-9 justify-center px-0 font-normal text-muted-foreground sm:w-full sm:max-w-sm sm:justify-start sm:px-3"
+        className="size-9 justify-center px-0 font-normal text-muted-foreground sm:h-10 sm:w-full sm:max-w-md sm:justify-start sm:rounded-xl sm:bg-background/70 sm:px-3.5 sm:shadow-none"
       >
         <Search aria-hidden />
         <span className="hidden flex-1 truncate text-start sm:inline">{t.search.placeholder}</span>

@@ -1,6 +1,6 @@
 # Security Plan
 
-> **Status:** implemented in migrations `…101000_security.sql` and `…20261124100000_access_control.sql`, the Next.js proxy and server actions. Verified by 197 database tests (`npm run test:db`) and 97 unit tests including server-action authorization (`npm test`). HTTP-level tests against a real Supabase project exist (`npm run test:api`) but have **not been run yet** — they need a separate test project.
+> **Status:** implemented in migrations `…101000_security.sql` and `…20261124100000_access_control.sql`, the Next.js proxy and server actions. Verified by 245 database tests (`npm run test:db`) and 135 unit tests including server-action authorization (`npm test`). HTTP-level tests against a real Supabase project exist (`npm run test:api`) but have **not been run yet** — they need a separate test project.
 
 ## Roles
 
@@ -12,7 +12,7 @@
 | Viewer | system | Read-only operational modules (products, stock quantities, customers, suppliers, sales, SOL, vehicles, reports). No confidential data. |
 | Custom roles | custom | Created by the Super Admin with any permission set. Accountant, Warehouse Staff, Order Taker and Driver are pre-made custom roles that can be edited or deleted. |
 
-System roles cannot be renamed or deleted. There are 66 permissions (`module.action`); changes take effect on the next request.
+System roles cannot be renamed or deleted. There are 68 permissions (`module.action`); changes take effect on the next request.
 
 ## Confidential data
 
@@ -24,6 +24,9 @@ System roles cannot be renamed or deleted. There are 66 permissions (`module.act
 | Customers, orders, invoices, receivables | Without `sales.view_all` or `customers.manage`: assigned customers only. Drivers: assigned deliveries only. Paid and outstanding amounts need a receivables permission |
 | SOL jobs | Without `sol.view_all`: jobs one is responsible for, created or delivers. Expected and actual costs need `costs.view` |
 | Expenses, payroll, vouchers, closings | Written by functions only; a user without `expenses.view` sees their own vouchers and receipts |
+| Documents (PDF) | `document_data` runs as the reader, so a PDF never says more than the screens; the file is `private, no-store` |
+| Reports and their exports | `reports.view` with the permission of each report; every export needs `reports.export`, checked by the server and the database and written to the audit log |
+| Deliveries of a supplier | Only the assigned supplier (and the office) sees and confirms them; what the shop pays is shown to the supplier and to holders of a receivables permission |
 | Account numbers | Full numbers need `cash_bank.view`; elsewhere, and for clients always, only the last four characters |
 | Cash with order takers | `receivables.post`, or `receivables.view` with `sales.view_all`; order takers see their own |
 | Bank information | Separate table `financial_account_bank_details` (`cash_bank.view`); balances need `cash_bank.view` |
@@ -55,7 +58,7 @@ Because clients cannot read hidden columns, `select=*` on `product_units`, `sale
 
 ## Audit
 
-Every insert/update/delete on business and access tables goes to `audit_logs` (who, when, before/after). Access History (`v_access_audit`) shows user, role and permission changes. Audit rows cannot be modified.
+Every insert/update/delete on business and access tables goes to `audit_logs` (who, when, before/after). Access History (`v_access_audit`) shows user, role and permission changes and exported reports. Audit rows cannot be modified.
 
 ## Storage
 

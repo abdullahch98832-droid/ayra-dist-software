@@ -1,6 +1,6 @@
 import { APP_CONFIG } from "@/config/app";
 
-export const PERIOD_PRESETS = ["today", "yesterday", "last7", "last30", "thisMonth", "lastMonth", "last12Months", "custom"] as const;
+export const PERIOD_PRESETS = ["today", "yesterday", "thisWeek", "thisMonth", "lastMonth", "thisYear", "last7", "last30", "last12Months", "custom"] as const;
 export type PeriodPreset = (typeof PERIOD_PRESETS)[number];
 
 export interface Period {
@@ -30,7 +30,7 @@ export function daysBetween(from: string, to: string): number {
   return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
 }
 
-function isDate(value: unknown): value is string {
+export function isIsoDate(value: unknown): value is string {
   return typeof value === "string" && ISO_DATE.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`))
     && new Date(`${value}T00:00:00Z`).toISOString().startsWith(value);
 }
@@ -40,6 +40,9 @@ function presetRange(preset: Exclude<PeriodPreset, "custom">, today: string): [s
   switch (preset) {
     case "today": return [today, today];
     case "yesterday": return [addDays(today, -1), addDays(today, -1)];
+    // Weeks begin on Monday, years on 1 January.
+    case "thisWeek": return [addDays(today, -((new Date(`${today}T00:00:00Z`).getUTCDay() + 6) % 7)), today];
+    case "thisYear": return [`${today.slice(0, 4)}-01-01`, today];
     case "last7": return [addDays(today, -6), today];
     case "last30": return [addDays(today, -29), today];
     case "thisMonth": return [monthStart, today];
@@ -59,7 +62,7 @@ export function parsePeriod(params: Record<string, string | string[] | undefined
   const preset = PERIOD_PRESETS.find((p) => p === params.range) ?? DEFAULT;
   if (preset === "custom") {
     const { from, to } = params;
-    if (isDate(from) && isDate(to) && from <= to && daysBetween(from, to) <= MAX_PERIOD_DAYS) return { preset, from, to };
+    if (isIsoDate(from) && isIsoDate(to) && from <= to && daysBetween(from, to) <= MAX_PERIOD_DAYS) return { preset, from, to };
     const [f, t] = presetRange(DEFAULT as "thisMonth", today);
     return { preset: DEFAULT, from: f, to: t };
   }

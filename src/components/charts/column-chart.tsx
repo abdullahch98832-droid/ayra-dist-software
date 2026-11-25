@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { ChartCard, ChartTooltip } from "./chart-card";
 import { SERIES_COLORS, axisScale, formatTick, type ChartPoint, type ChartSeries } from "./types";
 
@@ -21,17 +22,19 @@ export function ColumnChartCard({
   const [active, setActive] = useState<number | null>(null);
   const { ticks, low, high } = axisScale(points.flatMap((p) => p.values.map((v) => v.value)));
   const percent = (value: number) => ((value - low) / (high - low)) * 100;
+  // A single series has no legend; its plot takes that space, so cards side by side line up.
+  const height = series.length > 1 ? "h-60" : "h-[17rem]";
   const labelEvery = points.length > 8 ? Math.ceil(points.length / 6) : 1;
   return (
     <ChartCard title={title} description={description} categoryLabel={categoryLabel} series={series} points={points} emptyText={emptyText}>
       <div className="flex gap-2">
-        <div className="relative h-52 w-10 shrink-0 text-xs text-muted-foreground tabular-nums" aria-hidden>
+        <div className={cn("relative w-10 shrink-0 text-xs text-muted-foreground tabular-nums", height)} aria-hidden>
           {ticks.map((tick) => (
             <bdi key={tick} dir="ltr" className="absolute end-0 translate-y-1/2 leading-none" style={{ insetBlockEnd: `${percent(tick)}%` }}>{formatTick(tick)}</bdi>
           ))}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="relative h-52">
+          <div className={cn("relative", height)}>
             {ticks.map((tick) => (
               <div key={tick} className={tick === 0 ? "absolute inset-x-0 h-px bg-input" : "absolute inset-x-0 h-px bg-border"} style={{ insetBlockEnd: `${percent(tick)}%` }} aria-hidden />
             ))}
@@ -45,7 +48,7 @@ export function ColumnChartCard({
                   onFocus={() => setActive(index)}
                   onBlur={() => setActive(null)}
                   aria-label={`${p.label}: ${series.map((s, i) => `${s.label} ${p.values[i]?.display ?? "—"}`).join(", ")}`}
-                  className="relative flex min-w-0 flex-1 cursor-default items-stretch justify-center gap-0.5 rounded-md px-0.5 outline-none hover:bg-muted/70 focus-visible:bg-muted/70"
+                  className="relative flex min-w-0 flex-1 cursor-default items-stretch justify-center gap-0.5 rounded-lg px-0.5 outline-none transition-colors hover:bg-accent/70 focus-visible:bg-accent/70"
                 >
                   {series.map((s, i) => {
                     const value = p.values[i]?.value ?? 0;
@@ -76,7 +79,7 @@ export function ColumnChartCard({
               />
             )}
           </div>
-          <div className="mt-2 flex text-xs text-muted-foreground" aria-hidden>
+          <div className="mt-2 flex h-6 text-xs text-muted-foreground" aria-hidden>
             {points.map((p, i) => (
               <span key={p.label} className={labelEvery > 1 ? "flex min-w-0 flex-1 justify-center whitespace-nowrap" : "min-w-0 flex-1 truncate px-0.5 text-center"}>
                 {i % labelEvery === 0 && <span>{p.label}</span>}

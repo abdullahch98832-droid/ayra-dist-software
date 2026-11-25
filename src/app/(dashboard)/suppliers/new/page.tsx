@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { OTHER_VENDORS } from "@/config/vendors";
 import { getT } from "@/i18n/server";
 import { can, requireActiveSession } from "@/lib/auth/session";
 import { Forbidden } from "@/components/layout/forbidden";
@@ -10,6 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function NewSupplierPage() {
+  if (!OTHER_VENDORS) notFound();
   const ctx = await requireActiveSession();
   if (!can(ctx, "suppliers.manage")) return <Forbidden />;
   const t = await getT();

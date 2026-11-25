@@ -32,7 +32,7 @@ export function ClosingForm({ day, defaults }: { day: Day; defaults: ClosingValu
     <DocumentForm<ClosingValues> defaults={defaults} resolver={zodResolver(schema)} save={closeDayAction} openPath={() => "/cash-bank/closing"} cancelPath="/cash-bank/closing" submitLabel={c.closeDay} savedMessage={c.dayClosed} confirm={{ title: c.closeTitle, description: c.closeConfirm }}>
       {() => (
         <div className="grid items-start gap-6 lg:grid-cols-2">
-          <section className="rounded-xl border bg-card p-5 shadow-card">
+          <section className="rounded-2xl border bg-card p-5 shadow-card">
             <dl className="grid gap-2.5 text-sm">
               {([[c.opening, day.opening], [c.receipts, day.receipts], [c.payments, day.payments]] as const).map(([label, value]) => (
                 <div key={label} className="flex justify-between gap-4"><dt className="text-muted-foreground">{label}</dt><dd><Ltr className="tabular-nums">{formatPaisa(toPaisa(value), locale)}</Ltr></dd></div>

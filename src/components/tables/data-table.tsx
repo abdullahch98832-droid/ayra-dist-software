@@ -151,7 +151,7 @@ export function DataTable<T>({
       )}
 
       {visible.length === 0 ? (
-        <div className="rounded-xl border bg-card shadow-card">
+        <div className="rounded-2xl border bg-card shadow-card">
           {rows.length === 0
             ? <StateMessage title={empty.title} description={empty.description} actions={empty.action} />
             : <StateMessage icon={SearchX} title={t.table.noMatches} description={t.table.noMatchesHint}
@@ -159,7 +159,7 @@ export function DataTable<T>({
         </div>
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-xl border bg-card shadow-card md:block print:block print:overflow-visible print:rounded-none print:border-0 print:shadow-none">
+          <div className="hidden overflow-hidden rounded-2xl border bg-card shadow-card md:block print:block print:overflow-visible print:rounded-none print:border-0 print:shadow-none">
             <Table>
               <TableCaption className="sr-only">{caption}</TableCaption>
               <TableHeader>
@@ -222,7 +222,7 @@ export function DataTable<T>({
 
           <ul className="grid gap-3 md:hidden print:hidden" aria-label={caption}>
             {visible.map((row) => (
-              <li key={rowKey(row)} className="rounded-xl border bg-card p-4 shadow-card">
+              <li key={rowKey(row)} className="rounded-2xl border bg-card p-4 shadow-card">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">{primary?.cell(row)}</div>
                   {actions?.(row)}

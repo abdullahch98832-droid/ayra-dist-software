@@ -46,7 +46,7 @@ export default async function OrderTakersPage({ searchParams }: PageProps<"/orde
                 [k.collected, money(f?.collected)], [k.pending, money(f?.pending_collections)], [k.cashHeld, money(f?.cash_held)],
               ];
               return (
-                <li key={x.id} className="rounded-xl border bg-card p-5 shadow-card">
+                <li key={x.id} className="rounded-2xl border bg-card p-5 shadow-card">
                   <div className="flex items-start gap-4">
                     <EmployeeAvatar name={x.nameEn} url={photos.get(x.photoPath ?? "")} className="size-14" />
                     <div className="min-w-0 flex-1">

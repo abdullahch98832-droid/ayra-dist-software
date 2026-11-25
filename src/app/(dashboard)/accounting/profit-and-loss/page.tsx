@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { Printer } from "lucide-react";
 import { loadIncomeStatement, seesLedgers, seesStatements } from "@/features/accounting/queries";
 import { businessToday, parsePeriod } from "@/features/dashboard/period";
 import { getT } from "@/i18n/server";
 import { pageContext } from "@/lib/page-context";
 import { sumPaisa, toPaisa } from "@/lib/utils/money";
+import { DocumentLink } from "@/components/documents/document-link";
 import { Statement, type StatementRow } from "@/components/accounting/statement";
-import { PrintButton } from "@/components/documents/print-button";
 import { PeriodFrame } from "@/components/dashboard/period-frame";
 import { Forbidden } from "@/components/layout/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
@@ -31,8 +30,8 @@ export default async function ProfitAndLossPage({ searchParams }: PageProps<"/ac
   const net = gross + total(other) - total(expense);
   return (
     <>
-      <PageHeader title={a.tabs.profit} actions={<PrintButton label={t.sales.print} icon={<Printer aria-hidden />} />} />
-      <PeriodFrame key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={a.tabs.profit} description={a.subtitle}>
+      <PageHeader title={a.tabs.profit} actions={<DocumentLink kind="profit_and_loss" params={{ range: "custom", from: period.from, to: period.to }} label={t.docs.pdf} />} />
+      <PeriodFrame compact key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={a.tabs.profit} description={a.subtitle}>
         {rows.length === 0 ? <EmptyState title={a.statementEmpty} /> : (
           <Statement caption={a.tabs.profit} locale={locale} sections={[
             { key: "sales", rows: sales, total: { label: a.sales, amount: total(sales) } }, { key: "cost", title: a.costOfSales, rows: cost, total: { label: a.costOfSales, amount: total(cost) } },

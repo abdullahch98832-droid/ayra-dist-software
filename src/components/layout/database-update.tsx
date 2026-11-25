@@ -23,7 +23,7 @@ export function DatabaseUpdateBanner() {
   const { needed, admin } = useDatabaseUpdate();
   if (!needed || !admin) return null;
   return (
-    <div role="status" className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-warning print:hidden">
+    <div role="status" className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-warning/30 bg-warning-soft px-4 py-3 text-sm text-warning print:hidden">
       <DatabaseZap className="size-5 shrink-0" aria-hidden />
       <div className="min-w-0 flex-1 basis-64">
         <p className="font-medium">{t.states.updateTitle}</p>

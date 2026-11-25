@@ -14,6 +14,7 @@ import { formatDate, formatNumber } from "@/components/shared/format";
 import { LinkButton } from "@/components/shared/link-button";
 import { SectionCard } from "@/components/shared/section-card";
 import { StatCard } from "@/components/shared/stat-card";
+import { StatGrid } from "@/components/shared/stat-grid";
 import { StateMessage } from "@/components/shared/states";
 import { StatusBadge } from "@/components/shared/status-badge";
 
@@ -33,7 +34,7 @@ export default async function SalesOverview() {
     <>
       <PageHeader title={s.title} description={s.subtitle} actions={add} />
       <div className="grid gap-6">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <StatGrid>
           <StatCard label={s.today} value={money(summary.today)} icon={TrendingUp} />
           <StatCard label={s.month} value={money(summary.month)} icon={TrendingUp} hint={fill(s.monthInvoices, { count: formatNumber(summary.month_invoices, locale) })} href="/sales/invoices" />
           {summary.collected_month !== undefined && <StatCard label={s.collectedMonth} value={money(summary.collected_month)} icon={Banknote} href="/receivables/payments" />}
@@ -41,14 +42,14 @@ export default async function SalesOverview() {
           <StatCard label={s.toDispatch} value={formatNumber(dispatch, locale)} icon={PackageCheck} tone={dispatch ? "attention" : "default"} href={can(ctx, "sales.dispatch") ? "/inventory/dispatch" : "/sales/orders?status=open"} />
           <StatCard label={s.inTransit} value={formatNumber(summary.in_transit, locale)} icon={Truck} href="/sales/deliveries?status=dispatched" />
           <StatCard label={s.unpaid} value={formatNumber(n("delivered"), locale)} icon={CircleCheck} href="/sales/orders?status=delivered" />
-        </div>
-        <SectionCard title={s.tabs.orders} action={<LinkButton variant="ghost" size="sm" href="/sales/orders">{t.common.all}</LinkButton>}>
+        </StatGrid>
+        <SectionCard title={s.tabs.orders} action={<LinkButton variant="outline" size="sm" href="/sales/orders">{t.common.all}</LinkButton>}>
           {latest.rows.length === 0 ? <StateMessage headingLevel="p" title={s.orderEmpty} description={s.orderEmptyHint} className="py-6" /> : (
             <ul className="divide-y">
               {latest.rows.slice(0, 8).map((o) => {
                 const status = orderOptions(t)[o.status];
                 return (
-                  <li key={o.id} className="flex items-start justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+                  <li key={o.id} className="flex items-start justify-between gap-4 -mx-3 px-3 py-2.5 transition-colors hover:bg-accent/50">
                     <div className="min-w-0">
                       <Link href={`/sales/orders/${o.id}`} className="text-sm font-medium hover:text-primary hover:underline"><Ltr>{o.doc_no}</Ltr></Link>
                       <p className="text-xs text-muted-foreground"><bdi>{o.customer && local(o.customer.name, o.customer.name_ur)}</bdi> · <bdi>{formatDate(o.order_date, locale)}</bdi></p>

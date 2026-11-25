@@ -1,3 +1,4 @@
+import { OTHER_VENDORS } from "@/config/vendors";
 import {
   Banknote, Boxes, Factory, HandCoins, Landmark, PackageCheck, ReceiptText, ScrollText, ShoppingCart, Waypoints, type LucideIcon,
 } from "lucide-react";
@@ -9,9 +10,13 @@ import { formatPaisa, toPaisa } from "@/lib/utils/money";
 import type { Locale } from "@/types";
 import { Ltr } from "@/components/shared/bidi";
 import { formatNumber } from "@/components/shared/format";
+import { StatGrid } from "@/components/shared/stat-grid";
 import { StatCard } from "@/components/shared/stat-card";
 
 interface Card { key: string; label: string; value: React.ReactNode; icon: LucideIcon; hint?: React.ReactNode; tone?: "default" | "attention" }
+
+/** Goods and today's trade come first, then the money. */
+const ACTIVITY = new Set(["stock", "value", "sales", "purchases"]);
 
 /** Balances now and today's activity. Only figures present in `position` are shown. */
 export function PositionCards({ position, kind, t, locale }: { position: Position; kind: DashboardKind; t: Dictionary; locale: Locale }) {
@@ -65,7 +70,8 @@ export function PositionCards({ position, kind, t, locale }: { position: Positio
   if (position.cash) cards.push({ key: "cash", label: f.cash, value: money(position.cash), icon: Banknote });
   if (position.bank) cards.push({ key: "bank", label: f.bank, value: money(position.bank), icon: Landmark });
   if (position.receivables) cards.push({ key: "receivables", label: f.receivables, value: money(position.receivables), icon: HandCoins, hint: f.receivablesHint });
-  if (position.supplier_payables) cards.push({ key: "payables", label: f.supplierPayables, value: money(position.supplier_payables), icon: ScrollText, hint: f.supplierPayablesHint });
+  // Money owed is never hidden, whether vendors are used or not.
+  if (position.supplier_payables && (OTHER_VENDORS || toPaisa(position.supplier_payables) !== BigInt(0))) cards.push({ key: "payables", label: f.supplierPayables, value: money(position.supplier_payables), icon: ScrollText, hint: f.supplierPayablesHint });
   if (position.company_outstanding) cards.push({ key: "company", label: f.companyOutstanding, value: money(position.company_outstanding), icon: Factory, hint: f.companyOutstandingHint });
   if (position.sol_pending) {
     cards.push({
@@ -76,8 +82,12 @@ export function PositionCards({ position, kind, t, locale }: { position: Positio
   }
   if (cards.length === 0) return null;
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {cards.map(({ key, ...card }) => <StatCard key={key} {...card} />)}
+    <div className="grid gap-4">
+      {[cards.filter((c) => ACTIVITY.has(c.key)), cards.filter((c) => !ACTIVITY.has(c.key))].filter((group) => group.length > 0).map((group) => (
+        <StatGrid key={group[0]?.key}>
+          {group.map(({ key, ...card }) => <StatCard key={key} {...card} />)}
+        </StatGrid>
+      ))}
     </div>
   );
 }

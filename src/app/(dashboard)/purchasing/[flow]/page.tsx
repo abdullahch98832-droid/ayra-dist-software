@@ -13,6 +13,7 @@ import { formatDate, formatNumber } from "@/components/shared/format";
 import { LinkButton } from "@/components/shared/link-button";
 import { SectionCard } from "@/components/shared/section-card";
 import { StatCard } from "@/components/shared/stat-card";
+import { StatGrid } from "@/components/shared/stat-grid";
 import { StateMessage } from "@/components/shared/states";
 import Link from "next/link";
 
@@ -52,25 +53,25 @@ export default async function PurchasingOverview({ params }: PageProps<"/purchas
       />
       <div className="grid gap-6">
         {summary && (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <StatGrid>
             <StatCard label={p.openOrders} value={formatNumber(summary.open_orders, locale)} icon={ClipboardList} hint={fill(p.openValue, { amount: text(summary.open_value) })} href={flowPath(flow, "orders")} />
             <StatCard label={p.unbilled} value={money(summary.unbilled_amount)} icon={ReceiptText} tone={summary.unbilled_receipts > 0 ? "attention" : "default"} hint={fill(p.unbilledHint, { count: formatNumber(summary.unbilled_receipts, locale) })} href={flowPath(flow, "bills", "new")} />
             <StatCard label={p.purchasedMonth} value={money(summary.purchased_month)} icon={PackageCheck} />
             {summary.balance !== undefined && <StatCard label={p.payable} value={money(summary.balance)} icon={Wallet} href={flowPath(flow, "account")} />}
             {summary.unpaid_amount !== undefined && <StatCard label={p.unpaidBills} value={money(summary.unpaid_amount)} icon={HandCoins} hint={fill(p.unpaidHint, { count: formatNumber(summary.unpaid_bills ?? 0, locale) })} href={flowPath(flow, "bills")} />}
             {summary.paid_month !== undefined && <StatCard label={p.paidMonth} value={money(summary.paid_month)} icon={Banknote} href={flowPath(flow, "payments")} />}
-          </div>
+          </StatGrid>
         )}
         <div className="grid items-start gap-6 lg:grid-cols-2">
           {[
             { title: p.tabs.orders, href: "orders", rows: orders.rows.slice(0, 6).map((o) => ({ id: o.id, no: o.doc_no, date: o.order_date, status: o.status, closed: !!o.closed_at, total: o.total_amount, party: local(o.supplier.name, o.supplier.name_ur) })) },
             { title: p.tabs.receipts, href: "receipts", rows: receipts.rows.slice(0, 6).map((r) => ({ id: r.id, no: r.doc_no, date: r.receipt_date, status: r.status, closed: false, total: r.total_amount, party: local(r.supplier.name, r.supplier.name_ur) })) },
           ].map((list) => (
-            <SectionCard key={list.href} title={list.title} action={<LinkButton variant="ghost" size="sm" href={flowPath(flow, list.href)}>{t.common.all}</LinkButton>}>
+            <SectionCard key={list.href} title={list.title} action={<LinkButton variant="outline" size="sm" href={flowPath(flow, list.href)}>{t.common.all}</LinkButton>}>
               {list.rows.length === 0 ? <StateMessage headingLevel="p" title={t.documents.empty} className="py-6" /> : (
                 <ul className="divide-y">
                   {list.rows.map((r) => (
-                    <li key={r.id} className="flex items-start justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+                    <li key={r.id} className="flex items-start justify-between gap-4 -mx-3 px-3 py-2.5 transition-colors hover:bg-accent/50">
                       <div className="min-w-0">
                         <Link href={flowPath(flow, list.href, r.id)} className="text-sm font-medium hover:text-primary hover:underline"><Ltr>{r.no}</Ltr></Link>
                         <p className="text-xs text-muted-foreground"><bdi>{r.party}</bdi> · <bdi>{formatDate(r.date, locale)}</bdi></p>

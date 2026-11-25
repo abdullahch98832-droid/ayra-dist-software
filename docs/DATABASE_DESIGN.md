@@ -1,6 +1,6 @@
 # Database Design
 
-> **Status:** implemented as migrations in `supabase/migrations/` and verified by 197 automated tests on PostgreSQL 17 (`npm run test:db`). See [SUPABASE_SETUP.md](SUPABASE_SETUP.md).
+> **Status:** implemented as migrations in `supabase/migrations/` and verified by 245 automated tests on PostgreSQL 17 (`npm run test:db`). See [SUPABASE_SETUP.md](SUPABASE_SETUP.md).
 
 ## Conventions
 
@@ -29,7 +29,7 @@
 | `…100800_expenses_payroll` | expense categories, expenses, employee advances, payroll runs/items, salary payments |
 | `…100900_reporting` | ledger, balance, outstanding and profitability views; trial balance; profit and loss |
 | `…101000_security` | RLS policies, column privileges, audit/updated triggers, storage buckets |
-| `…101100_reference_data` | permissions, roles, units, chart of accounts, expense categories, numbering, settings, default warehouses, main company |
+| `…101100_reference_data` | permissions, roles, units, chart of accounts, expense categories, numbering, settings, default warehouses, Ayra company |
 | `20261124100000_access_control` | Super Admin / Manager / Data Entry / Viewer roles, company-account and costs permissions, user lifecycle functions, manager limit, confidential column restrictions and `secure_*` views, salary and bank-detail tables, employee codes |
 | `20261124110000_explicit_grants` | explicit table grants (projects that do not expose tables automatically) |
 | `20261124120000_dashboard` | dashboard functions |
@@ -37,6 +37,10 @@
 | `20261126100000_sales_distribution` | customer details and notes, order takers, order workflow with picking, delivery confirmation with returns, held cash, deposits and counts, customer statement, sales reports, assigned-customer access |
 | `20261127100000_sol_vehicles` | SOL job types, services, items, deliveries, returns and payments; vehicle details, drivers list; expenses of jobs and vehicles; account list with masked numbers; reports. Its first section completes databases that received an early copy of the Phase 7 file |
 | `20261128100000_finance` | expense approval and categories, payroll, opening balances, vouchers, daily cash closing, period closing, ledgers, statements and ledger checks |
+| `20261129100000_documents` | letterhead settings; what each printed document says (`document_data`, `document_statement`), read as the caller |
+| `20261130100000_reports` | `reports.export`, `cash_bank.reconcile`; business reports from posted entries, `ledger_total` to compare with, recorded exports, bank reconciliation |
+| `20261201100000_distributor` | wording of a distributor; SOL orders of other distributors: `purchase_orders.sol_job_id`, price paid to Ayra as cost of the order |
+| `20261202100000_suppliers` | suppliers as staff, supplier and money of a delivery, extra payments to the Ayra company, vendors |
 
 With every new migration, set `app_settings.schema_version` and update `src/config/database.ts` (a test enforces it). Until that migration has been applied, administrators see a notice naming the file and affected pages say the database needs an update.
 
@@ -50,10 +54,10 @@ With every new migration, set `app_settings.schema_version` and update `src/conf
 **Purchasing:** `purchase_orders(+_items)`, `goods_receipts(+_items)`, `supplier_invoices`, `supplier_invoice_receipts`, `supplier_payments`, `supplier_payment_allocations`, `supplier_returns(+_items)`
 **Sales:** `order_takers`, `customer_notes`, `cash_deposits`, `cash_reconciliations`, `sales_orders(+_items)`, `deliveries`, `delivery_items`, `sales_invoices(+_items)`, `customer_returns(+_items)`, `customer_payments`, `customer_payment_allocations`
 **SOL:** `sol_job_types`, `sol_services`, `sol_jobs`, `sol_job_items`, `sol_deliveries`, `sol_delivery_items`, `sol_returns`, `sol_return_items`, `sol_trips`
-**Finance:** `chart_of_accounts`, `financial_accounts` (cash + bank), `financial_account_bank_details` (confidential), `accounting_periods`, `journal_entries`, `journal_entry_lines`, `fund_transfers`, `account_openings`, `cash_vouchers`, `cash_closings`, `expense_categories`, `expenses`, `employee_advances`, `payroll_runs`, `payroll_items`, `salary_payments`
+**Finance:** `chart_of_accounts`, `financial_accounts` (cash + bank), `financial_account_bank_details` (confidential), `accounting_periods`, `journal_entries`, `journal_entry_lines`, `fund_transfers`, `account_openings`, `cash_vouchers`, `cash_closings`, `bank_reconciliations`, `company_extra_payments`, `bank_reconciliation_lines`, `expense_categories`, `expenses`, `employee_advances`, `payroll_runs`, `payroll_items`, `salary_payments`
 
 Requested items that are **views or roles rather than tables**:
-- *Main company ledger* → `v_company_ledger` (journal lines on control account `AP_PRINCIPAL`)
+- *Ayra company ledger* → `v_company_ledger` (journal lines on control account `AP_PRINCIPAL`)
 - *Supplier / customer ledgers* → `v_supplier_ledger`, `v_customer_ledger` (+ balances views)
 - *SOL payments* → customer payments allocated to a job (`customer_payment_allocations.sol_job_id`), summarised in `v_sol_job_summary`
 - *Cash accounts / bank accounts* → one table `financial_accounts` with `account_type`
@@ -198,7 +202,7 @@ Clients insert and edit **drafts** directly (RLS + column privileges). Every sta
 | Function | Effect |
 |---|---|
 | `approve_purchase_order`, `cancel_purchase_order` | PO status |
-| `post_goods_receipt` | Stock in at line value; Dr Inventory / Cr payable (main company or supplier) |
+| `post_goods_receipt` | Stock in at line value; Dr Inventory / Cr payable (Ayra company or supplier) |
 | `post_supplier_invoice` | Matches receipts; posts any price difference to inventory variance |
 | `post_supplier_payment`, `allocate_supplier_payment`, `void_supplier_payment` | Payables, partial payments |
 | `post_supplier_return` | Stock out at average cost; payable reduced by agreed credit |
@@ -219,6 +223,13 @@ Clients insert and edit **drafts** directly (RLS + column privileges). Every sta
 | `create_period`, `period_checklist`, `close_period`, `reopen_period` | Periods |
 | `general_ledger`, `account_book`, `list_journal`, `report_trial_balance`, `income_statement`, `balance_sheet`, `cash_flow`, `ledger_checks` | Ledgers, statements and checks |
 | `create_manual_journal`, `reverse_manual_journal` | Journal |
+| `document_data`, `document_statement`, `save_document_settings` | Printed documents and their letterhead |
+| `report_…`, `ledger_total` | Reports, and the ledger side of their comparison (see REPORTS.md) |
+| `record_report_export` | Checks `reports.export` and writes the export to the audit log |
+| `start_bank_reconciliation`, `save_…`, `complete_…`, `reopen_…`, `delete_bank_reconciliation` | Bank reconciliation |
+| `save_sol_order`, `order_sol_goods`, `report_sol_orders` | Distributor orders and their goods from Ayra |
+| `save_supply_staff`, `assign_supplier`, `delivery_money`, `report_supply`, `report_suppliers_work` | Suppliers (staff) |
+| `save_company_extra_payment`, `void_company_extra_payment`, `report_company_extra` | Extra payments to Ayra |
 | `my_permissions` | Permissions of the signed-in user |
 | `trial_balance`, `profit_and_loss` | Financial reports (require `reports.financial`) |
 | `admin_list_users`, `admin_assign_role`, `admin_link_employee`, `admin_set_user_status` | User administration |

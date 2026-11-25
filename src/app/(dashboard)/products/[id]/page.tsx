@@ -4,6 +4,7 @@ import { z } from "zod";
 import { uploadProductImageAction } from "@/features/catalog/actions";
 import { loadProduct, loadProductChoices } from "@/features/catalog/queries";
 import { getLocale, getT } from "@/i18n/server";
+import { OTHER_VENDORS } from "@/config/vendors";
 import { can, requireActiveSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { breakdown } from "@/lib/utils/quantity";
@@ -77,7 +78,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]"
                 { label: t.catalog.barcode, value: product.barcode && <Ltr>{product.barcode}</Ltr> },
                 { label: t.catalog.category, value: label(choices.categories, product.category_id) },
                 { label: t.catalog.brand, value: label(choices.brands, product.brand_id) },
-                { label: t.catalog.supplier, value: label(choices.suppliers, product.default_supplier_id) },
+                ...(OTHER_VENDORS ? [{ label: t.catalog.supplier, value: label(choices.suppliers, product.default_supplier_id) }] : []),
                 { label: t.catalog.minimumStock, value: formatNumber(product.reorder_level, locale) },
                 ...product.units.map((u) => ({
                   label: `${label(choices.units, u.unitId) ?? "—"}${u.factor > 1 ? ` (${u.factor})` : ""}`,

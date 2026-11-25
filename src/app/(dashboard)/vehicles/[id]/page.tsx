@@ -20,6 +20,7 @@ import { formatDate, formatNumber } from "@/components/shared/format";
 import { LinkButton } from "@/components/shared/link-button";
 import { SectionCard } from "@/components/shared/section-card";
 import { StatCard } from "@/components/shared/stat-card";
+import { StatGrid } from "@/components/shared/stat-grid";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { SpecTable } from "@/components/tables/spec-table";
 import { TripsTable } from "../trips-table";
@@ -75,7 +76,7 @@ export default async function VehiclePage({ params, searchParams }: PageProps<"/
           ]} />
         </SectionCard>
         <PeriodFrame key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={v.use} description={v.useHint}>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatGrid>
             <StatCard label={v.solTrips} value={n(use?.sol_deliveries)} icon={Truck} hint={`${v.jobs}: ${n(use?.jobs)}`} />
             <StatCard label={v.salesTrips} value={n(use?.sales_deliveries)} icon={Truck} />
             <StatCard label={v.distance} value={n(use?.distance)} icon={Gauge} />
@@ -88,13 +89,13 @@ export default async function VehiclePage({ params, searchParams }: PageProps<"/
                 <StatCard label={v.total} value={money(use?.total)} icon={Coins} hint={<>{v.forJobs}: {money(use?.for_jobs)}</>} />
               </>
             )}
-          </div>
+          </StatGrid>
           <h3 className="text-base font-semibold text-navy">{v.trips}</h3>
           <TripsTable t={t} local={local} rows={trips} oneVehicle canOpen={{ sol: can(ctx, "sol.view"), sales: can(ctx, "sales.view") || can(ctx, "sales.view_all") }} />
         </PeriodFrame>
         {seesExpenses && (
           <section className="grid gap-3">
-            <div className="flex items-center justify-between gap-3"><h2 className="text-base font-semibold text-navy">{v.expenses}</h2><LinkButton variant="ghost" size="sm" href={`/expenses?vehicle=${id}`}>{t.common.all}</LinkButton></div>
+            <div className="flex items-center justify-between gap-3"><h2 className="text-base font-semibold text-navy">{v.expenses}</h2><LinkButton variant="outline" size="sm" href={`/expenses?vehicle=${id}`}>{t.common.all}</LinkButton></div>
             <SpecTable
               caption={v.expenses}
               rows={spent.rows.slice(0, 10).map((e) => ({ id: e.id, no: e.doc_no, noHref: `/expenses/${e.id}`, date: e.expense_date, category: e.category && local(e.category.name_en, e.category.name_ur), payee: e.payee, job: e.job?.doc_no, odometer: e.odometer, litres: e.litres, amount: e.amount, status: e.status }))}

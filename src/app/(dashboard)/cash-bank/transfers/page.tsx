@@ -39,7 +39,7 @@ export default async function TransfersPage({ searchParams }: PageProps<"/cash-b
       <div className="grid gap-4">
         <div className="flex flex-wrap gap-2"><UrlSearch placeholder={t.documents.searchNumber} /><UrlSelect param="status" label={t.documents.allStatuses} options={STATUSES.map((s) => ({ value: s, label: t.purchasing.statuses[s] }))} /></div>
         {rows.length === 0 ? <EmptyState title={c.transferEmpty} actions={add} /> : (
-          <ul className="divide-y rounded-xl border bg-card shadow-card">
+          <ul className="divide-y rounded-2xl border bg-card shadow-card">
             {rows.map((x) => {
               const kind = x.source?.account_type === x.target?.account_type ? "transfer" : x.source?.account_type === "cash" ? "deposit" : "withdrawal";
               return (

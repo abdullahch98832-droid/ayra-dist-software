@@ -14,6 +14,7 @@ import { phoneHref, whatsappHref } from "@/lib/utils/phone";
 import { formatPaisa, sumPaisa, toPaisa } from "@/lib/utils/money";
 import { PeriodFrame } from "@/components/dashboard/period-frame";
 import { Forbidden } from "@/components/layout/forbidden";
+import { DocumentLink } from "@/components/documents/document-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Ltr, Money } from "@/components/shared/bidi";
 import { DescriptionList } from "@/components/shared/description-list";
@@ -21,6 +22,7 @@ import { formatDate } from "@/components/shared/format";
 import { LinkButton } from "@/components/shared/link-button";
 import { SectionCard } from "@/components/shared/section-card";
 import { StatCard } from "@/components/shared/stat-card";
+import { StatGrid } from "@/components/shared/stat-grid";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { SpecTable } from "@/components/tables/spec-table";
 
@@ -84,6 +86,7 @@ export default async function CustomerPage({ params, searchParams }: PageProps<"
         description={<span className="flex flex-wrap items-center gap-3"><Ltr className="font-mono text-xs">{customer.code}</Ltr><StatusBadge tone={customer.is_active ? "green" : "gray"}>{customer.is_active ? c.active : c.inactive}</StatusBadge></span>}
         actions={
           <>
+            {ledger && <DocumentLink kind="customer_statement" params={{ customer: id, range: "custom", from: period.from, to: period.to }} label={t.docs.statement} />}
             {can(ctx, "customers.manage") && <LinkButton variant="outline" href={`/customers/${id}/edit`}><Pencil aria-hidden />{c.edit}</LinkButton>}
             {can(ctx, "receivables.adjust") && <LinkButton variant="outline" href={`/receivables/notes/new?customer=${id}`}><FilePlus2 aria-hidden />{t.receivables.note}</LinkButton>}
             {can(ctx, "receivables.collect") && <LinkButton variant="outline" href={`/receivables/payments/new?customer=${id}`}><Banknote aria-hidden />{t.receivables.newPayment}</LinkButton>}
@@ -92,12 +95,12 @@ export default async function CustomerPage({ params, searchParams }: PageProps<"
         }
       />
       <div className="grid gap-6">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatGrid>
           {ledger && <StatCard label={c.balance} value={money(summary.balance)} icon={HandCoins} hint={summary.unallocated !== undefined && toPaisa(summary.unallocated) > BigInt(0) ? <>{c.onAccount}: {money(summary.unallocated)}</> : undefined} />}
           <StatCard label={c.creditLimit} value={summary.credit_limit === undefined ? c.noLimit : money(summary.credit_limit)} icon={CreditCard} hint={summary.credit_available !== undefined ? <>{c.available}: {money(summary.credit_available)}</> : undefined} tone={summary.credit_available !== undefined && toPaisa(summary.credit_available) < BigInt(0) ? "attention" : "default"} />
           {ledger && <StatCard label={c.overdue} value={money(summary.overdue)} icon={Clock} tone={summary.overdue !== undefined && toPaisa(summary.overdue) > BigInt(0) ? "attention" : "default"} />}
           <StatCard label={c.openOrders} value={money(summary.open_orders)} icon={ShoppingCart} href={seesOrders ? `/sales/orders?customer=${id}&status=open` : undefined} />
-        </div>
+        </StatGrid>
         <div className="grid items-start gap-6 lg:grid-cols-2">
           <SectionCard
             title={c.details}
@@ -124,13 +127,13 @@ export default async function CustomerPage({ params, searchParams }: PageProps<"
             ]} />
           </SectionCard>
           {seesOrders && (
-            <SectionCard title={c.recentOrders} action={<LinkButton variant="ghost" size="sm" href={`/sales/orders?customer=${id}`}>{t.common.all}</LinkButton>}>
+            <SectionCard title={c.recentOrders} action={<LinkButton variant="outline" size="sm" href={`/sales/orders?customer=${id}`}>{t.common.all}</LinkButton>}>
               {orders.rows.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">{t.sales.orderEmpty}</p> : (
                 <ul className="divide-y">
                   {orders.rows.slice(0, 6).map((o) => {
                     const status = orderOptions(t)[o.status];
                     return (
-                      <li key={o.id} className="flex items-start justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+                      <li key={o.id} className="flex items-start justify-between gap-4 -mx-3 px-3 py-2.5 transition-colors hover:bg-accent/50">
                         <div className="min-w-0">
                           <Link href={`/sales/orders/${o.id}`} className="text-sm font-medium hover:text-primary hover:underline"><Ltr>{o.doc_no}</Ltr></Link>
                           <p className="text-xs text-muted-foreground"><bdi>{formatDate(o.order_date, locale)}</bdi></p>
@@ -149,7 +152,7 @@ export default async function CustomerPage({ params, searchParams }: PageProps<"
         </div>
         {ledger && (
           <PeriodFrame key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={c.ledger} description={c.ledgerHint}>
-            <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border shadow-card sm:grid-cols-4 xl:grid-cols-7">
+            <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border bg-border shadow-card sm:grid-cols-4 xl:grid-cols-7">
               {[...figures, { label: c.closing, value: closing, strong: true }].map((f) => (
                 <div key={f.label} className="bg-card px-4 py-3">
                   <dt className="text-xs text-muted-foreground">{f.label}</dt>

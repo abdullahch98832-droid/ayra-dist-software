@@ -3,7 +3,7 @@ import { HandCoins, Wallet } from "lucide-react";
 import { deleteReceivableDraftAction, postDepositAction, voidDepositAction } from "@/features/receivables/actions";
 import { loadCash, loadDeposits, seesAllCollections } from "@/features/receivables/queries";
 import { DOCUMENT_TONE } from "@/features/sales/status";
-import { loadTakers, takerNames } from "@/features/takers/queries";
+import { loadCollectors, takerNames } from "@/features/takers/queries";
 import { getT } from "@/i18n/server";
 import { can } from "@/lib/auth/session";
 import { LIST_PAGE, listParams } from "@/lib/list-params";
@@ -17,6 +17,7 @@ import { formatDate } from "@/components/shared/format";
 import { LinkButton } from "@/components/shared/link-button";
 import { SectionCard } from "@/components/shared/section-card";
 import { StatCard } from "@/components/shared/stat-card";
+import { StatGrid } from "@/components/shared/stat-grid";
 import { StateMessage } from "@/components/shared/states";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { SpecTable } from "@/components/tables/spec-table";
@@ -39,7 +40,7 @@ export default async function CashPage({ searchParams }: PageProps<"/receivables
   const mayLoad = all || can(ctx, "receivables.collect");
   const poster = can(ctx, "receivables.post");
   const filter = { ...listParams(query, STATUSES), takerId: uuidParam(query.taker) };
-  const [cash, deposits, takers, names] = await Promise.all([mayLoad ? loadCash() : [], loadDeposits(filter), all ? loadTakers() : [], takerNames()]);
+  const [cash, deposits, takers, names] = await Promise.all([mayLoad ? loadCash() : [], loadDeposits(filter), all ? loadCollectors() : [], takerNames()]);
   const total = sumPaisa(cash.map((c) => toPaisa(c.held)));
   const shown = cash.filter((c) => c.is_active || toPaisa(c.held) !== BigInt(0) || toPaisa(c.waiting_deposits) !== BigInt(0));
   const mayDeposit = poster || (can(ctx, "receivables.collect") && cash.some((c) => c.employee_id === ctx.employeeId));
@@ -47,7 +48,7 @@ export default async function CashPage({ searchParams }: PageProps<"/receivables
     <>
       <PageHeader title={r.tabs.cash} description={r.cashHint} actions={mayDeposit && <LinkButton href="/receivables/cash/deposit"><HandCoins aria-hidden />{r.newDeposit}</LinkButton>} />
       <div className="grid gap-6">
-        {all && <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"><StatCard label={r.totalHeld} value={<Ltr>{formatPaisa(total, locale)}</Ltr>} icon={Wallet} tone={total > BigInt(0) ? "attention" : "default"} /></div>}
+        {all && <StatGrid><StatCard label={r.totalHeld} value={<Ltr>{formatPaisa(total, locale)}</Ltr>} icon={Wallet} tone={total > BigInt(0) ? "attention" : "default"} /></StatGrid>}
         <SpecTable
           caption={r.tabs.cash}
           rows={shown.map((c) => ({
@@ -56,7 +57,7 @@ export default async function CashPage({ searchParams }: PageProps<"/receivables
             deposit: poster && toPaisa(c.held) > BigInt(0) ? r.newDeposit : null, depositHref: `/receivables/cash/deposit?taker=${c.employee_id}`,
           }))}
           columns={[
-            { key: "name", label: t.sales.orderTaker, kind: "link", primary: true },
+            { key: "name", label: t.receivables.collectedBy, kind: "link", primary: true },
             { key: "held", label: r.held, kind: "money", total: true },
             { key: "waiting", label: r.waitingCollections, kind: "money", hideBelow: "xl", total: true },
             { key: "deposits", label: r.waitingDeposits, kind: "money", hideBelow: "lg", total: true },
@@ -78,7 +79,7 @@ export default async function CashPage({ searchParams }: PageProps<"/receivables
           action={
             <span className="flex flex-wrap gap-2">
               <UrlSelect param="status" label={t.documents.allStatuses} options={STATUSES.map((x) => ({ value: x, label: t.purchasing.statuses[x] }))} />
-              {takers.length > 0 && <UrlSelect param="taker" label={t.customers.allOrderTakers} options={takers.map((x) => ({ value: x.id, label: local(x.nameEn, x.nameUr) }))} />}
+              {takers.length > 0 && <UrlSelect param="taker" label={t.receivables.collectedBy} options={takers.map((x) => ({ value: x.id, label: local(x.nameEn, x.nameUr) }))} />}
             </span>
           }
         >

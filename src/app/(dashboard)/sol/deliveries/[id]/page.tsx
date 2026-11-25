@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Ban, MessageCircle, Pencil, Phone, Printer, Truck } from "lucide-react";
+import { Ban, MessageCircle, Pencil, Phone, Truck } from "lucide-react";
 import { loadWarehouseChoices } from "@/features/catalog/queries";
 import { loadDriverList } from "@/features/fleet/queries";
 import { cancelSolDeliveryAction, dispatchSolAction } from "@/features/sol/actions";
@@ -11,8 +11,8 @@ import { getT } from "@/i18n/server";
 import { can } from "@/lib/auth/session";
 import { pageContext } from "@/lib/page-context";
 import { phoneHref, whatsappHref } from "@/lib/utils/phone";
+import { DocumentLink } from "@/components/documents/document-link";
 import { ActionButton } from "@/components/documents/action-button";
-import { PrintButton } from "@/components/documents/print-button";
 import { Forbidden } from "@/components/layout/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
 import { Ltr } from "@/components/shared/bidi";
@@ -62,7 +62,7 @@ export default async function SolDeliveryPage({ params }: PageProps<"/sol/delive
         description={<span className="flex flex-wrap items-center gap-3">{status && <StatusBadge tone={status.tone}>{status.label}</StatusBadge>}<bdi>{client && local(client.name, client.name_ur)}</bdi></span>}
         actions={
           <>
-            <PrintButton label={t.sales.print} icon={<Printer aria-hidden />} />
+            <DocumentLink kind="sol_challan" params={{ id }} label={t.docs.pdf} />
             {planned && planner && (
               <>
                 <ActionButton label={s.cancelDelivery} icon={<Ban aria-hidden />} variant="outline" action={cancelSolDeliveryAction.bind(null, id)} success={s.deliveryCancelled} confirm={{ title: s.cancelDeliveryTitle, description: s.cancelDeliveryHint, tone: "danger" }} />

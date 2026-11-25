@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { documentHref } from "@/features/documents/kinds";
 import { reportTrialBalance, seesStatements } from "@/features/accounting/queries";
 import { businessToday, parsePeriod } from "@/features/dashboard/period";
 import { getT } from "@/i18n/server";
@@ -27,11 +28,11 @@ export default async function TrialBalancePage({ searchParams }: PageProps<"/acc
   return (
     <>
       <PageHeader title={a.tabs.trial} />
-      <PeriodFrame key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={a.tabs.trial} description={a.subtitle}>
+      <PeriodFrame compact key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={a.tabs.trial} description={a.subtitle}>
         {rows.length > 0 && <FormAlert tone={ok ? "success" : "error"}>{ok ? a.balanced : a.differs}</FormAlert>}
         <SpecTable
           caption={a.tabs.trial}
-          exportName={`trial-balance-${period.from}-${period.to}`}
+          exportName={`trial-balance-${period.from}-${period.to}`} pdfHref={documentHref("trial_balance", { range: "custom", from: period.from, to: period.to })}
           rows={rows.map((r) => ({
             id: r.account_id, code: r.code, name: local(r.name_en, r.name_ur), nameHref: can(ctx, "accounting.view") ? `/accounting/ledger?account=${r.account_id}&range=${period.preset}${period.preset === "custom" ? `&from=${period.from}&to=${period.to}` : ""}` : undefined, type: a.types[r.account_type],
             od: r.opening_debit, oc: r.opening_credit, debit: r.debit, credit: r.credit, cd: r.closing_debit, cc: r.closing_credit,

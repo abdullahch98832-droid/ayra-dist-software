@@ -18,6 +18,23 @@ Jobs for clients with services, products, deliveries, costs and payments, and th
 
 Without `sol.view_all`, a user sees jobs they are responsible for, created or deliver. Costs and profit need `costs.view`; received and outstanding amounts need a receivables permission.
 
+## Distributor orders
+
+Distributors of other cities order goods through us (`20261201100000_distributor.sql`). An order is a SOL job whose type is the fixed *Distributor order*: products only, its amount is the sum of its lines, and it can never become a job or the other way round.
+
+| Step | What happens | Where |
+|---|---|---|
+| Call received | Who called, number, date, what was agreed, products with the price to the distributor and the expected Ayra price. Confirm | `/sol/orders/new` (`sol.manage`) |
+| Ordered from Ayra | A purchase order at Ayra for this order, at the price for it | `/sol/orders/[id]/buy` (`sol.manage` and `purchasing.create`), approved as any purchase order |
+| Goods received | Received into our warehouse on the purchase order | Purchases from Ayra |
+| Supplied | Delivery with vehicle and driver; goods can come back | as for jobs |
+| Completed | The amount becomes income and is owed by the distributor | `sol.post` |
+| Paid | Nothing is left to pay; advances count | payments of jobs |
+
+**Profit = amount from the distributor − price paid to Ayra for the goods of this order − transport − other expenses of the order.** Goods that Ayra delivered for the order (accepted, on receipts of its purchase orders) leave stock at exactly their price, so other stock keeps its value; anything beyond them leaves at average cost. When other sales have already taken part of that value, the order still costs what was paid and the rest is an inventory variance, so the ledger stays exact. Returns reverse both sides exactly.
+
+Not included: differences of the later supplier bill, and goods returned to Ayra after receipt. Goods received for an order are not reserved. Orders are excluded from the list of jobs; both count in the SOL overview and reports. Report: `/reports/sol-orders`.
+
 ## Jobs
 
 | Step | Permission | Effect |

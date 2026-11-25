@@ -45,7 +45,7 @@ export default async function DispatchPage() {
           {deliveries.length === 0 ? <StateMessage headingLevel="p" icon={Truck} title={s.deliveriesEmpty} className="py-6" /> : (
             <ul className="divide-y">
               {deliveries.map((x) => (
-                <li key={x.id} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                <li key={x.id} className="flex flex-wrap items-center justify-between gap-3 -mx-3 px-3 py-3 transition-colors hover:bg-accent/50">
                   <div className="min-w-0">
                     <p className="text-sm font-medium"><Ltr>{x.doc_no}</Ltr> · <bdi>{x.order.customer && local(x.order.customer.name, x.order.customer.name_ur)}</bdi></p>
                     <p className="text-xs text-muted-foreground"><Ltr>{x.order.doc_no}</Ltr> · <bdi>{formatDate(x.delivery_date, locale)}</bdi>{x.vehicle && <> · <Ltr>{x.vehicle.registration_no}</Ltr></>}</p>

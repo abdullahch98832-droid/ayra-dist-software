@@ -8,7 +8,7 @@ import { sqlNull } from "@/lib/supabase/rpc";
 import { createClient } from "@/lib/supabase/server";
 import { maskAccount } from "@/lib/utils/mask";
 import { money, orNull, positiveMoney } from "@/lib/validation/common";
-import { arrivalSchema, jobSchema, plannedSchema, sentLines, serviceSchema, solPaymentSchema, solReturnSchema, typeSchema } from "./schema";
+import { arrivalSchema, buySchema, jobSchema, orderSchema, plannedSchema, sentLines, serviceSchema, solPaymentSchema, solReturnSchema, typeSchema } from "./schema";
 
 const uuid = z.uuid();
 const idOrNull = (id: string | null) => sqlNull(id === null ? null : uuid.parse(id));
@@ -28,6 +28,35 @@ export async function saveJobAction(id: string | null, values: unknown): Promise
         id: orNull(l.id), kind: l.kind, service_id: l.kind === "service" ? orNull(l.serviceId) : null, product_id: l.kind === "product" ? orNull(l.productId) : null,
         unit_id: l.kind === "product" ? orNull(l.unitId) : null, description: orNull(l.description), quantity: l.quantity, unit_price: orNull(l.price) ?? "0", unit_cost: orNull(l.cost),
       })),
+    });
+    if (error) throw error;
+    return data;
+  });
+}
+
+export async function saveOrderAction(id: string | null, values: unknown): Promise<ActionResult<string>> {
+  return runAction("sol.manage", orderSchema, values, async (v) => {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("save_sol_order", {
+      p_id: idOrNull(id),
+      p_doc: {
+        customer_id: v.customerId, contact_name: orNull(v.contactName), contact_phone: orNull(v.contactPhone), address: orNull(v.address), description: orNull(v.description),
+        responsible_employee_id: orNull(v.responsibleId), date: v.date, start_date: orNull(v.startDate), due_date: orNull(v.dueDate), notes: orNull(v.notes), client_request_id: v.requestId,
+      },
+      p_lines: v.lines.map((l) => ({ id: orNull(l.id), product_id: l.productId, unit_id: l.unitId, quantity: l.quantity, unit_price: l.price, unit_cost: orNull(l.cost) })),
+    });
+    if (error) throw error;
+    return data;
+  });
+}
+
+/** Orders the goods of a distributor order from Ayra and returns the purchase order. The database asks for sol.manage too. */
+export async function buyForOrderAction(values: unknown): Promise<ActionResult<string>> {
+  return runAction("purchasing.create", buySchema, values, async (v) => {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("order_sol_goods", {
+      p_job_id: v.jobId, p_doc: { warehouse_id: v.warehouseId, date: v.date, expected_date: orNull(v.expectedDate), notes: orNull(v.notes), client_request_id: v.requestId },
+      p_lines: v.lines.filter((l) => /[1-9]/.test(l.quantity)).map((l) => ({ product_id: l.productId, unit_id: l.unitId, quantity: l.quantity, unit_price: l.price })),
     });
     if (error) throw error;
     return data;

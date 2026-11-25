@@ -28,6 +28,7 @@ export default async function PurchasingLayout({ params, children }: LayoutProps
           ] : []),
           ...(account ? [
             { href: flowPath(flow, "payments"), label: tabs.payments },
+            ...(flow === "company" ? [{ href: flowPath(flow, "extra-payments"), label: t.supply.extra.tab }] : []),
             { href: flowPath(flow, "account"), label: tabs.account },
           ] : []),
         ]}

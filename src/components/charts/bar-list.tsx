@@ -14,6 +14,7 @@ export function BarListCard({
   points: ChartPoint[];
   emptyText?: string;
 }) {
+  const total = points.reduce((sum, p) => sum + (p.values[0]?.value ?? 0), 0);
   const max = Math.max(...points.map((p) => p.values[0]?.value ?? 0), 0);
   return (
     <ChartCard title={title} description={description} categoryLabel={categoryLabel} series={[series]} points={points} emptyText={emptyText}>
@@ -24,11 +25,14 @@ export function BarListCard({
             <li key={p.label} className="group grid gap-1.5 text-sm">
               <div className="flex items-baseline justify-between gap-4">
                 <span className="min-w-0 break-words">{p.label}</span>
-                <bdi dir="ltr" className="font-semibold tabular-nums">{p.values[0]?.display}</bdi>
+                <span className="flex shrink-0 items-baseline gap-2.5">
+                  <bdi dir="ltr" className="font-semibold tabular-nums">{p.values[0]?.display}</bdi>
+                  {total > 0 && <bdi dir="ltr" className="w-11 text-end text-xs text-muted-foreground tabular-nums">{Math.round((value / total) * 100)}%</bdi>}
+                </span>
               </div>
-              <div className="h-2.5 rounded-e-[4px] bg-muted">
+              <div className="h-2.5 rounded-full bg-muted">
                 <div
-                  className="h-full rounded-e-[4px] bg-chart-1 transition-[filter] group-hover:brightness-110"
+                  className="h-full rounded-full bg-chart-1 transition-[filter,inline-size] duration-500 group-hover:brightness-110"
                   style={{ inlineSize: max > 0 ? `${(value / max) * 100}%` : 0 }}
                 />
               </div>

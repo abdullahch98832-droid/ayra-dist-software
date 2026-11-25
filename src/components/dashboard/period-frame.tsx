@@ -7,6 +7,7 @@ import { MAX_PERIOD_DAYS, PERIOD_PRESETS, daysBetween, type Period, type PeriodP
 import { useI18n } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/components/shared/format";
+import { SectionHeading } from "@/components/shared/section-heading";
 import { NativeSelect } from "@/components/forms/field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,11 +16,13 @@ import { Input } from "@/components/ui/input";
  * Date filter and everything it scopes. While new figures load, the old ones stay in
  * place, dimmed. The period lives in the URL, so it survives reloads and can be shared.
  */
-export function PeriodFrame({ period, today, title, description, children }: {
+export function PeriodFrame({ period, today, title, description, compact = false, children }: {
   period: Period;
   today: string;
   title: string;
   description: string;
+  /** The page title already says the same: show the dates as the heading. */
+  compact?: boolean;
   children: React.ReactNode;
 }) {
   const { t, locale } = useI18n();
@@ -57,16 +60,16 @@ export function PeriodFrame({ period, today, title, description, children }: {
     if (ok) go({ range: "custom", from, to });
   };
 
+  const dates = <><bdi>{formatDate(period.from, locale)}</bdi>{period.from !== period.to && <> – <bdi>{formatDate(period.to, locale)}</bdi></>}</>;
+
   return (
     <section aria-labelledby={`${id}-title`} className="grid gap-4">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-        <div>
-          <h2 id={`${id}-title`} className="text-lg font-semibold text-navy">{title}</h2>
-          <p className="text-sm text-muted-foreground">
-            <bdi>{formatDate(period.from, locale)}</bdi>{period.from !== period.to && <> – <bdi>{formatDate(period.to, locale)}</bdi></>}
-            {" · "}{description}
-          </p>
-        </div>
+        <SectionHeading
+          id={`${id}-title`} icon={CalendarRange}
+          title={compact ? <><span className="sr-only">{title} </span>{dates}</> : title}
+          description={compact ? description : <>{dates}{" · "}{description}</>}
+        />
         <form onSubmit={apply} className="print:hidden flex w-full flex-wrap items-end gap-2 sm:w-auto">
           <div className="grid w-full gap-1.5 sm:w-48">
             <label htmlFor={`${id}-preset`} className="flex items-center gap-1.5 text-xs text-muted-foreground">

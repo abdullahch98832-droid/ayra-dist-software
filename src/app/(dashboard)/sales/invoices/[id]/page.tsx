@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Banknote, FileMinus, Printer, Undo2 } from "lucide-react";
+import { Banknote, FileMinus, Undo2 } from "lucide-react";
 import { APP_CONFIG } from "@/config/app";
 import { loadCustomerSummary } from "@/features/customers/queries";
 import { seesSettlements } from "@/features/sales/access";
@@ -12,7 +12,7 @@ import { getT } from "@/i18n/server";
 import { can } from "@/lib/auth/session";
 import { pageContext } from "@/lib/page-context";
 import { toPaisa } from "@/lib/utils/money";
-import { PrintButton } from "@/components/documents/print-button";
+import { DocumentLink } from "@/components/documents/document-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Ltr, Money } from "@/components/shared/bidi";
 import { formatDate, formatNumber } from "@/components/shared/format";
@@ -60,7 +60,7 @@ export default async function InvoicePage({ params }: PageProps<"/sales/invoices
         description={<span className="flex flex-wrap items-center gap-3">{status && <StatusBadge tone={PAY_TONE[status] ?? "gray"}>{statusLabel}</StatusBadge>}<bdi>{local(customer.name, customer.name_ur)}</bdi></span>}
         actions={
           <>
-            <PrintButton label={s.print} icon={<Printer aria-hidden />} />
+            <DocumentLink kind="sales_invoice" params={{ id }} label={t.docs.pdf} />
             {can(ctx, "receivables.adjust") && outstanding > ZERO && <LinkButton variant="outline" href={`/receivables/notes/new?kind=credit&customer=${invoice.customer_id}&invoice=${id}`}><FileMinus aria-hidden />{t.receivables.newCredit}</LinkButton>}
             {can(ctx, "sales.return") && <LinkButton variant="outline" href={`/sales/returns/new?invoice=${id}`}><Undo2 aria-hidden />{s.newReturn}</LinkButton>}
             {can(ctx, "receivables.collect") && outstanding > ZERO && <LinkButton href={`/receivables/payments/new?customer=${invoice.customer_id}&invoice=${id}`}><Banknote aria-hidden />{s.recordPayment}</LinkButton>}
@@ -68,7 +68,7 @@ export default async function InvoicePage({ params }: PageProps<"/sales/invoices
         }
       />
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
-        <article className="rounded-xl border bg-card p-5 shadow-card sm:p-8 print:border-0 print:p-0 print:shadow-none">
+        <article className="rounded-2xl border bg-card p-5 shadow-card sm:p-8 print:border-0 print:p-0 print:shadow-none">
           <header className="flex flex-wrap items-start justify-between gap-6 border-b pb-5">
             <div className="min-w-0">
               <p className="font-heading text-xl text-navy">{APP_CONFIG.name}</p>

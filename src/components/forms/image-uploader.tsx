@@ -43,7 +43,7 @@ export function ImageUploader({ id, url, title, buttonLabel, success, canEdit, a
   const fieldError = result && !result.ok ? result.fieldErrors?.file?.[0] : undefined;
 
   return (
-    <div className="flex flex-wrap items-center gap-5 rounded-xl border bg-card p-5 shadow-card">
+    <div className="flex flex-wrap items-center gap-5 rounded-2xl border bg-card p-5 shadow-card">
       <span className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted text-muted-foreground">
         {url ? <Image src={url} alt={title} width={96} height={96} unoptimized className="size-full object-cover" /> : <ImageIcon className="size-8" aria-hidden />}
       </span>

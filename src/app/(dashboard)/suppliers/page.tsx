@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { OTHER_VENDORS } from "@/config/vendors";
 import { Plus } from "lucide-react";
 import { getT } from "@/i18n/server";
 import { can, requireActiveSession } from "@/lib/auth/session";
@@ -14,6 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function SuppliersPage() {
+  if (!OTHER_VENDORS) notFound();
   const ctx = await requireActiveSession();
   if (!can(ctx, "suppliers.view")) return <Forbidden />;
   const t = await getT();

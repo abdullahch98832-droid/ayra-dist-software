@@ -23,16 +23,18 @@ export interface DispatchLine {
   remaining: number;
 }
 
-export function DispatchForm({ defaults, lines, vehicles, drivers }: {
+export function DispatchForm({ defaults, lines, vehicles, drivers, suppliers }: {
   defaults: DispatchValues;
   /** Same order as defaults.lines; quantities in the unit of the order line. */
   lines: DispatchLine[];
   vehicles: { id: string; label: string }[];
   drivers: { id: string; label: string }[];
+  suppliers: { id: string; label: string }[];
 }) {
   const { t } = useI18n();
   const s = t.stock;
   const limited = dispatchSchema.superRefine((v, ctx) => {
+    if (suppliers.length > 0 && v.suppliedBy === "") ctx.addIssue({ code: "custom", message: "required", path: ["suppliedBy"] });
     v.lines.forEach((l, i) => {
       if (wholeAbove(l.quantity, lines[i]?.remaining ?? 0)) ctx.addIssue({ code: "custom", message: "tooMuch", path: ["lines", i, "quantity"] });
     });
@@ -58,7 +60,8 @@ export function DispatchForm({ defaults, lines, vehicles, drivers }: {
         );
         return (
           <>
-            <FormSection title={s.delivery} className="lg:grid-cols-4">
+            <FormSection title={s.delivery} className="lg:grid-cols-3">
+              {suppliers.length > 0 && <Field id="suppliedBy" label={t.supply.supplier} hint={t.supply.chooseHint} required error={errors.suppliedBy?.message}><NativeSelect id="suppliedBy" {...form.register("suppliedBy")}><option value="">{t.supply.choose}</option>{suppliers.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}</NativeSelect></Field>}
               <Field id="date" label={t.documents.date} required error={errors.date?.message}><Input id="date" type="date" dir="ltr" {...form.register("date")} /></Field>
               <Field id="vehicleId" label={s.vehicle} optional error={errors.vehicleId?.message}><NativeSelect id="vehicleId" {...form.register("vehicleId")}>{options(vehicles)}</NativeSelect></Field>
               <Field id="driverId" label={s.driver} optional error={errors.driverId?.message}><NativeSelect id="driverId" {...form.register("driverId")}>{options(drivers)}</NativeSelect></Field>
@@ -80,7 +83,7 @@ function Lines({ lines }: { lines: DispatchLine[] }) {
   const n = (v: number) => formatNumber(v, locale);
   const error = errors.lines?.root?.message ?? (errors.lines as { message?: string } | undefined)?.message;
   return (
-    <section className="rounded-xl border bg-card shadow-card">
+    <section className="rounded-2xl border bg-card shadow-card">
       <header className="border-b px-5 py-4"><h2 className="text-base font-semibold text-navy">{t.documents.lines}</h2></header>
       {error && <p role="alert" className="px-5 pt-4 text-sm text-destructive">{message(error)}</p>}
       <ul className="divide-y">

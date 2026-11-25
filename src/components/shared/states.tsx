@@ -1,12 +1,10 @@
 import { Inbox, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { IconTile } from "./icon-tile";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const TONE = {
-  neutral: "bg-accent text-accent-foreground",
-  danger: "bg-destructive-soft text-destructive",
-  warning: "bg-warning-soft text-warning",
-} as const;
+const TONE = { neutral: "blue", danger: "danger", warning: "attention" } as const;
+const RING = { neutral: "border-primary/15", danger: "border-destructive/15", warning: "border-warning/20" } as const;
 
 /** Shared layout for empty, error, not-found, forbidden and planned screens. */
 export function StateMessage({
@@ -22,9 +20,11 @@ export function StateMessage({
   children?: React.ReactNode;
 }) {
   return (
-    <div className={cn("flex flex-col items-center justify-center gap-4 px-6 py-12 text-center", className)}>
-      <span className={cn("flex size-12 items-center justify-center rounded-xl", TONE[tone])}>
-        <Icon className="size-6" aria-hidden />
+    <div className={cn("flex flex-col items-center justify-center gap-3 px-6 py-12 text-center", className)}>
+      <span className="relative flex size-24 items-center justify-center" aria-hidden>
+        <span className="dotted absolute inset-0 text-primary/25 [mask-image:radial-gradient(closest-side,black,transparent)]" />
+        <span className={cn("absolute inset-2 rounded-full border border-dashed", RING[tone])} />
+        <IconTile icon={Icon} tone={TONE[tone]} size="lg" className="relative shadow-card" />
       </span>
       <div className="grid max-w-md gap-1">
         <Heading className="text-base font-semibold text-navy">{title}</Heading>
@@ -38,7 +38,7 @@ export function StateMessage({
 
 /** Empty state inside a card-like surface. */
 export function EmptyState(props: React.ComponentProps<typeof StateMessage>) {
-  return <StateMessage {...props} className={cn("rounded-xl border border-dashed bg-card", props.className)} />;
+  return <StateMessage {...props} className={cn("rounded-2xl border border-dashed bg-card", props.className)} />;
 }
 
 export function PageHeaderSkeleton() {
@@ -52,7 +52,7 @@ export function PageHeaderSkeleton() {
 
 export function TableSkeleton({ rows = 8 }: { rows?: number }) {
   return (
-    <div className="overflow-hidden rounded-xl border bg-card shadow-card">
+    <div className="overflow-hidden rounded-2xl border bg-card shadow-card">
       <div className="border-b bg-muted/60 px-4 py-3.5"><Skeleton className="h-4 w-40" /></div>
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex items-center gap-4 border-b px-4 py-3.5 last:border-0">
@@ -69,7 +69,7 @@ export function TableSkeleton({ rows = 8 }: { rows?: number }) {
 export function CardsSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {Array.from({ length: count }, (_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+      {Array.from({ length: count }, (_, i) => <Skeleton key={i} className="h-36 rounded-2xl" />)}
     </div>
   );
 }
@@ -78,7 +78,7 @@ export function FormSkeleton() {
   return (
     <div className="grid max-w-4xl gap-6">
       {[0, 1].map((section) => (
-        <div key={section} className="grid gap-5 rounded-xl border bg-card p-5 shadow-card sm:grid-cols-2">
+        <div key={section} className="grid gap-5 rounded-2xl border bg-card p-5 shadow-card sm:grid-cols-2">
           {Array.from({ length: 6 }, (_, i) => (
             <div key={i} className="grid gap-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-10" /></div>
           ))}
@@ -90,7 +90,7 @@ export function FormSkeleton() {
 
 export function ListSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="h-full rounded-xl border bg-card p-5 shadow-card">
+    <div className="h-full rounded-2xl border bg-card p-5 shadow-card">
       <Skeleton className="h-5 w-40" />
       <div className="mt-5 grid gap-4">
         {Array.from({ length: rows }, (_, i) => (
@@ -108,10 +108,10 @@ export function ChartsSkeleton() {
   return (
     <div className="grid gap-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
+        {Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-40 rounded-2xl" />)}
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
-        {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-80 rounded-xl" />)}
+        {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-80 rounded-2xl" />)}
       </div>
     </div>
   );

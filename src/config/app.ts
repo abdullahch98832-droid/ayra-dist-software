@@ -1,6 +1,6 @@
 export const APP_CONFIG = {
   name: "AYRA HAPPINESS",
-  subtitle: "Distribution Management System",
+  subtitle: "Distributor Management System",
   shortName: "AYRA DMS",
   version: "0.1.0",
   /** Business days start and end at midnight in Pakistan; keep in step with private.business_today(). */

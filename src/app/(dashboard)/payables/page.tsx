@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { OTHER_VENDORS } from "@/config/vendors";
 import { Factory, Wallet } from "lucide-react";
 import { businessToday } from "@/features/dashboard/period";
 import { accountPay, flowOf, flowPath } from "@/features/purchasing/flow";
@@ -10,6 +12,7 @@ import { Forbidden } from "@/components/layout/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
 import { Ltr } from "@/components/shared/bidi";
 import { StatCard } from "@/components/shared/stat-card";
+import { StatGrid } from "@/components/shared/stat-grid";
 import { SpecTable } from "@/components/tables/spec-table";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -17,6 +20,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PayablesPage() {
+  // Everything owed is owed to Ayra.
+  if (!OTHER_VENDORS) redirect("/purchasing/company/account");
   const ctx = await requireActiveSession();
   if (!can(ctx, "payables.view") && !can(ctx, "company.view")) return <Forbidden />;
   const [t, locale] = await Promise.all([getT(), getLocale()]);
@@ -30,10 +35,10 @@ export default async function PayablesPage() {
     <>
       <PageHeader title={p.title} description={p.subtitle} />
       <div className="grid gap-6">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <StatGrid>
           {can(ctx, "company.view") && <StatCard label={t.purchasing.flows.company} value={<Ltr>{formatPaisa(total(true), locale)}</Ltr>} icon={Factory} href={flowPath("company", "account")} />}
           {can(ctx, "payables.view") && <StatCard label={t.purchasing.flows.suppliers} value={<Ltr>{formatPaisa(total(false), locale)}</Ltr>} icon={Wallet} href={flowPath("suppliers", "account")} />}
-        </div>
+        </StatGrid>
         <SpecTable
           caption={p.title}
           rows={rows.map((r) => {

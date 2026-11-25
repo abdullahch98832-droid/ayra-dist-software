@@ -19,10 +19,15 @@ export type OrderValues = z.infer<typeof orderSchema>;
 
 export const CONDITIONS = ["saleable", "damaged"] as const;
 export const deliverySchema = z.object({
-  id: requiredId, receivedBy: text(120), notes: text(500), returnReason: text(300),
+  id: requiredId, receivedBy: text(120), notes: text(500), returnReason: text(300), suppliedBy: optionalId, amount: optionalMoney, destination: z.union([z.literal("held"), z.uuid()]), method: z.enum(["cash", "bank_transfer", "cheque", "online", "other"]), reference: text(120),
   lines: z.array(z.object({ itemId: z.uuid(), quantity: optionalQuantity, condition: z.enum(CONDITIONS) })),
 }).superRefine((v, ctx) => {
   if (v.lines.some((l) => /[1-9]/.test(l.quantity)) && v.returnReason === "") ctx.addIssue({ code: "custom", message: "required", path: ["returnReason"] });
+  if (/[1-9]/.test(v.amount)) {
+    if (v.destination === "held" && v.suppliedBy === "") ctx.addIssue({ code: "custom", message: "required", path: ["suppliedBy"] });
+    if (v.method !== "cash" && v.destination === "held") ctx.addIssue({ code: "custom", message: "required", path: ["destination"] });
+    if ((v.method === "bank_transfer" || v.method === "cheque") && v.reference === "") ctx.addIssue({ code: "custom", message: "required", path: ["reference"] });
+  }
 });
 export type DeliveryValues = z.infer<typeof deliverySchema>;
 

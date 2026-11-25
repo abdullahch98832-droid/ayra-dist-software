@@ -15,3 +15,10 @@ const options = (labels: Record<string, string>, tones: Record<string, BadgeTone
 export const jobOptions = (t: Dictionary) => options(t.sol.statuses, JOB_TONE);
 export const solDeliveryOptions = (t: Dictionary) => options(t.sol.deliveryStatuses, DELIVERY_TONE);
 export const vehicleOptions = (t: Dictionary) => options(t.vehicles.statuses, VEHICLE_TONE);
+
+/** The steps of a distributor order, in order. */
+export const ORDER_STEPS = ["call", "ordered", "received", "supplied", "completed", "paid"] as const;
+const STEP_TONE: Record<string, BadgeTone> = { draft: "gray", call: "blue", ordered: "amber", received: "amber", supplied: "blue", completed: "blue", paid: "green", cancelled: "gray" };
+export const stepOptions = (t: Dictionary) => options(t.distributor.steps, STEP_TONE);
+const PURCHASE_TONE: Record<string, BadgeTone> = { draft: "gray", approved: "blue", partially_received: "amber", received: "green", cancelled: "gray" };
+export const purchaseOptions = (t: Dictionary) => options(t.purchasing.statuses, PURCHASE_TONE);

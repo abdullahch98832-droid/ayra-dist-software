@@ -120,7 +120,7 @@ function ReceiptPicker({ receipts }: { receipts: BillReceipt[] }) {
 
   const error = errors.receiptIds?.root?.message ?? errors.receiptIds?.message;
   return (
-    <section className="rounded-xl border bg-card shadow-card">
+    <section className="rounded-2xl border bg-card shadow-card">
       <header className="border-b px-5 py-4"><h2 className="text-base font-semibold text-navy">{t.purchasing.chooseReceipts}</h2></header>
       {error && <p role="alert" className="px-5 pt-4 text-sm text-destructive">{message(error)}</p>}
       {own.length === 0 ? (

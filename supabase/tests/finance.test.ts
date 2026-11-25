@@ -108,8 +108,9 @@ async function statements(from: string, to: string) {
   expect(sum(ca, "deposits") + sum(ca, "withdrawals") + sum(ca, "transfers")).toBe(0);
   // Expenses by category, salaries from payroll
   const ex = await rows(b.admin, "report_expenses", from, to);
-  const ids = new Set((await db.sql("select journal_entry_id id from public.expenses where status = 'posted' and expense_date between $1 and $2", [from, to])).map((r) => r.id));
-  expect(sum(ex.filter((r) => !r.is_payroll), "amount")).toBe(total(all.filter((l) => ids.has(l.entry) && l.type === "expense")));
+  // Vouchers as the ledger has them: one voided later is undone on the day it was voided.
+  const vouchers = new Set((await db.sql("select id from public.journal_entries where source_type = 'expense' and status = 'posted'")).map((r) => r.id as string));
+  expect(sum(ex.filter((r) => !r.is_payroll), "amount")).toBe(total(within.filter((l) => vouchers.has(l.entry) && l.type === "expense")));
   const runs = new Set((await db.sql("select id from public.journal_entries where source_type = 'payroll_run'")).map((r) => r.id));
   expect(sum(ex.filter((r) => r.is_payroll), "amount")).toBe(total(within.filter((l) => runs.has(l.entry) && l.key === "SALARIES_EXPENSE")));
   // A ledger per account

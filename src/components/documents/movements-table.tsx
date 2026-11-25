@@ -3,7 +3,7 @@ import type { Dictionary } from "@/i18n";
 import { SpecTable } from "@/components/tables/spec-table";
 
 /** Stock movements, shared by the inventory tab and the report. */
-export function MovementsTable({ t, local, rows, costs, toolbar, server, exportName }: {
+export function MovementsTable({ t, local, rows, costs, toolbar, server, exportName, pdfHref }: {
   t: Dictionary;
   local: (en: string, ur: string | null | undefined) => string;
   rows: Awaited<ReturnType<typeof loadMovements>>["rows"];
@@ -11,6 +11,7 @@ export function MovementsTable({ t, local, rows, costs, toolbar, server, exportN
   toolbar?: React.ReactNode;
   server?: React.ComponentProps<typeof SpecTable>["server"];
   exportName?: string;
+  pdfHref?: string;
 }) {
   const s = t.stock;
   const types = s.movementTypes as Record<string, string>;
@@ -36,6 +37,7 @@ export function MovementsTable({ t, local, rows, costs, toolbar, server, exportN
       toolbar={toolbar}
       server={server}
       exportName={exportName}
+      pdfHref={pdfHref}
       empty={{ title: s.noMovements }}
     />
   );

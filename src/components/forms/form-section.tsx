@@ -10,9 +10,9 @@ export function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border bg-card shadow-card">
-      <header className="border-b px-5 py-4">
-        <h2 className="text-base font-semibold text-navy">{title}</h2>
+    <section className="overflow-clip rounded-2xl border bg-card shadow-card">
+      <header className="border-b bg-[linear-gradient(to_bottom,color-mix(in_srgb,var(--accent),var(--card)_35%),var(--card))] px-5 py-4">
+        <h2 className="text-[1.0625rem] font-semibold tracking-[-0.01em] text-navy">{title}</h2>
         {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
       </header>
       <div className={cn("grid gap-5 p-5 sm:grid-cols-2", className)}>{children}</div>

@@ -13,6 +13,7 @@ import { Ltr } from "@/components/shared/bidi";
 import { formatBucket } from "@/components/shared/format";
 import { LinkButton } from "@/components/shared/link-button";
 import { StatCard } from "@/components/shared/stat-card";
+import { StatGrid } from "@/components/shared/stat-grid";
 import { SpecTable } from "@/components/tables/spec-table";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -34,11 +35,11 @@ export default async function PayrollEmployeePage({ params }: PageProps<"/payrol
         actions={<>{can(ctx, "employees.view") && <LinkButton variant="outline" href={`/employees/${id}`}>{t.nav.employees}</LinkButton>}{(can(ctx, "payroll.manage") || can(ctx, "payroll.pay")) && e.is_active && <LinkButton href={`/payroll/advances/new?employee=${id}`}><HandCoins aria-hidden />{p.newAdvance}</LinkButton>}</>}
       />
       <div className="grid gap-6">
-        <div className="grid gap-4 sm:grid-cols-3">
+        <StatGrid>
           <StatCard label={p.salary} value={money(e.base_salary)} icon={Banknote} />
           <StatCard label={p.payable} value={money(e.payable)} icon={Wallet} tone={e.payable > 0 ? "attention" : "default"} />
           <StatCard label={p.advances} value={money(e.advances)} icon={HandCoins} />
-        </div>
+        </StatGrid>
         <section className="grid gap-3">
           <h2 className="text-base font-semibold text-navy">{p.history}</h2>
           <SpecTable

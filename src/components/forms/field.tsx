@@ -46,7 +46,7 @@ export function Field({
       <Label htmlFor={id} className="flex-wrap gap-x-1.5 gap-y-0">
         {label}
         {required && <span className="text-destructive" title={t.common.required} aria-hidden>*</span>}
-        {optional && <span className="text-xs font-normal text-muted-foreground">({t.common.optional})</span>}
+        {optional && <span className="text-xs leading-none font-normal text-muted-foreground">({t.common.optional})</span>}
       </Label>
       {control}
       {text ? (
@@ -69,7 +69,7 @@ const ALERT = {
 export function FormAlert({ tone = "error", children }: { tone?: keyof typeof ALERT; children: React.ReactNode }) {
   const { icon: Icon, className } = ALERT[tone];
   return (
-    <div role={tone === "error" ? "alert" : "status"} className={cn("flex items-start gap-2.5 rounded-lg border px-3.5 py-2.5 text-sm", className)}>
+    <div role={tone === "error" ? "alert" : "status"} className={cn("flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm shadow-card", className)}>
       <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />
       <div className="min-w-0 break-words">{children}</div>
     </div>
@@ -83,7 +83,7 @@ export function NativeSelect({ className, ...props }: React.ComponentProps<"sele
       <select
         data-slot="native-select"
         className={cn(
-          "h-10 w-full appearance-none rounded-lg text-ellipsis border border-input bg-card ps-3 pe-9 text-base shadow-xs transition-colors outline-none md:text-sm",
+          "h-10 w-full appearance-none rounded-lg text-ellipsis border border-input bg-card ps-3 pe-9 text-base shadow-xs transition-[border-color,box-shadow] outline-none hover:border-[color-mix(in_srgb,var(--input),var(--navy)_25%)] md:text-sm",
           "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 disabled:opacity-50",
           "aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
         )}

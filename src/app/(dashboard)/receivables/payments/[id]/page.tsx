@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Ban, CheckCheck, Printer, Trash2 } from "lucide-react";
+import { Ban, CheckCheck, Trash2 } from "lucide-react";
 import { z } from "zod";
 import { deleteReceivableDraftAction, postPaymentAction, voidPaymentAction } from "@/features/receivables/actions";
 import { loadOpenInvoices, loadPayment } from "@/features/receivables/queries";
@@ -12,8 +12,8 @@ import { getT } from "@/i18n/server";
 import { can } from "@/lib/auth/session";
 import { pageContext } from "@/lib/page-context";
 import { sumPaisa, toDbAmount, toPaisa } from "@/lib/utils/money";
+import { DocumentLink } from "@/components/documents/document-link";
 import { ActionButton } from "@/components/documents/action-button";
-import { PrintButton } from "@/components/documents/print-button";
 import { FormAlert } from "@/components/forms/field";
 import { PageHeader } from "@/components/layout/page-header";
 import { Ltr, Money } from "@/components/shared/bidi";
@@ -53,7 +53,7 @@ export default async function PaymentPage({ params }: PageProps<"/receivables/pa
         description={<span className="flex flex-wrap items-center gap-3"><StatusBadge tone={DOCUMENT_TONE[payment.status] ?? "gray"}>{t.purchasing.statuses[payment.status]}</StatusBadge><bdi>{payment.customer && local(payment.customer.name, payment.customer.name_ur)}</bdi></span>}
         actions={
           <>
-            {posted && <PrintButton label={t.sales.print} icon={<Printer aria-hidden />} />}
+            {!draft && <DocumentLink kind={payment.sol_job ? "sol_receipt" : "customer_receipt"} params={{ id }} label={t.docs.pdf} />}
             {draft && can(ctx, "receivables.collect") && <ActionButton label={d.deleteDraft} icon={<Trash2 aria-hidden />} variant="outline" action={deleteReceivableDraftAction.bind(null, "customer_payments", id)} success={d.deleted} redirectTo="/receivables/payments" confirm={{ title: d.confirmDeleteTitle, description: d.confirmDelete, tone: "danger" }} />}
             {posted && poster && <ActionButton label={r.void} icon={<Ban aria-hidden />} variant="outline" action={voidPaymentAction.bind(null, id)} reasonLabel={d.reason} success={r.voided} confirm={{ title: r.voidTitle, description: r.voidHint, tone: "danger" }} />}
             {draft && poster && <ActionButton label={r.post} icon={<CheckCheck aria-hidden />} action={postPaymentAction.bind(null, id)} success={r.posted} confirm={{ title: r.postTitle, description: r.postHint }} />}

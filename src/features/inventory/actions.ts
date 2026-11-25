@@ -87,7 +87,7 @@ export async function dispatchAction(values: unknown): Promise<ActionResult<stri
     const supabase = await createClient();
     const { data: id, error } = await supabase.rpc("save_delivery", {
       p_order_id: v.orderId,
-      p_doc: { vehicle_id: orNull(v.vehicleId), driver_id: orNull(v.driverId), date: v.date, notes: orNull(v.notes), client_request_id: v.requestId },
+      p_doc: { vehicle_id: orNull(v.vehicleId), driver_id: orNull(v.driverId), supplied_by: orNull(v.suppliedBy), date: v.date, notes: orNull(v.notes), client_request_id: v.requestId },
       p_lines: v.lines.filter((l) => /[1-9]/.test(l.quantity)).map((l) => ({ sales_order_item_id: l.itemId, quantity: l.quantity })),
     });
     if (error) throw error;

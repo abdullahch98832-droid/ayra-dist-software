@@ -36,7 +36,7 @@ export function PhotoUploader({ employeeId, name, url, canEdit }: { employeeId: 
   const fieldError = result && !result.ok ? result.fieldErrors?.photo?.[0] : undefined;
 
   return (
-    <div className="flex items-center gap-4 rounded-xl border bg-card p-5 shadow-card">
+    <div className="flex items-center gap-4 rounded-2xl border bg-card p-5 shadow-card">
       <EmployeeAvatar name={name} url={url} className="size-20 text-lg" />
       <div className="grid gap-2">
         <p className="text-sm font-medium">{t.employees.photo}</p>

@@ -31,7 +31,7 @@ export default async function JournalPage({ searchParams }: PageProps<"/accounti
   return (
     <>
       <PageHeader title={a.tabs.journal} actions={can(ctx, "accounting.journal") && <LinkButton href="/accounting/journal/new"><Plus aria-hidden />{a.newJournal}</LinkButton>} />
-      <PeriodFrame key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={a.tabs.journal} description={a.subtitle}>
+      <PeriodFrame compact key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={a.tabs.journal} description={a.subtitle}>
         <SpecTable
           caption={a.tabs.journal}
           rows={rows.map((r) => ({ id: r.entry_id, no: r.doc_no, noHref: `/accounting/journal/${r.entry_id}`, flag: r.reversal_of ? a.reversal : r.reversed_by ? a.reversed : null, date: r.entry_date, source: sourceLabel(t, r.source_type), doc: r.source_no, docHref: sourceHref(r.source_type, r.source_id), description: r.description, amount: r.amount }))}

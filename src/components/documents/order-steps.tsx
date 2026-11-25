@@ -6,12 +6,12 @@ import { cn } from "@/lib/utils";
 /** Where an order stands. Scrolls sideways inside itself on phones. */
 export function OrderSteps({ status, t }: { status: string; t: Dictionary }) {
   if (status === "cancelled") {
-    return <p className="flex items-center gap-2 rounded-xl border bg-card px-5 py-4 text-sm text-muted-foreground shadow-card print:hidden"><Ban className="size-4" aria-hidden />{t.sales.statuses.cancelled}</p>;
+    return <p className="flex items-center gap-2 rounded-2xl border bg-card px-5 py-4 text-sm text-muted-foreground shadow-card print:hidden"><Ban className="size-4" aria-hidden />{t.sales.statuses.cancelled}</p>;
   }
   const current = stepIndex(status);
   const finished = status === "completed";
   return (
-    <nav aria-label={t.sales.steps} className="no-scrollbar overflow-x-auto rounded-xl border bg-card px-5 py-4 shadow-card print:hidden">
+    <nav aria-label={t.sales.steps} className="no-scrollbar overflow-x-auto rounded-2xl border bg-card px-5 py-4 shadow-card print:hidden">
       <ol className="flex min-w-max items-center gap-2">
         {ORDER_STEPS.map((step, i) => {
           const done = i < current || finished;

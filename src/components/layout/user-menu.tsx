@@ -24,7 +24,7 @@ export function UserMenu({ user }: { user: ShellUser }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="ghost" className="h-11 gap-2.5 px-1.5 sm:px-2" />} aria-label={`${t.profile.title}: ${name}`}>
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-navy text-xs font-semibold text-white" aria-hidden>
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(145deg,#3f7dff,#14284f)] text-sm font-semibold text-white ring-2 ring-accent" aria-hidden>
           {name.trim().charAt(0).toUpperCase() || "?"}
         </span>
         <span className="hidden max-w-44 text-start lg:block">

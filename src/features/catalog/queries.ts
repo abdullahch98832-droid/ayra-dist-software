@@ -1,4 +1,5 @@
 import "server-only";
+import { OTHER_VENDORS } from "@/config/vendors";
 import { can, type SessionContext } from "@/lib/auth/session";
 import { likeTerm } from "@/lib/supabase/like-term";
 import { signedUrls } from "@/lib/supabase/signed-urls";
@@ -73,7 +74,7 @@ export async function loadProductChoices(ctx: SessionContext) {
     supabase.from("product_categories").select("id, name_en, name_ur").eq("is_active", true).order("name_en"),
     supabase.from("brands").select("id, name_en, name_ur").eq("is_active", true).order("name_en"),
     supabase.from("units").select("id, name_en, name_ur").eq("is_active", true).order("name_en"),
-    can(ctx, "suppliers.view")
+    OTHER_VENDORS && can(ctx, "suppliers.view")
       ? supabase.from("suppliers").select("id, name, name_ur").eq("is_active", true).order("name")
       : Promise.resolve({ data: [], error: null }),
   ]);

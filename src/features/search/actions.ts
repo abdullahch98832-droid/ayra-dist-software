@@ -1,5 +1,6 @@
 "use server";
 
+import { OTHER_VENDORS } from "@/config/vendors";
 import { z } from "zod";
 import { can, getSessionContext } from "@/lib/auth/session";
 import { likeTerm } from "@/lib/supabase/like-term";
@@ -40,7 +41,7 @@ export async function searchRecordsAction(input: unknown): Promise<SearchResult>
       ? supabase.from("products").select("id, sku, name_en, name_ur")
         .or(`name_en.ilike.%${term}%,name_ur.ilike.%${term}%,sku.ilike.%${term}%,barcode.eq.${term}`).order("name_en").limit(6)
       : none,
-    can(ctx, "suppliers.view")
+    OTHER_VENDORS && can(ctx, "suppliers.view")
       ? supabase.from("suppliers").select("id, code, name, name_ur")
         .or(`name.ilike.%${term}%,name_ur.ilike.%${term}%,code.ilike.%${term}%,phone.ilike.%${term}%`).order("name").limit(6)
       : none,

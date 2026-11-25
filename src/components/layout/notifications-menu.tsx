@@ -6,6 +6,7 @@ import { Banknote, Bell, CircleCheck, ClipboardCheck, HandCoins, PackageCheck, T
 import { useI18n } from "@/i18n/context";
 import { fill } from "@/i18n/format";
 import type { AppNotification, NotificationResult } from "@/features/notifications/types";
+import { IconTile } from "@/components/shared/icon-tile";
 import { StateMessage } from "@/components/shared/states";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
@@ -33,7 +34,7 @@ function Menu({ result }: { result: Promise<NotificationResult> }) {
       <PopoverTrigger render={<Button variant="ghost" size="icon" className="relative" />} aria-label={label}>
         <Bell className="size-5!" aria-hidden />
         {items.length > 0 && (
-          <span className="font-latin absolute end-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[0.625rem] leading-none font-semibold text-white" aria-hidden>
+          <span className="font-latin absolute end-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[0.625rem] leading-none font-semibold text-white ring-2 ring-card" aria-hidden>
             {items.length > 9 ? "9+" : items.length}
           </span>
         )}
@@ -51,7 +52,7 @@ function Menu({ result }: { result: Promise<NotificationResult> }) {
               return (
                 <li key={item.id}>
                   <Link href={item.href} onClick={() => setOpen(false)} className="flex gap-3 rounded-md px-3 py-2.5 outline-none hover:bg-accent focus-visible:bg-accent">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-warning-soft text-warning"><Icon className="size-4.5" aria-hidden /></span>
+                    <IconTile icon={Icon} tone="attention" size="sm" />
                     <span className="min-w-0">
                       <span className="block font-medium">{fill(t.notifications[item.kind], { count: item.count })}</span>
                       <span className="block text-xs text-muted-foreground">{t.notifications[`${item.kind}Hint`]}</span>

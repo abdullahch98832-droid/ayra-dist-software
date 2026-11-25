@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Ban, CheckCheck, Pencil, Printer, Trash2 } from "lucide-react";
+import { Ban, CheckCheck, Pencil, Trash2 } from "lucide-react";
+import { documentHref } from "@/features/documents/kinds";
 import { accountLabel, loadPaymentAccounts } from "@/features/cash-bank/queries";
 import { businessToday } from "@/features/dashboard/period";
 import { deletePayrollDraftAction, postPayrollAction, voidPayrollAction, voidSalaryPaymentAction } from "@/features/payroll/actions";
@@ -11,8 +12,8 @@ import { getT } from "@/i18n/server";
 import { can } from "@/lib/auth/session";
 import { pageContext } from "@/lib/page-context";
 import { sumPaisa, toDbAmount, toPaisa } from "@/lib/utils/money";
+import { DocumentLink } from "@/components/documents/document-link";
 import { ActionButton } from "@/components/documents/action-button";
-import { PrintButton } from "@/components/documents/print-button";
 import { FormAlert } from "@/components/forms/field";
 import { Forbidden } from "@/components/layout/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
@@ -54,7 +55,7 @@ export default async function PayrollRunPage({ params }: PageProps<"/payroll/[id
         description={<span className="flex flex-wrap items-center gap-3"><StatusBadge tone={DOCUMENT_TONE[run.status] ?? "gray"}>{t.purchasing.statuses[run.status]}</StatusBadge><Ltr>{run.doc_no}</Ltr>{run.journal && <Ltr>{run.journal.doc_no}</Ltr>}</span>}
         actions={
           <>
-            {!draft && <PrintButton label={t.sales.print} icon={<Printer aria-hidden />} />}
+            {!draft && <DocumentLink kind="salary_slips" params={{ id }} label={t.docs.allSlips} />}
             {draft && can(ctx, "payroll.manage") && (
               <>
                 <ActionButton label={d.deleteDraft} icon={<Trash2 aria-hidden />} variant="outline" action={deletePayrollDraftAction.bind(null, "payroll_runs", id)} success={d.deleted} redirectTo="/payroll" confirm={{ title: d.confirmDeleteTitle, description: d.confirmDelete, tone: "danger" }} />
@@ -74,12 +75,13 @@ export default async function PayrollRunPage({ params }: PageProps<"/payroll/[id
           exportName={`payroll-${run.period_month.slice(0, 7)}`}
           rows={lines.map((l) => ({
             id: l.id, name: l.name, nameHref: `/payroll/employees/${l.employee_id}`, code: l.code, basic: l.basic_salary, allowances: l.allowances, bonus: l.bonus, deductions: l.deductions, recovery: l.advance_recovery, net: l.net_pay,
-            paid: toDbAmount(l.paid), pending: toDbAmount(l.pending),
+            paid: toDbAmount(l.paid), pending: toDbAmount(l.pending), slip: t.docs.slip, slipHref: documentHref("salary_slip", { id: l.id }),
           }))}
           columns={[
             { key: "name", sub: "code", label: p.employee, kind: "link", primary: true }, { key: "basic", label: p.basic, kind: "money", total: true }, { key: "allowances", label: p.allowances, kind: "money", hideBelow: "2xl", total: true },
             { key: "bonus", label: p.bonus, kind: "money", hideBelow: "lg", total: true }, { key: "deductions", label: p.deductions, kind: "money", hideBelow: "lg", total: true }, { key: "recovery", label: p.recovery, kind: "money", hideBelow: "xl", total: true },
             { key: "net", label: p.net, kind: "money", total: true }, ...(run.status === "posted" ? [{ key: "paid", label: p.paid, kind: "money" as const, hideBelow: "xl" as const, total: true }, { key: "pending", label: p.pending, kind: "money" as const, total: true }] : []),
+            ...(draft ? [] : [{ key: "slip", label: t.docs.pdf, kind: "link" as const }]),
           ]}
           empty={{ title: p.none }}
         />

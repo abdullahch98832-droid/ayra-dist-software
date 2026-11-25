@@ -13,7 +13,7 @@ Every figure is calculated in the database (`supabase/migrations/20261124120000_
 | Cash, Bank | Ledger: accounts of `financial_accounts` (cash still with order takers is not included) | `cash_bank.view` |
 | Customer receivables | Ledger: AR (customers and SOL clients) | `receivables.view` |
 | Supplier payables | Ledger: AP_SUPPLIERS | `payables.view` |
-| Main company outstanding | Ledger: AP_PRINCIPAL | `company.view` |
+| Ayra company outstanding | Ledger: AP_PRINCIPAL | `company.view` |
 | Expenses | Ledger: expense accounts outside Cost of Sales | `reports.financial`; with only `expenses.view`, expense documents without payroll |
 | Gross profit | Sales − every account under Cost of Sales (`COST_OF_SALES`: COGS, variances, write-offs) | `reports.financial` |
 | Net profit | All income − all expense; always equals `profit_and_loss()` | `reports.financial` |

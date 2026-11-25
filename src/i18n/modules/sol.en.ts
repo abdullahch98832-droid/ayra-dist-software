@@ -394,7 +394,7 @@ const sol = {
     voidHint: "The accounting entry is reversed.",
     newReceipt: "New receipt",
     newPayment: "New payment",
-    voucherHint: "For owner's capital and drawings, loans, other income, fixed assets and taxes. Customer, supplier, expense and salary money has its own screens, so nothing is counted twice.",
+    voucherHint: "For owner's capital and drawings, loans, other income, fixed assets and taxes. Customer, Ayra company, expense and salary money has its own screens, so nothing is counted twice.",
     voucherKinds: { receipt: "Receipt", payment: "Payment" },
     counter: "Account",
     partyName: "From / to whom",

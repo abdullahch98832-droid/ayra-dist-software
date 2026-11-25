@@ -8,6 +8,7 @@ import { loadBill } from "@/features/purchasing/queries";
 import { can } from "@/lib/auth/session";
 import { sumPaisa, toPaisa } from "@/lib/utils/money";
 import { ActionButton } from "@/components/documents/action-button";
+import { DocumentLink } from "@/components/documents/document-link";
 import { DocumentStatus } from "@/components/documents/document-status";
 import { PageHeader } from "@/components/layout/page-header";
 import { Money } from "@/components/shared/bidi";
@@ -39,6 +40,7 @@ export default async function BillPage({ params }: PageProps<"/purchasing/[flow]
         description={<span className="flex flex-wrap items-center gap-3"><DocumentStatus status={bill.status ?? "draft"} t={t} /><bdi>{local(bill.supplier_name ?? "", bill.supplier_name_ur)}</bdi></span>}
         actions={
           <>
+            <DocumentLink kind="purchase_invoice" params={{ id }} label={t.docs.pdf} />
             {bill.status === "draft" && can(ctx, "purchasing.create") && (
               <>
                 <ActionButton label={d.deleteDraft} icon={<Trash2 aria-hidden />} variant="outline" action={deletePurchasingDraftAction.bind(null, "supplier_invoices", id)} success={d.deleted} redirectTo={base} confirm={{ title: d.confirmDeleteTitle, description: d.confirmDelete, tone: "danger" }} />

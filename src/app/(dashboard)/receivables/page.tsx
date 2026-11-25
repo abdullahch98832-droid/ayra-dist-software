@@ -14,6 +14,7 @@ import { Ltr } from "@/components/shared/bidi";
 import { formatNumber } from "@/components/shared/format";
 import { LinkButton } from "@/components/shared/link-button";
 import { StatCard } from "@/components/shared/stat-card";
+import { StatGrid } from "@/components/shared/stat-grid";
 import { SpecTable } from "@/components/tables/spec-table";
 import { UrlSelect } from "@/components/tables/url-filters";
 
@@ -44,13 +45,13 @@ export default async function ReceivablesPage({ searchParams }: PageProps<"/rece
         actions={can(ctx, "receivables.collect") && <LinkButton href="/receivables/payments/new"><Banknote aria-hidden />{r.newPayment}</LinkButton>}
       />
       <div className="grid gap-6">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <StatGrid>
           <StatCard label={r.total} value={money(owed)} icon={HandCoins} hint={sum("advance") > ZERO ? <>{r.advances}: {money(sum("advance"))}</> : undefined} />
           <StatCard label={r.overdue} value={money(sum("overdue"))} icon={Clock} tone={sum("overdue") > ZERO ? "attention" : "default"} href="/sales/invoices?status=overdue" />
           <StatCard label={r.over90} value={money(sum("older"))} icon={History} tone={sum("older") > ZERO ? "attention" : "default"} />
           <StatCard label={r.totalHeld} value={money(held)} icon={Wallet} tone={held > ZERO ? "attention" : "default"} href="/receivables/cash" />
           <StatCard label={r.waiting} value={formatNumber(waiting, locale)} icon={Banknote} tone={waiting ? "attention" : "default"} hint={fill(r.waitingHint, { count: formatNumber(waiting, locale) })} href="/receivables/payments?status=draft" />
-        </div>
+        </StatGrid>
         <SpecTable
           caption={r.tabs.overview}
           rows={rows.map((x) => ({

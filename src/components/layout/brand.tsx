@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 /** AYRA HAPPINESS wordmark with the system name beneath it. */
 export function Brand({ subtitle, tone = "navy", size = "md", className }: {
   subtitle: string;
-  tone?: "navy" | "white";
+  tone?: "navy" | "white" | "sidebar";
   size?: "md" | "lg";
   className?: string;
 }) {
@@ -15,21 +15,21 @@ export function Brand({ subtitle, tone = "navy", size = "md", className }: {
         <p className={cn(
           "font-latin font-heading tracking-[0.08em] whitespace-nowrap",
           size === "lg" ? "text-xl" : "text-[0.95rem]",
-          tone === "white" ? "text-white" : "text-navy"
+          tone === "navy" ? "text-navy" : "text-white"
         )}>
           {APP_CONFIG.name}
         </p>
-        <p className={cn("text-xs leading-tight", tone === "white" ? "text-white/75" : "text-muted-foreground")}>{subtitle}</p>
+        <p className={cn("text-xs leading-tight", tone === "navy" ? "text-muted-foreground" : "text-white/70")}>{subtitle}</p>
       </div>
     </div>
   );
 }
 
-export function BrandMark({ tone = "navy", className }: { tone?: "navy" | "white"; className?: string }) {
+export function BrandMark({ tone = "navy", className }: { tone?: "navy" | "white" | "sidebar"; className?: string }) {
   return (
     <span aria-hidden className={cn(
-      "font-latin font-heading flex shrink-0 items-center justify-center rounded-lg leading-none",
-      tone === "white" ? "bg-white text-navy" : "bg-navy text-white",
+      "font-latin font-heading relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl leading-none shadow-action",
+      tone === "white" ? "bg-[linear-gradient(145deg,#ffffff,#d5e3ff)] text-navy" : "bg-[linear-gradient(145deg,#3f7dff,#1a47ad)] text-white",
       className
     )}>
       A

@@ -1,4 +1,7 @@
-import { CircleCheck, Inbox, type LucideIcon } from "lucide-react";
+import {
+  ArrowLeftRight, Banknote, CircleCheck, ClipboardCheck, ClipboardList, CreditCard, FileText, HandCoins, Inbox, Package, PackageCheck, PackagePlus, Receipt, ReceiptText, ShoppingCart, Truck, Undo2, Wallet, Waypoints,
+  type LucideIcon,
+} from "lucide-react";
 import type { loadMyRecords, loadOpenWork, loadPendingDeliveries, loadRecentOrders, loadRecentTransactions } from "@/features/dashboard/queries";
 import type { LowStock, Overdue, OverdueSide } from "@/features/dashboard/schema";
 import { fill } from "@/i18n/format";
@@ -7,12 +10,19 @@ import { toPaisa } from "@/lib/utils/money";
 import type { Locale } from "@/types";
 import { Ltr, Money } from "@/components/shared/bidi";
 import { formatDate, formatNumber } from "@/components/shared/format";
+import { IconTile, InitialTile } from "@/components/shared/icon-tile";
 import { SectionCard } from "@/components/shared/section-card";
 import { StateMessage } from "@/components/shared/states";
 import { StatusBadge, type BadgeTone } from "@/components/shared/status-badge";
 
 interface Common { t: Dictionary; locale: Locale }
 type Rows<F extends (...args: never[]) => Promise<unknown>> = Awaited<ReturnType<F>>;
+
+const KIND_ICON: Record<string, LucideIcon> = {
+  sales_order: ShoppingCart, purchase_order: ClipboardList, goods_receipt: PackagePlus, supplier_invoice: Receipt, cash_deposit: Banknote, customer_payment: HandCoins, supplier_payment: CreditCard,
+  sales_invoice: ReceiptText, customer_return: Undo2, expense: Wallet, fund_transfer: ArrowLeftRight, stock_count: ClipboardCheck, stock_transfer: ArrowLeftRight, dispatch: PackageCheck, delivery: Truck,
+  sol_job: Waypoints, sol_delivery: Truck,
+};
 
 const STATUS_TONE: Record<string, BadgeTone> = {
   draft: "gray", submitted: "blue", approved: "blue", picking: "amber", partially_dispatched: "amber", dispatched: "amber", delivered: "green", completed: "green",
@@ -44,10 +54,11 @@ function ListCard({ title, description, count, locale, empty, emptyIcon = Inbox,
   );
 }
 
-function Row({ title, subtitle, end, endNote }: { title: React.ReactNode; subtitle?: React.ReactNode; end?: React.ReactNode; endNote?: React.ReactNode }) {
+function Row({ lead, title, subtitle, end, endNote }: { lead?: React.ReactNode; title: React.ReactNode; subtitle?: React.ReactNode; end?: React.ReactNode; endNote?: React.ReactNode }) {
   return (
-    <li className="flex items-start justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
-      <div className="min-w-0">
+    <li className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-accent/50">
+      {lead}
+      <div className="min-w-0 flex-1">
         <p className="text-sm font-medium break-words">{title}</p>
         {subtitle && <p className="text-xs break-words text-muted-foreground">{subtitle}</p>}
       </div>
@@ -60,14 +71,14 @@ function Row({ title, subtitle, end, endNote }: { title: React.ReactNode; subtit
 }
 
 const local = (locale: Locale, en: string | null, ur: string | null) => (locale === "ur" && ur ? ur : en) ?? "—";
-const List = ({ children }: { children: React.ReactNode }) => <ul className="divide-y">{children}</ul>;
+const List = ({ children }: { children: React.ReactNode }) => <ul className="grid">{children}</ul>;
 
 export function RecentOrdersCard({ rows, t, locale }: Common & { rows: Rows<typeof loadRecentOrders> }) {
   return (
     <ListCard title={t.dashboard.lists.orders} locale={locale} empty={rows.length ? null : t.dashboard.lists.ordersEmpty}>
       <List>
         {rows.map((o) => (
-          <Row key={o.doc_no} title={<bdi>{local(locale, o.customer, o.customer_ur)}</bdi>}
+          <Row key={o.doc_no} lead={<InitialTile name={local(locale, o.customer, o.customer_ur)} />} title={<bdi>{local(locale, o.customer, o.customer_ur)}</bdi>}
             subtitle={<><Ltr>{o.doc_no}</Ltr> · <bdi>{formatDate(o.order_date, locale)}</bdi></>}
             end={<Money amount={toPaisa(o.total_amount)} locale={locale} />} endNote={<Status value={o.status} t={t} />} />
         ))}
@@ -82,7 +93,7 @@ export function RecentTransactionsCard({ rows, t, locale }: Common & { rows: Row
     <ListCard title={t.dashboard.lists.transactions} locale={locale} empty={rows.length ? null : t.dashboard.lists.transactionsEmpty}>
       <List>
         {rows.map((r) => (
-          <Row key={`${r.kind}-${r.doc_no}`} title={kinds[r.kind] ?? r.kind}
+          <Row key={`${r.kind}-${r.doc_no}`} lead={<IconTile icon={KIND_ICON[r.kind] ?? FileText} size="sm" />} title={kinds[r.kind] ?? r.kind}
             subtitle={<>{r.party && <><bdi>{local(locale, r.party, r.party_ur)}</bdi> · </>}<Ltr>{r.doc_no}</Ltr></>}
             end={<Money amount={toPaisa(r.amount)} locale={locale} />} endNote={<bdi>{formatDate(r.txn_date, locale)}</bdi>} />
         ))}
@@ -97,7 +108,7 @@ export function PendingDeliveriesCard({ rows, t, locale }: Common & { rows: Rows
     <ListCard title={t.dashboard.alerts.deliveries} count={total} locale={locale} empty={rows.length ? null : t.dashboard.alerts.deliveriesEmpty} emptyIcon={CircleCheck}>
       <List>
         {rows.map((d) => (
-          <Row key={d.doc_no} title={<bdi>{local(locale, d.customer, d.customer_ur)}</bdi>}
+          <Row key={d.doc_no} lead={<IconTile icon={Truck} size="sm" />} title={<bdi>{local(locale, d.customer, d.customer_ur)}</bdi>}
             subtitle={<><Ltr>{d.doc_no}</Ltr>{d.vehicle && <> · <Ltr>{d.vehicle}</Ltr></>}</>}
             end={<Status value={d.status} t={t} />} endNote={<bdi>{formatDate(d.delivery_date, locale)}</bdi>} />
         ))}
@@ -122,7 +133,7 @@ export function LowStockCard({ data, t, locale }: Common & { data: LowStock }) {
           const none = p.available === "0";
           const n = (v: string) => formatNumber(BigInt(v), locale);
           return (
-            <Row key={p.sku} title={<bdi>{local(locale, p.name_en, p.name_ur)}</bdi>} subtitle={<Ltr>{p.sku}</Ltr>}
+            <Row key={p.sku} lead={<IconTile icon={Package} size="sm" tone={none ? "danger" : "attention"} />} title={<bdi>{local(locale, p.name_en, p.name_ur)}</bdi>} subtitle={<Ltr>{p.sku}</Ltr>}
               end={<StatusBadge tone={none ? "red" : "amber"}>{fill(a.available, { available: n(p.available), level: n(p.reorder_level), unit: locale === "ur" ? p.unit_ur : p.unit_en })}</StatusBadge>} />
           );
         })}
@@ -141,7 +152,7 @@ function OverdueBlock({ title, side, t, locale }: Common & { title: string; side
       </div>
       <List>
         {side.items.map((i) => (
-          <Row key={i.doc_no} title={<bdi>{local(locale, i.party, i.party_ur)}</bdi>}
+          <Row key={i.doc_no} lead={<InitialTile name={local(locale, i.party, i.party_ur)} tone="danger" />} title={<bdi>{local(locale, i.party, i.party_ur)}</bdi>}
             subtitle={<><Ltr>{i.doc_no}</Ltr> · {fill(t.dashboard.alerts.daysLate, { days: formatNumber(i.days, locale) })}</>}
             end={<Money amount={toPaisa(i.outstanding)} locale={locale} />} />
         ))}
@@ -177,7 +188,7 @@ export function OpenWorkCard({ rows, t, locale }: Common & { rows: Rows<typeof l
             <h3 className="mb-1 text-sm text-muted-foreground">{t.dashboard.work[scope]}</h3>
             <List>
               {rows.filter((r) => r.scope === scope).map((r) => (
-                <Row key={r.kind} title={kinds[r.kind] ?? r.kind} end={<Ltr className="tabular-nums">{formatNumber(r.waiting, locale)}</Ltr>} />
+                <Row key={r.kind} lead={<IconTile icon={KIND_ICON[r.kind] ?? FileText} size="sm" />} title={kinds[r.kind] ?? r.kind} end={<StatusBadge tone="blue" dot={false}><Ltr>{formatNumber(r.waiting, locale)}</Ltr></StatusBadge>} />
               ))}
             </List>
           </div>
@@ -193,7 +204,7 @@ export function MyRecordsCard({ rows, t, locale }: Common & { rows: Rows<typeof 
     <ListCard title={t.dashboard.lists.myRecords} locale={locale} empty={rows.length ? null : t.dashboard.lists.myRecordsEmpty}>
       <List>
         {rows.map((r) => (
-          <Row key={`${r.kind}-${r.doc_no}`} title={kinds[r.kind] ?? r.kind} subtitle={<Ltr>{r.doc_no}</Ltr>}
+          <Row key={`${r.kind}-${r.doc_no}`} lead={<IconTile icon={KIND_ICON[r.kind] ?? FileText} size="sm" />} title={kinds[r.kind] ?? r.kind} subtitle={<Ltr>{r.doc_no}</Ltr>}
             end={<Status value={r.status} t={t} />} endNote={<bdi>{formatDate(r.record_date, locale)}</bdi>} />
         ))}
       </List>

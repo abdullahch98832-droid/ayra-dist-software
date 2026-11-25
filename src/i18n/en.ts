@@ -2,11 +2,15 @@ import operations from "./modules/operations.en";
 import salesModule from "./modules/sales.en";
 import solModule from "./modules/sol.en";
 import financeModule from "./modules/finance.en";
+import documentsModule from "./modules/documents.en";
+import analyticsModule from "./modules/analytics.en";
+import distributorModule from "./modules/distributor.en";
+import supplyModule from "./modules/supply.en";
 
 const en = {
   common: {
     appName: "AYRA HAPPINESS",
-    subtitle: "Distribution Management System",
+    subtitle: "Distributor Management System",
     loading: "Loading...",
     save: "Save",
     saving: "Saving...",
@@ -55,7 +59,7 @@ const en = {
   },
   auth: {
     brandHeadline: "From purchase to delivery, in one ledger.",
-    brandText: "Stock, sales, deliveries, SOL and accounts for AYRA HAPPINESS.",
+    brandText: "For the distributor of Ayra Happiness products: goods from Ayra, orders of shops and distributors, supply, payments and accounts.",
     signIn: "Sign in",
     signingIn: "Signing in...",
     signOut: "Sign out",
@@ -119,7 +123,7 @@ const en = {
     solJobs: "SOL jobs",
     vehicles: "Vehicles",
     products: "Products",
-    suppliers: "Suppliers",
+    suppliers: "Vendors",
     employees: "Employees",
     searching: "Searching...",
     empty: "Nothing matches your search",
@@ -232,10 +236,10 @@ const en = {
       bank: "Bank balance",
       receivables: "Customer receivables",
       receivablesHint: "Includes SOL clients",
-      supplierPayables: "Supplier payables",
-      supplierPayablesHint: "Excludes the main company",
-      companyOutstanding: "Main company outstanding",
-      companyOutstandingHint: "Owed to Ayra Happiness",
+      supplierPayables: "Vendor payables",
+      supplierPayablesHint: "Excludes the Ayra company",
+      companyOutstanding: "Owed to Ayra",
+      companyOutstandingHint: "For goods taken from the Ayra company",
       solPending: "Pending SOL payments",
       solPendingHint: "Completed jobs not fully paid: {count}",
       sales: "Sales",
@@ -281,6 +285,8 @@ const en = {
         yesterday: "Yesterday",
         last7: "Last 7 days",
         last30: "Last 30 days",
+        thisWeek: "This week",
+        thisYear: "This year",
         thisMonth: "This month",
         lastMonth: "Last month",
         last12Months: "Last 12 months",
@@ -297,7 +303,7 @@ const en = {
       deliveriesEmpty: "No deliveries are waiting",
       overdue: "Overdue balances",
       overdueReceivables: "From customers",
-      overduePayables: "To suppliers",
+      overduePayables: "To vendors",
       overdueEmpty: "Nothing is overdue",
       overdueHint: "Invoices past their due date, after allocated payments. Invoices without a due date are not counted.",
       daysLate: "Days late: {days}",
@@ -322,6 +328,7 @@ const en = {
     },
     quick: {
       salesOrder: "Sales order",
+      distributorOrder: "Distributor order",
       goodsReceipt: "Goods receipt",
       collection: "Customer collection",
       expense: "Expense",
@@ -334,10 +341,10 @@ const en = {
       sales_order: "Sales order",
       purchase_order: "Purchase order",
       goods_receipt: "Goods receipt",
-      supplier_invoice: "Supplier invoice",
+      supplier_invoice: "Company bill",
       cash_deposit: "Cash deposit",
       customer_payment: "Customer payment",
-      supplier_payment: "Supplier payment",
+      supplier_payment: "Company payment",
       sales_invoice: "Sales invoice",
       customer_return: "Customer return",
       expense: "Expense",
@@ -439,6 +446,10 @@ const en = {
       name_ur: "Name (Urdu)",
       description: "Description",
       permission_code: "Permission",
+      format: "Format",
+      from: "From",
+      to: "To",
+      date: "Date",
     },
     yes: "Yes",
     no: "No",
@@ -446,6 +457,7 @@ const en = {
       profiles: "User account",
       roles: "Role",
       role_permissions: "Role permission",
+      report_exports: "Report export",
     },
     actions: {
       INSERT: "Created",
@@ -503,8 +515,8 @@ const en = {
     sales: "Sales",
     customers: "Customers",
     receivables: "Receivables",
-    suppliers: "Suppliers",
-    payables: "Supplier payables",
+    suppliers: "Vendors",
+    payables: "Vendor payables",
     company: "Company account",
     sol: "SOL",
     vehicles: "Vehicles",
@@ -523,6 +535,10 @@ const en = {
   ...salesModule,
   ...solModule,
   ...financeModule,
+  docs: documentsModule,
+  analytics: analyticsModule,
+  distributor: distributorModule,
+  supply: supplyModule,
   errors: {
     moreThanHeld: "More than the cash held",
     discountTooHigh: "More than the line amount",
@@ -555,7 +571,7 @@ const en = {
     receiptType: "Use a JPEG, PNG, WebP or PDF file",
     notBalanced: "Debit and credit must be equal",
     oneSide: "Enter either debit or credit",
-    partyRequired: "This account needs a customer or supplier",
+    partyRequired: "This account needs a customer or company",
     invalidDecimal: "Enter a number with up to 2 decimals",
     futureDate: "The date cannot be in the future",
     dueBeforeStart: "Before the start date",

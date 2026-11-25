@@ -22,6 +22,23 @@ export const jobSchema = z.object({
 });
 export type JobValues = z.infer<typeof jobSchema>;
 
+/** An order of a distributor: products only, each with a whole quantity and a price. */
+export const orderSchema = jobSchema.superRefine((v, ctx) => {
+  if (v.lines.length === 0) ctx.addIssue({ code: "custom", message: "required", path: ["lines"] });
+  v.lines.forEach((l, i) => {
+    if (l.kind !== "product") ctx.addIssue({ code: "custom", message: "required", path: ["lines", i, "productId"] });
+    if (!/[1-9]/.test(l.price)) ctx.addIssue({ code: "custom", message: "positiveQuantity", path: ["lines", i, "price"] });
+  });
+});
+export const buySchema = z.object({
+  jobId: requiredId, warehouseId: requiredId, date: isoDate, expectedDate: optionalDate, notes: text(300), requestId,
+  lines: z.array(z.object({ productId: requiredId, unitId: requiredId, quantity: optionalQuantity, price: optionalMoney })),
+}).superRefine((v, ctx) => {
+  if (!v.lines.some((l) => /[1-9]/.test(l.quantity))) ctx.addIssue({ code: "custom", message: "nothingToDispatch", path: ["notes"] });
+  v.lines.forEach((l, i) => { if (/[1-9]/.test(l.quantity) && l.price === "") ctx.addIssue({ code: "custom", message: "required", path: ["lines", i, "price"] }); });
+});
+export type BuyValues = z.infer<typeof buySchema>;
+
 const quantityLine = z.object({ itemId: z.uuid(), quantity: optionalDecimal });
 export const plannedSchema = z.object({
   jobId: requiredId, vehicleId: optionalId, driverId: optionalId, warehouseId: optionalId, date: isoDate, destination: requiredText(300),

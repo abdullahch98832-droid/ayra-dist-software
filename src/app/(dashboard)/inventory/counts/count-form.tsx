@@ -73,7 +73,7 @@ function Sheet({ sheet, saved }: { sheet: CountSheetRow[]; saved: Record<string,
   const error = errors.lines?.root?.message ?? (errors.lines as { message?: string } | undefined)?.message;
 
   return (
-    <section className="rounded-xl border bg-card shadow-card">
+    <section className="rounded-2xl border bg-card shadow-card">
       <header className="flex flex-wrap items-center gap-3 border-b px-5 py-4">
         <h2 className="me-auto text-base font-semibold text-navy">{t.documents.lines}</h2>
         <span className="text-sm text-muted-foreground">{fill(s.counts, { counted: n(counted), total: n(sheet.length) })}</span>

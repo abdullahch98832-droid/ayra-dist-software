@@ -3,7 +3,7 @@ import { loadCustomerOption } from "@/features/customers/queries";
 import { businessToday } from "@/features/dashboard/period";
 import { loadOpenInvoices, loadReceivingAccounts } from "@/features/receivables/queries";
 import { HELD } from "@/features/receivables/schema";
-import { loadTakers } from "@/features/takers/queries";
+import { loadCollectors } from "@/features/takers/queries";
 import { getT } from "@/i18n/server";
 import { can } from "@/lib/auth/session";
 import { pageContext, uuidParam } from "@/lib/page-context";
@@ -20,7 +20,7 @@ export default async function NewPaymentPage({ searchParams }: PageProps<"/recei
   if (!can(ctx, "receivables.collect")) return <Forbidden />;
   const query = await searchParams;
   const customer = await loadCustomerOption(uuidParam(query.customer));
-  const [invoices, accounts, takers] = await Promise.all([customer ? loadOpenInvoices(customer.id) : [], loadReceivingAccounts(), loadTakers()]);
+  const [invoices, accounts, takers] = await Promise.all([customer ? loadOpenInvoices(customer.id) : [], loadReceivingAccounts(), loadCollectors()]);
   const poster = can(ctx, "receivables.post");
   // Order takers collect in their own name and hold the cash until it is deposited.
   const collector = !poster && !can(ctx, "sales.view_all") ? ctx.employeeId : null;

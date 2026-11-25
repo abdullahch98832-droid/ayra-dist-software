@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Ban, CheckCheck, Paperclip, Pencil, Printer, Trash2, X } from "lucide-react";
+import { Ban, CheckCheck, Paperclip, Pencil, Trash2, X } from "lucide-react";
 import { deleteExpenseAction, postExpenseAction, rejectExpenseAction, voidExpenseAction } from "@/features/expenses/actions";
 import { loadExpense, receiptUrl, userNames } from "@/features/expenses/queries";
 import { expenseStatus } from "@/features/expenses/schema";
@@ -11,8 +11,8 @@ import { getT } from "@/i18n/server";
 import { can } from "@/lib/auth/session";
 import { pageContext } from "@/lib/page-context";
 import { toPaisa } from "@/lib/utils/money";
+import { DocumentLink } from "@/components/documents/document-link";
 import { ActionButton } from "@/components/documents/action-button";
-import { PrintButton } from "@/components/documents/print-button";
 import { FormAlert } from "@/components/forms/field";
 import { PageHeader } from "@/components/layout/page-header";
 import { Ltr, Money } from "@/components/shared/bidi";
@@ -46,7 +46,7 @@ export default async function ExpensePage({ params }: PageProps<"/expenses/[id]"
         description={<span className="flex flex-wrap items-center gap-3"><StatusBadge tone={EXPENSE_TONE[status] ?? "gray"}>{x.statuses[status]}</StatusBadge><bdi>{e.category && local(e.category.name_en, e.category.name_ur)}</bdi></span>}
         actions={
           <>
-            {status === "posted" && <PrintButton label={t.sales.print} icon={<Printer aria-hidden />} />}
+            <DocumentLink kind="expense_voucher" params={{ id }} label={t.docs.pdf} />
             {status === "draft" && (own || poster) && (
               <>
                 <ActionButton label={d.deleteDraft} icon={<Trash2 aria-hidden />} variant="outline" action={deleteExpenseAction.bind(null, id)} success={d.deleted} redirectTo="/expenses" confirm={{ title: d.confirmDeleteTitle, description: d.confirmDelete, tone: "danger" }} />

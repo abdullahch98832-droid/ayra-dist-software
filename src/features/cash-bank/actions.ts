@@ -7,7 +7,7 @@ import { runAction } from "@/lib/server-action";
 import { sqlNull } from "@/lib/supabase/rpc";
 import { createClient } from "@/lib/supabase/server";
 import { orNull } from "@/lib/validation/common";
-import { accountSchema, closingSchema, openingSchema, transferSchema, voucherSchema } from "./schema";
+import { accountSchema, closingSchema, openingSchema, reconciliationSaveSchema, reconciliationSchema, transferSchema, voucherSchema } from "./schema";
 
 export async function saveAccountAction(id: string | null, values: unknown): Promise<ActionResult<string>> {
   return runAction("cash_bank.manage", accountSchema, values, async (v) => {
@@ -63,7 +63,7 @@ export async function recordVoucherAction(values: unknown): Promise<ActionResult
   });
 }
 
-async function withReason(rpc: "void_account_opening" | "void_fund_transfer" | "void_cash_voucher" | "reopen_cash_day", permission: Permission, id: string, reason: string): Promise<ActionResult<null>> {
+async function withReason(rpc: "void_account_opening" | "void_fund_transfer" | "void_cash_voucher" | "reopen_cash_day" | "reopen_bank_reconciliation", permission: Permission, id: string, reason: string): Promise<ActionResult<null>> {
   return runAction(permission, reasoned, { id, reason }, async (v) => {
     const supabase = await createClient();
     const { error } = await supabase.rpc(rpc, { p_id: v.id, p_reason: v.reason });
@@ -86,5 +86,36 @@ export async function closeDayAction(values: unknown): Promise<ActionResult<stri
     });
     if (error) throw error;
     return data;
+  });
+}
+
+export async function startReconciliationAction(values: unknown): Promise<ActionResult<string>> {
+  return runAction("cash_bank.reconcile", reconciliationSchema, values, async (v) => {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("start_bank_reconciliation", { p_account_id: v.accountId, p_doc: { statement_date: v.date, statement_balance: v.balance, client_request_id: v.requestId } });
+    if (error) throw error;
+    return data;
+  });
+}
+
+/** Saves the ticks and, when asked, completes it; the database compares the totals again. */
+export async function saveReconciliationAction(values: unknown): Promise<ActionResult<null>> {
+  return runAction("cash_bank.reconcile", reconciliationSaveSchema, values, async (v) => {
+    const supabase = await createClient();
+    const { error } = await supabase.rpc("save_bank_reconciliation", { p_id: v.id, p_doc: { statement_balance: v.balance, notes: orNull(v.notes) }, p_lines: v.lines });
+    if (error) throw error;
+    if (!v.complete) return null;
+    const { error: failed } = await supabase.rpc("complete_bank_reconciliation", { p_id: v.id });
+    if (failed) throw failed;
+    return null;
+  });
+}
+export async function reopenReconciliationAction(id: string, reason: string) { return withReason("reopen_bank_reconciliation", "cash_bank.reconcile", id, reason); }
+export async function deleteReconciliationAction(id: string): Promise<ActionResult<null>> {
+  return runAction("cash_bank.reconcile", z.object({ id: uuid }), { id }, async (v) => {
+    const supabase = await createClient();
+    const { error } = await supabase.rpc("delete_bank_reconciliation", { p_id: v.id });
+    if (error) throw error;
+    return null;
   });
 }

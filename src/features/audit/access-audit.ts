@@ -1,6 +1,7 @@
 import "server-only";
 import type { Dictionary } from "@/i18n";
 import type { Locale } from "@/types";
+import { findReport } from "@/features/reports/registry";
 import { can, type SessionContext } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
@@ -41,10 +42,12 @@ export async function loadAccessAudit(ctx: SessionContext, t: Dictionary, locale
 
   return (rows ?? []).map((row) => {
     const before = (row.old_data ?? null) as Data;
-    const after = (row.new_data ?? null) as Data;
+    const stored = (row.new_data ?? null) as Data;
+    const after: Data = row.table_name === "report_exports" && stored ? { format: stored.format, ...(stored.filters as Data) } : stored;
     const record = after ?? before;
     const subject =
       row.table_name === "profiles" ? userName.get(row.record_id ?? "") ?? row.record_id ?? ""
+      : row.table_name === "report_exports" ? findReport(row.record_id ?? "")?.title[locale] ?? row.record_id ?? ""
       : row.table_name === "role_permissions" ? roleName.get(String(record?.role_id)) ?? ""
       : String((locale === "ur" ? record?.name_ur : record?.name_en) ?? record?.name_en ?? "");
     const changes = fields.flatMap(([key, label]) => {

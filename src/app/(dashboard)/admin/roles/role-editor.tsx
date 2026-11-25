@@ -4,6 +4,7 @@ import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Plus } from "lucide-react";
+import { OTHER_VENDORS } from "@/config/vendors";
 import { useI18n } from "@/i18n/context";
 import type { ActionResult } from "@/lib/action-result";
 import { PERMISSION_MODULES } from "@/lib/auth/permissions";
@@ -69,7 +70,7 @@ export function RoleEditor({
 
   const locked = !canManage || role?.code === "super_admin";
   const name = (r: Role) => (locale === "ur" ? r.name_ur : r.name_en);
-  const modules = t.modules as Record<string, string>;
+  const modules: Record<string, string> = OTHER_VENDORS ? t.modules : { ...t.modules, suppliers: t.supply.ayraDetails, payables: t.analytics.owedToSuppliers };
 
   const toggle = (code: string, enabled: boolean) => {
     if (!role || locked) return;
@@ -91,7 +92,7 @@ export function RoleEditor({
         <NativeSelect className="lg:hidden" aria-label={t.users.role} value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>
           {roles.map((r) => <option key={r.id} value={r.id}>{name(r)}</option>)}
         </NativeSelect>
-        <ul className="hidden gap-0.5 rounded-xl border bg-card p-1.5 shadow-card lg:grid">
+        <ul className="hidden gap-0.5 rounded-2xl border bg-card p-1.5 shadow-card lg:grid">
           {roles.map((r) => (
             <li key={r.id}>
               <button
@@ -113,7 +114,7 @@ export function RoleEditor({
 
       {role && (
         <div className="grid min-w-0 content-start gap-4">
-          <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border bg-card p-5 shadow-card">
+          <div className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border bg-card p-5 shadow-card">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-semibold text-navy">{name(role)}</h2>
@@ -138,7 +139,7 @@ export function RoleEditor({
 
           <div className="grid gap-3 md:grid-cols-2">
             {byModule.map(([module, items]) => (
-              <fieldset key={module} className="min-w-0 rounded-xl border bg-card p-5 shadow-card" disabled={locked}>
+              <fieldset key={module} className="min-w-0 rounded-2xl border bg-card p-5 shadow-card" disabled={locked}>
                 <legend className="float-start mb-3 w-full text-sm font-semibold text-navy">{modules[module] ?? module}</legend>
                 <div className="clear-both grid gap-3">
                   {items.map((p) => {

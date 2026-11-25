@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { documentHref } from "@/features/documents/kinds";
 import { loadChart, loadGeneralLedger, seesLedgers } from "@/features/accounting/queries";
 import { businessToday, parsePeriod } from "@/features/dashboard/period";
 import { getT } from "@/i18n/server";
@@ -28,7 +29,7 @@ export default async function GeneralLedgerPage({ searchParams }: PageProps<"/ac
     <>
       <PageHeader title={a.tabs.ledger} />
       <PeriodFrame key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={title} description={account ? a.types[account.account_type] : ""}>
-        <LedgerTable t={t} local={local} lines={lines} caption={title} exportName={`ledger-${account?.code}-${period.from}-${period.to}`} debitLabel={a.debit} creditLabel={a.credit} canOpen
+        <LedgerTable t={t} local={local} lines={lines} caption={title} exportName={`ledger-${account?.code}-${period.from}-${period.to}`} pdfHref={documentHref("general_ledger", { account: account?.id, range: "custom", from: period.from, to: period.to })} debitLabel={a.debit} creditLabel={a.credit} canOpen
           toolbar={<UrlSelect param="account" label={a.allAccounts} className="sm:w-72" options={accounts.map((x) => ({ value: x.id, label: `${x.code} · ${local(x.name_en, x.name_ur)}` }))} />} />
       </PeriodFrame>
     </>

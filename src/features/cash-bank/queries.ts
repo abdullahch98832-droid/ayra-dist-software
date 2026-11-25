@@ -1,7 +1,9 @@
 import "server-only";
+import { z } from "zod";
 import { firstRow, lastRow, type ListFilter } from "@/lib/list-params";
 import { fetchAll } from "@/lib/supabase/fetch-all";
 import { listPage } from "@/lib/supabase/list-page";
+import { sqlNull } from "@/lib/supabase/rpc";
 import { createClient } from "@/lib/supabase/server";
 
 /** Accounts for payments and expenses: name and masked identifier only. */
@@ -89,3 +91,41 @@ export async function loadClosings(filter: ListFilter & { accountId: string | nu
   if (filter.accountId) query = query.eq("financial_account_id", filter.accountId);
   return listPage(query.order("closing_date", { ascending: false }).order("created_at", { ascending: false }).range(firstRow(filter.page), lastRow(filter.page)));
 }
+
+/** Bank accounts, for whoever compares them with their statements. */
+export async function loadBankAccounts() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("list_bank_accounts");
+  if (error) throw error;
+  return data.map((a) => ({ id: a.id, name: a.name, isActive: a.is_active }));
+}
+
+export async function loadBankReconciliations(accountId: string | null) {
+  const supabase = await createClient();
+  return fetchAll((from, to) => supabase.rpc("list_bank_reconciliations", { p_account_id: sqlNull(accountId) }).range(from, to));
+}
+
+const money = z.string();
+const totalsSchema = z.object({ ledger: money, uncleared_in: money, uncleared_out: money, adjusted: money, statement: money, difference: money });
+const reconciliationSchema = z.object({
+  id: z.string(), doc_no: z.string(), account_id: z.string(), account: z.string(), statement_date: z.string(), status: z.enum(["draft", "completed"]), notes: z.string().nullable(), reopen_reason: z.string().nullable(),
+  completed_at: z.string().nullable(), completed_by: z.string().nullable(), latest: z.boolean(), totals: totalsSchema,
+  lines: z.array(z.object({
+    id: z.string(), entry_id: z.string(), date: z.string(), entry: z.string(), type: z.string().nullable(), number: z.string().nullable(), reversal: z.boolean(), description: z.string().nullable(), party: z.string().nullable(), party_ur: z.string().nullable(), amount: money, cleared: z.boolean(),
+  })),
+});
+
+/** A statement with the ledger lines it is compared with, or null. */
+export async function loadBankReconciliation(id: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("bank_reconciliation", { p_id: id });
+  if (error) throw error;
+  if (data === null) return null;
+  const r = reconciliationSchema.parse(data);
+  return {
+    id: r.id, number: r.doc_no, accountId: r.account_id, account: r.account, date: r.statement_date, status: r.status, notes: r.notes ?? "", reopenReason: r.reopen_reason, completedAt: r.completed_at, completedBy: r.completed_by, latest: r.latest,
+    totals: { ledger: r.totals.ledger, unclearedIn: r.totals.uncleared_in, unclearedOut: r.totals.uncleared_out, adjusted: r.totals.adjusted, statement: r.totals.statement, difference: r.totals.difference },
+    lines: r.lines.map((l) => ({ id: l.id, entryId: l.entry_id, date: l.date, entry: l.entry, type: l.type, number: l.number, reversal: l.reversal, description: l.description, party: l.party, partyUr: l.party_ur, amount: l.amount, cleared: l.cleared })),
+  };
+}
+export type BankReconciliation = NonNullable<Awaited<ReturnType<typeof loadBankReconciliation>>>;

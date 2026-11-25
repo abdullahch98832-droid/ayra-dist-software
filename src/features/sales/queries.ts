@@ -57,7 +57,7 @@ export type SalesOrder = NonNullable<Awaited<ReturnType<typeof loadOrder>>>;
 export async function loadDeliveries(filter: ListFilter) {
   const supabase = await createClient();
   let query = supabase.from("deliveries")
-    .select("id, doc_no, delivery_date, status, received_by, delivered_at, order:sales_orders!deliveries_sales_order_id_fkey(id, doc_no, customer:customers!sales_orders_customer_id_fkey(name, name_ur, city)), vehicle:vehicles!deliveries_vehicle_id_fkey(registration_no)", { count: "exact" });
+    .select("id, doc_no, delivery_date, status, received_by, delivered_at, supplied_by, order:sales_orders!deliveries_sales_order_id_fkey(id, doc_no, customer:customers!sales_orders_customer_id_fkey(name, name_ur, city)), vehicle:vehicles!deliveries_vehicle_id_fkey(registration_no)", { count: "exact" });
   if (filter.status) query = query.eq("status", filter.status as "dispatched");
   if (filter.q) query = query.ilike("doc_no", `%${filter.q}%`);
   return listPage(query.order("created_at", { ascending: false }).order("doc_no", { ascending: false }).range(firstRow(filter.page), lastRow(filter.page)));
@@ -66,7 +66,7 @@ export async function loadDeliveries(filter: ListFilter) {
 export async function loadDelivery(id: string) {
   const supabase = await createClient();
   const { data, error } = await supabase.from("deliveries").select(
-    "id, doc_no, delivery_date, status, notes, received_by, delivery_note, dispatched_at, delivered_at, driver_id, order:sales_orders!deliveries_sales_order_id_fkey(id, doc_no, customer:customers!sales_orders_customer_id_fkey(id, name, name_ur, phone, whatsapp, address, city)), vehicle:vehicles!deliveries_vehicle_id_fkey(registration_no, name), invoice:sales_invoices!deliveries_sales_invoice_id_fkey(id, doc_no, total_amount), delivery_items(id, quantity, returned_quantity, item:sales_order_items!delivery_items_sales_order_item_id_fkey(id, unit_price, product:products!sales_order_items_product_id_fkey(sku, name_en, name_ur), unit:units!sales_order_items_unit_id_fkey(name_en, name_ur))), returns:customer_returns!customer_returns_delivery_id_fkey(id, doc_no, total_amount, status)"
+    "id, doc_no, delivery_date, status, notes, received_by, delivery_note, dispatched_at, delivered_at, driver_id, supplied_by, order:sales_orders!deliveries_sales_order_id_fkey(id, doc_no, customer:customers!sales_orders_customer_id_fkey(id, name, name_ur, phone, whatsapp, address, city)), vehicle:vehicles!deliveries_vehicle_id_fkey(registration_no, name), invoice:sales_invoices!deliveries_sales_invoice_id_fkey(id, doc_no, total_amount), delivery_items(id, quantity, returned_quantity, item:sales_order_items!delivery_items_sales_order_item_id_fkey(id, unit_price, product:products!sales_order_items_product_id_fkey(sku, name_en, name_ur), unit:units!sales_order_items_unit_id_fkey(name_en, name_ur))), returns:customer_returns!customer_returns_delivery_id_fkey(id, doc_no, total_amount, status)"
   ).eq("id", id).maybeSingle();
   if (error) throw error;
   return data;

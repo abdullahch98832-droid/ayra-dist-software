@@ -36,7 +36,7 @@ describe("inventory documents", () => {
   });
 
   it("dispatches at least one line", () => {
-    const doc = { orderId: id, date: "2026-11-24", vehicleId: "", driverId: "", notes: "", requestId: id, lines: [{ itemId: id, quantity: "0" }] };
+    const doc = { orderId: id, date: "2026-11-24", vehicleId: "", driverId: "", suppliedBy: "", notes: "", requestId: id, lines: [{ itemId: id, quantity: "0" }] };
     expect(messages(dispatchSchema.safeParse(doc))).toEqual(["lines:nothingToDispatch"]);
     expect(dispatchSchema.safeParse({ ...doc, lines: [{ itemId: id, quantity: "2" }] }).success).toBe(true);
   });

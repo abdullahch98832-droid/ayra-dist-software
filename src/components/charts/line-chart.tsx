@@ -5,7 +5,9 @@ import { useI18n } from "@/i18n/context";
 import { ChartCard, ChartTooltip } from "./chart-card";
 import { SERIES_COLORS, axisScale, formatTick, type ChartPoint, type ChartSeries } from "./types";
 
-const HEIGHT = 208;
+const PLOT = 240;
+/** A single series has no legend; its plot takes that space, so cards side by side line up. */
+const LEGEND = 32;
 
 /** Change over time. Time runs in the reading direction: right to left in Urdu. */
 export function LineChartCard({
@@ -19,6 +21,7 @@ export function LineChartCard({
   emptyText?: string;
 }) {
   const { direction } = useI18n();
+  const HEIGHT = series.length > 1 ? PLOT : PLOT + LEGEND;
   const plot = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [active, setActive] = useState<number | null>(null);
@@ -80,6 +83,12 @@ export function LineChartCard({
                 {active !== null && <line x1={x(active)} x2={x(active)} y1={0} y2={HEIGHT} stroke="var(--input)" />}
                 {series.map((s, i) => (
                   <g key={s.key}>
+                    {series.length === 1 && last > 0 && (
+                      <polygon
+                        fill={SERIES_COLORS[i]} fillOpacity={0.1}
+                        points={`${x(0)},${y(0)} ${points.map((p, index) => `${x(index)},${y(p.values[i]?.value ?? 0)}`).join(" ")} ${x(last)},${y(0)}`}
+                      />
+                    )}
                     <polyline
                       fill="none" stroke={SERIES_COLORS[i]} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"
                       points={points.map((p, index) => `${x(index)},${y(p.values[i]?.value ?? 0)}`).join(" ")}

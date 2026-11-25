@@ -84,7 +84,10 @@ export async function completeDeliveryAction(values: unknown): Promise<ActionRes
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("complete_delivery", {
       p_id: v.id,
-      p_doc: { received_by: orNull(v.receivedBy), notes: orNull(v.notes), return_reason: orNull(v.returnReason) },
+      p_doc: {
+        received_by: orNull(v.receivedBy), notes: orNull(v.notes), return_reason: orNull(v.returnReason), supplied_by: orNull(v.suppliedBy),
+        ...(/[1-9]/.test(v.amount) ? { amount: v.amount, method: v.method, reference: orNull(v.reference), financial_account_id: v.destination === "held" ? null : v.destination } : {}),
+      },
       p_returns: v.lines.filter((l) => /[1-9]/.test(l.quantity)).map((l) => ({ delivery_item_id: l.itemId, quantity: l.quantity, condition: l.condition })),
     });
     if (error) throw error;

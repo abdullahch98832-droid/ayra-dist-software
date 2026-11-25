@@ -25,7 +25,7 @@ export default async function TripsPage({ searchParams }: PageProps<"/vehicles/t
   return (
     <>
       <PageHeader title={v.tabs.trips} />
-      <PeriodFrame key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={v.trips} description={t.reports.vehicleTripsHint}>
+      <PeriodFrame compact key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={v.trips} description={t.reports.vehicleTripsHint}>
         <TripsTable
           t={t} local={local} rows={rows} canOpen={{ sol: can(ctx, "sol.view"), sales: can(ctx, "sales.view") || can(ctx, "sales.view_all") }}
           toolbar={<UrlSelect param="vehicle" label={v.allVehicles} options={vehicles.map((x) => ({ value: x.id, label: `${x.registration_no} · ${x.name}` }))} />}

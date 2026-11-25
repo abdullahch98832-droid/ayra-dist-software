@@ -18,6 +18,7 @@ import { DescriptionList } from "@/components/shared/description-list";
 import { formatNumber } from "@/components/shared/format";
 import { LinkButton } from "@/components/shared/link-button";
 import { StatCard } from "@/components/shared/stat-card";
+import { StatGrid } from "@/components/shared/stat-grid";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { SpecTable } from "@/components/tables/spec-table";
 
@@ -58,7 +59,7 @@ export default async function TakerPage({ params, searchParams }: PageProps<"/or
         }
       />
       <div className="grid gap-6">
-        <section className="flex flex-wrap items-start gap-6 rounded-xl border bg-card p-5 shadow-card">
+        <section className="flex flex-wrap items-start gap-6 rounded-2xl border bg-card p-5 shadow-card">
           <EmployeeAvatar name={taker.nameEn} url={photos.get(taker.photoPath ?? "")} className="size-24 text-2xl" />
           <div className="min-w-0 flex-1 basis-64">
             <DescriptionList items={[
@@ -72,7 +73,7 @@ export default async function TakerPage({ params, searchParams }: PageProps<"/or
         </section>
         {f && (
           <PeriodFrame key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={k.performance} description={k.performanceHint}>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatGrid>
               <StatCard label={k.orders} value={count(f.orders)} icon={ShoppingCart} hint={<>{k.orderValue}: {money(f.order_value)}</>} href={can(ctx, "sales.view") ? `/sales/orders?taker=${id}` : undefined} />
               <StatCard label={k.totalSales} value={money(f.total_sales)} icon={TrendingUp} />
               <StatCard label={k.delivered} value={count(f.delivered_orders)} icon={CircleCheck} hint={<>{k.open}: {count(f.open_orders)}</>} />
@@ -81,7 +82,7 @@ export default async function TakerPage({ params, searchParams }: PageProps<"/or
               <StatCard label={k.pending} value={money(f.pending_collections)} icon={HandCoins} hint={k.pendingHint} />
               <StatCard label={k.cashHeld} value={money(f.cash_held)} icon={Wallet} hint={k.cashHeldHint} tone={f.cash_held !== null && toPaisa(f.cash_held) > BigInt(0) ? "attention" : "default"} />
               <StatCard label={k.customers} value={count(f.customers)} icon={Users} />
-            </div>
+            </StatGrid>
           </PeriodFrame>
         )}
         {can(ctx, "customers.view") && (

@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Download, Printer } from "lucide-react";
+import { Download, FileText, Printer } from "lucide-react";
 import { useI18n } from "@/i18n/context";
 import { cn } from "@/lib/utils";
+import { allowListExportAction } from "@/features/reports/actions";
 import { toCsv } from "@/lib/utils/csv";
 import { formatPaisa, sumPaisa, toPaisa } from "@/lib/utils/money";
 import { Ltr } from "@/components/shared/bidi";
 import { formatDate, formatDateTime, formatNumber } from "@/components/shared/format";
+import { LinkButton } from "@/components/shared/link-button";
 import { StatusBadge, type BadgeTone } from "@/components/shared/status-badge";
+import { usePermission } from "@/components/layout/permissions";
+import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "./data-table";
 import { UrlPagination } from "./url-filters";
@@ -36,7 +40,7 @@ export interface SpecColumn {
   options?: Record<string, { label: string; tone: BadgeTone }>;
 }
 
-export function SpecTable({ rows, columns, caption, empty, toolbar, searchKeys, searchPlaceholder, initialSort, exportName, pageSize, server }: {
+export function SpecTable({ rows, columns, caption, empty, toolbar, searchKeys, searchPlaceholder, initialSort, exportName, pdfHref, pageSize, server }: {
   rows: SpecRow[];
   columns: SpecColumn[];
   caption: string;
@@ -48,12 +52,15 @@ export function SpecTable({ rows, columns, caption, empty, toolbar, searchKeys, 
   initialSort?: { id: string; descending?: boolean };
   /** Shows CSV export and print; used as the file name. */
   exportName?: string;
+  /** Address of the same report as a document; takes the place of printing the page. */
+  pdfHref?: string;
   pageSize?: number;
   /** The rows are one page of `total`; search and paging happen on the server. */
   server?: { page: number; pageSize: number; total: number };
 }) {
   const { t, locale } = useI18n();
   const params = useSearchParams();
+  const mayExport = usePermission("reports.export");
   // An empty page of a filtered list means nothing matched, not that there is nothing.
   const nothing = server && params.size > 0 ? { title: t.table.noMatches, description: t.table.noMatchesHint } : empty;
 
@@ -111,7 +118,12 @@ export function SpecTable({ rows, columns, caption, empty, toolbar, searchKeys, 
     footer: c.total ? (matching) => footer(c, matching) : undefined,
   }));
 
-  const download = () => {
+  const download = async () => {
+    const allowed = await allowListExportAction(exportName ?? "").catch(() => null);
+    if (!allowed?.ok) {
+      toast.add({ title: allowed?.code === "permissionDenied" ? t.analytics.exportForbidden : t.analytics.exportFailed, type: "error" });
+      return;
+    }
     const header = columns.flatMap((c) => (c.sub ? [c.label, ""] : [c.label]));
     const body = rows.map((row) => columns.flatMap((c) => {
       const value = row[c.key];
@@ -132,13 +144,15 @@ export function SpecTable({ rows, columns, caption, empty, toolbar, searchKeys, 
       pageSize={server?.pageSize ?? pageSize} paging={server && <UrlPagination {...server} />}
       searchText={searchKeys ? (r) => searchKeys.map((k) => r[k] ?? "").join(" ") : undefined}
       searchPlaceholder={searchPlaceholder}
-      toolbar={(toolbar || exportName) ? (
+      toolbar={(toolbar || (exportName && (mayExport || pdfHref))) ? (
         <>
           {toolbar}
           {exportName && rows.length > 0 && (
             <div className="flex gap-2 sm:ms-auto print:hidden">
-              <Button variant="outline" onClick={download}><Download aria-hidden />{t.reports.export}</Button>
-              <Button variant="outline" onClick={() => window.print()}><Printer aria-hidden />{t.reports.print}</Button>
+              {mayExport && <Button variant="outline" onClick={() => void download()}><Download aria-hidden />{t.reports.export}</Button>}
+              {pdfHref
+                ? <LinkButton variant="outline" href={pdfHref}><FileText aria-hidden />{t.docs.pdf}</LinkButton>
+                : mayExport && <Button variant="outline" onClick={() => window.print()}><Printer aria-hidden />{t.reports.print}</Button>}
             </div>
           )}
         </>

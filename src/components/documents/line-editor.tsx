@@ -74,7 +74,7 @@ export function LineEditor({
   const linesError = errors.lines?.root?.message ?? (typeof errors.lines?.message === "string" ? errors.lines.message : undefined);
 
   return (
-    <section className="rounded-xl border bg-card shadow-card">
+    <section className="rounded-2xl border bg-card shadow-card">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4">
         <h2 className="text-base font-semibold text-navy">{t.documents.lines}</h2>
         {!lockProducts && <ProductPicker onPick={add} />}

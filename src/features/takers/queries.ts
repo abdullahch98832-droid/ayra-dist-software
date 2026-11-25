@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { can, type SessionContext } from "@/lib/auth/session";
+import { loadSupplyStaff } from "@/features/supply/queries";
 import { signedPhotoUrls } from "@/features/employees/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,10 +19,19 @@ export type Taker = Awaited<ReturnType<typeof loadTakers>>[number];
 
 /** Names by id, for lists that only hold the id. */
 export async function takerNames(): Promise<Map<string, { nameEn: string; nameUr: string | null }>> {
-  return new Map((await loadTakers()).map((x) => [x.id, x]));
+  const [takers, staff] = await Promise.all([loadTakers(), loadSupplyStaff()]);
+  return new Map([...staff, ...takers].map((x) => [x.id, x]));
 }
 
-export const takerPhotos = (takers: Pick<Taker, "photoPath">[]) => signedPhotoUrls(takers.map((x) => x.photoPath));
+/** Everyone who may hold cash: order takers and suppliers, once each. */
+export async function loadCollectors() {
+  const [takers, staff] = await Promise.all([loadTakers(), loadSupplyStaff()]);
+  const byId = new Map<string, { id: string; nameEn: string; nameUr: string | null; isActive: boolean }>();
+  for (const x of [...takers, ...staff]) byId.set(x.id, { id: x.id, nameEn: x.nameEn, nameUr: x.nameUr, isActive: x.isActive || (byId.get(x.id)?.isActive ?? false) });
+  return [...byId.values()];
+}
+
+export const takerPhotos = (takers: { photoPath: string | null }[]) => signedPhotoUrls(takers.map((x) => x.photoPath));
 
 export async function loadTakerReport(from: string, to: string) {
   const supabase = await createClient();

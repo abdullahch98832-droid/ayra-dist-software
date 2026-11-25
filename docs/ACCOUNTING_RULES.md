@@ -10,20 +10,20 @@
 4. **One entry in force per document.** A unique index on `(source_type, source_id)` prevents a document from being posted twice; only a reversed entry can be followed by a new one (a reopened SOL job).
 5. **Atomic.** A document's stock movements, journal entry and status change happen in one transaction inside its posting function.
 6. **Period and cash locking.** Postings dated inside a `closed` accounting period, or in a cash account on or before its last closed day, are rejected. Periods cannot overlap. (If no period covers a date, posting is allowed.)
-7. **Sub-ledger integrity.** Lines on the receivables account must name a customer; payables lines a supplier (and the main company may only use its own account); employee advance, salary and order-taker cash lines an employee. Header accounts cannot receive postings.
+7. **Sub-ledger integrity.** Lines on the receivables account must name a customer; payables lines a supplier (and the Ayra company may only use its own account); employee advance, salary and order-taker cash lines an employee. Header accounts cannot receive postings.
 8. **Counted once.** Receipts and payments never touch income, purchases or expenses of a recorded document. Vouchers and manual journals cannot use accounts that documents own (sales, returns, SOL revenue, inventory, cost of goods sold, salaries payable, advances, cash with order takers). `ledger_checks()` proves it against the documents.
 
 ## Separate ledgers
 
 | Ledger | Control account | View |
 |---|---|---|
-| Main company (Ayra Happiness) | 2100 `AP_PRINCIPAL` | `v_company_ledger` |
+| Ayra company (Ayra Happiness) | 2100 `AP_PRINCIPAL` | `v_company_ledger` |
 | Other suppliers | 2200 `AP_SUPPLIERS` | `v_supplier_ledger`, `v_supplier_balances` |
 | Customers and SOL clients | 1200 `AR` | `v_customer_ledger`, `v_customer_balances` |
 | Cash with order takers | 1180 `CASH_WITH_COLLECTORS` | `collector_cash()`, `collector_statement()` |
 | Employees | 1400 `EMPLOYEE_ADVANCES`, 2400 `SALARIES_PAYABLE` | `v_employee_balances` |
 
-The main company is the single supplier with `is_principal = true`.
+The Ayra company is the single supplier with `is_principal = true`.
 
 ## Chart of accounts (seeded, editable)
 
@@ -36,7 +36,7 @@ System accounts (with a `system_key`) cannot be deleted or have their type chang
 
 | Event | Debit | Credit |
 |---|---|---|
-| Goods receipt (accepted + damaged; rejected goods are never booked) | Inventory | Payable (main company or supplier) |
+| Goods receipt (accepted + damaged; rejected goods are never booked) | Inventory | Payable (Ayra company or supplier) |
 | Receipt settling stock issued below zero | Inventory, difference to Inventory variance | Payable |
 | Supplier invoice above receipts | Inventory variance | Payable |
 | Supplier invoice below receipts | Payable | Inventory variance |

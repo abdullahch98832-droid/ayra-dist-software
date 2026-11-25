@@ -26,6 +26,12 @@ export const voucherSchema = z.object({
 });
 export type VoucherValues = z.infer<typeof voucherSchema>;
 
+const signedMoney = optionalSignedMoney.refine((v) => v.trim() !== "", "required");
+export const reconciliationSchema = z.object({ accountId: requiredId, date: isoDate, balance: signedMoney, requestId: z.uuid() });
+export type ReconciliationValues = z.infer<typeof reconciliationSchema>;
+export const reconciliationSaveSchema = z.object({ id: z.uuid(), balance: signedMoney, notes: text(300), lines: z.array(z.uuid()).max(20000), complete: z.boolean() });
+export type ReconciliationSave = z.infer<typeof reconciliationSaveSchema>;
+
 export const NOTES = ["5000", "1000", "500", "100", "50", "20", "10", "5", "2", "1"] as const;
 export const closingSchema = z.object({ accountId: requiredId, date: isoDate, counted: money, notes: text(300), postDifference: z.boolean(), denominations: z.record(z.string(), optionalQuantity), requestId: z.uuid() });
 export type ClosingValues = z.infer<typeof closingSchema>;

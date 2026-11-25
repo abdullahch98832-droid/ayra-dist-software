@@ -1,7 +1,9 @@
 import "server-only";
+import { OTHER_VENDORS } from "@/config/vendors";
 import { z } from "zod";
 import { can, type SessionContext } from "@/lib/auth/session";
 import { firstRow, lastRow, type ListFilter } from "@/lib/list-params";
+import { loadSupplyStaff } from "@/features/supply/queries";
 import { loadDrivers } from "@/features/takers/queries";
 import { fetchAll } from "@/lib/supabase/fetch-all";
 import { listPage } from "@/lib/supabase/list-page";
@@ -190,14 +192,14 @@ export async function loadDispatchOrder(id: string) {
 
 export async function loadVehiclesAndDrivers(ctx: SessionContext) {
   const supabase = await createClient();
-  const [vehicles, drivers] = await Promise.all([
+  const [vehicles, drivers, staff] = await Promise.all([
     can(ctx, "vehicles.view")
       ? supabase.from("vehicles").select("id, name, registration_no").eq("is_active", true).order("registration_no")
       : Promise.resolve({ data: [], error: null }),
-    loadDrivers(),
+    loadDrivers(), loadSupplyStaff(),
   ]);
   if (vehicles.error) throw vehicles.error;
-  return { vehicles: (vehicles.data ?? []).map((v) => ({ id: v.id, label: `${v.registration_no} · ${v.name}` })), drivers: drivers.map((d) => ({ id: d.id, label: d.nameEn })) };
+  return { vehicles: (vehicles.data ?? []).map((v) => ({ id: v.id, label: `${v.registration_no} · ${v.name}` })), drivers: drivers.map((d) => ({ id: d.id, label: d.nameEn })), suppliers: staff.filter((x) => x.isActive).map((x) => ({ id: x.id, label: x.nameEn })) };
 }
 
 /** Damaged goods on hand, per product and damaged-goods warehouse. */
@@ -212,5 +214,5 @@ export async function loadDamaged(ctx: SessionContext) {
     : { data: [], error: null };
   if (suppliers.error) throw suppliers.error;
   const principal = new Map((suppliers.data ?? []).map((s) => [s.id, s.is_principal]));
-  return rows.map((r) => ({ ...r, supplierId: r.product.default_supplier_id, fromCompany: principal.get(r.product.default_supplier_id ?? "") ?? false }));
+  return rows.map((r) => ({ ...r, supplierId: r.product.default_supplier_id, fromCompany: !OTHER_VENDORS || (principal.get(r.product.default_supplier_id ?? "") ?? false) }));
 }

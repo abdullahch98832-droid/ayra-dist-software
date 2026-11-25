@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
+import { OTHER_VENDORS } from "@/config/vendors";
 import { getLocale, getT } from "@/i18n/server";
 import { can, requireActiveSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -29,14 +30,15 @@ export default async function SupplierPage({ params }: PageProps<"/suppliers/[id
   ]);
   if (supplier.error) throw supplier.error;
   const s = supplier.data;
-  if (!s) notFound();
+  // Without other vendors only the record of the Ayra company is open.
+  if (!s || (!OTHER_VENDORS && !s.is_principal)) notFound();
   const canEdit = can(ctx, "suppliers.manage");
   const canSeeAccount = can(ctx, s.is_principal ? "company.view" : "payables.view");
   return (
     <>
       <PageHeader
         title={locale === "ur" && s.name_ur ? s.name_ur : s.name}
-        breadcrumbs={[{ label: t.suppliers.title, href: "/suppliers" }]}
+        breadcrumbs={[OTHER_VENDORS ? { label: t.suppliers.title, href: "/suppliers" } : { label: t.purchasing.flows.company, href: "/purchasing/company" }]}
         description={<span className="flex flex-wrap items-center gap-3"><Ltr className="font-mono text-xs">{s.code}</Ltr>{s.is_principal && <StatusBadge tone="blue" dot={false}>{t.suppliers.mainCompany}</StatusBadge>}</span>}
         actions={canSeeAccount && <LinkButton variant="outline" href={s.is_principal ? "/purchasing/company/account" : `/purchasing/suppliers/account?supplier=${s.id}`}>{t.suppliers.statement}</LinkButton>}
       />

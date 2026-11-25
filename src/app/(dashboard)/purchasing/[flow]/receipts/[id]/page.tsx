@@ -9,6 +9,7 @@ import { loadBill, loadReceipt } from "@/features/purchasing/queries";
 import { can } from "@/lib/auth/session";
 import { toPaisa } from "@/lib/utils/money";
 import { ActionButton } from "@/components/documents/action-button";
+import { DocumentLink } from "@/components/documents/document-link";
 import { DocumentStatus } from "@/components/documents/document-status";
 import { PageHeader } from "@/components/layout/page-header";
 import { Ltr, Money } from "@/components/shared/bidi";
@@ -40,6 +41,7 @@ export default async function ReceiptPage({ params }: PageProps<"/purchasing/[fl
         description={<span className="flex flex-wrap items-center gap-3"><DocumentStatus status={receipt.status} t={t} /><bdi>{local(receipt.supplier.name, receipt.supplier.name_ur)}</bdi></span>}
         actions={
           <>
+            <DocumentLink kind="goods_receipt" params={{ id }} label={t.docs.pdf} />
             {receipt.status === "draft" && can(ctx, "purchasing.create") && (
               <>
                 <ActionButton label={d.deleteDraft} icon={<Trash2 aria-hidden />} variant="outline" action={deletePurchasingDraftAction.bind(null, "goods_receipts", id)} success={d.deleted} redirectTo={base} confirm={{ title: d.confirmDeleteTitle, description: d.confirmDelete, tone: "danger" }} />

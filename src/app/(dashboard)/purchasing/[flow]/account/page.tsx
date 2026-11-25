@@ -7,6 +7,7 @@ import { loadBalances, loadFlowSuppliers, loadStatement, seesAccount } from "@/f
 import { isolate } from "@/i18n/format";
 import { can } from "@/lib/auth/session";
 import { formatPaisa, toPaisa } from "@/lib/utils/money";
+import { DocumentLink } from "@/components/documents/document-link";
 import { PeriodFrame } from "@/components/dashboard/period-frame";
 import { Forbidden } from "@/components/layout/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
@@ -37,7 +38,7 @@ export default async function AccountPage({ params, searchParams }: PageProps<"/
         description={supplier
           ? <span className="flex flex-wrap items-baseline gap-x-3"><bdi>{local(supplier.nameEn, supplier.nameUr)}</bdi><span>{p.outstanding}: <Money amount={toPaisa(balances[supplier.id] ?? "0")} locale={locale} className="font-semibold text-foreground" /></span></span>
           : p.chooseSupplier}
-        actions={supplier && can(ctx, accountPay(flow)) && <LinkButton href={`${flowPath(flow, "payments", "new")}?supplier=${supplier.id}`}><Banknote aria-hidden />{p.newPayment}</LinkButton>}
+        actions={supplier && <><DocumentLink kind={flow === "company" ? "company_statement" : "supplier_statement"} params={{ supplier: supplier.id, range: "custom", from: period.from, to: period.to }} label={t.docs.statement} />{flow === "company" && can(ctx, "suppliers.view") && <LinkButton variant="outline" href={`/suppliers/${supplier.id}`}>{t.supply.ayraDetails}</LinkButton>}{can(ctx, accountPay(flow)) && <LinkButton href={`${flowPath(flow, "payments", "new")}?supplier=${supplier.id}`}><Banknote aria-hidden />{p.newPayment}</LinkButton>}</>}
       />
       <PeriodFrame
         key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today}

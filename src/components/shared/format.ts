@@ -1,3 +1,4 @@
+import { APP_CONFIG } from "@/config/app";
 import type { Locale } from "@/types";
 
 /** Dates and times with Latin digits in both languages (consistent with amounts and codes). */
@@ -7,6 +8,7 @@ export function formatDateTime(value: string | null | undefined, locale: Locale)
     dateStyle: "medium",
     timeStyle: "short",
     numberingSystem: "latn",
+    timeZone: APP_CONFIG.timeZone,
   }).format(new Date(value));
 }
 

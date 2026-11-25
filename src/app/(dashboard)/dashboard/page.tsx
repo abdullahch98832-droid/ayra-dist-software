@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import { Gauge } from "lucide-react";
 import { hasPerformance, PerformanceView } from "@/components/dashboard/performance";
 import {
   LowStockCard, MyRecordsCard, OpenWorkCard, OverdueCard, PendingDeliveriesCard, RecentOrdersCard, RecentTransactionsCard,
 } from "@/components/dashboard/lists";
 import { PeriodFrame } from "@/components/dashboard/period-frame";
 import { hasPosition, PositionCards } from "@/components/dashboard/position-cards";
+import { BusinessFlow } from "@/components/dashboard/business-flow";
+import { DashboardHero } from "@/components/dashboard/hero";
+import { isPlanned, quickActions } from "@/components/dashboard/quick-actions";
 import { QuickEntry } from "@/components/dashboard/quick-entry";
 import { DataSection } from "@/components/dashboard/section";
 import { dashboardKind } from "@/features/dashboard/layout";
@@ -17,8 +21,8 @@ import { fill, isolate } from "@/i18n/format";
 import { getLocale, getT } from "@/i18n/server";
 import { can, requireActiveSession } from "@/lib/auth/session";
 import { Forbidden } from "@/components/layout/forbidden";
-import { PageHeader } from "@/components/layout/page-header";
 import { formatDate } from "@/components/shared/format";
+import { SectionHeading } from "@/components/shared/section-heading";
 import { CardsSkeleton, ChartsSkeleton, ListSkeleton } from "@/components/shared/states";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -38,10 +42,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
 
   const position = hasPosition(ctx.permissions, kind) && (
     <section aria-labelledby="dashboard-now" className="grid gap-4">
-      <div>
-        <h2 id="dashboard-now" className="text-lg font-semibold text-navy">{d.now}</h2>
-        <p className="text-sm text-muted-foreground">{fill(d.nowHint, { date: isolate(formatDate(today, locale) ?? "") })}</p>
-      </div>
+      <SectionHeading id="dashboard-now" icon={Gauge} title={d.now} description={fill(d.nowHint, { date: isolate(formatDate(today, locale) ?? "") })} />
       <DataSection name={d.now} skeleton={<CardsSkeleton count={kind === "executive" || kind === "manager" ? 8 : 2} />} load={loadPosition}>
         {(data) => <PositionCards position={data} kind={kind} {...common} />}
       </DataSection>
@@ -100,8 +101,17 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
 
   return (
     <>
-      <PageHeader title={fill(d.greeting, { name: isolate(ctx.fullName || ctx.email) })} description={d.subtitles[kind]} />
+      <DashboardHero
+        title={fill(d.greeting, { name: isolate(ctx.fullName || ctx.email) })}
+        description={d.subtitles[kind]}
+        role={ctx.role ? (locale === "ur" ? ctx.role.nameUr : ctx.role.nameEn) : ""}
+        date={formatDate(today, locale) ?? ""}
+        actionsLabel={d.work.quick}
+        // Data entry has the full list of actions as a card below.
+        actions={kind === "entry" ? [] : quickActions(ctx.permissions).filter((a) => !isPlanned(a)).slice(0, 4).map((a) => ({ href: a.href, label: d.quick[a.key] }))}
+      />
       <div className="grid gap-8">
+        <BusinessFlow ctx={ctx} t={t} />
         {kind === "executive" && <>{position}{performance}{grid(openWork, lowStock, deliveries, overdue)}{grid(orders, transactions)}</>}
         {kind === "manager" && <>{grid(openWork, deliveries)}{position}{performance}{grid(lowStock, overdue)}{grid(orders, transactions)}</>}
         {kind === "entry" && <><QuickEntry permissions={ctx.permissions} t={t} />{grid(openWork, myRecords)}{position}{grid(lowStock, deliveries)}{grid(orders)}</>}

@@ -27,7 +27,7 @@ describe("navigation", () => {
     expect(groups.flatMap((g) => g.items.map((i) => i.href))).toEqual(["/dashboard", "/admin/audit"]);
     expect(visibleNavigation(new Set())).toEqual([]);
     const company = visibleNavigation(new Set(["company.view"])).flatMap((g) => g.items.map((i) => i.href));
-    expect(company).toEqual(["/purchasing/company", "/payables"]);
+    expect(company).toEqual(["/purchasing/company"]);
   });
 
   it("matches whole path segments", () => {

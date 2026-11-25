@@ -3,7 +3,7 @@ import type { Dictionary } from "@/i18n";
 import { SpecTable } from "@/components/tables/spec-table";
 
 /** Lines of one ledger account with its running balance: general ledger, cash book and bank book. */
-export function LedgerTable({ t, local, lines, caption, exportName, debitLabel, creditLabel, canOpen, toolbar }: {
+export function LedgerTable({ t, local, lines, caption, exportName, debitLabel, creditLabel, canOpen, toolbar, pdfHref }: {
   t: Dictionary;
   local: (en: string, ur: string | null | undefined) => string;
   lines: LedgerLine[];
@@ -14,12 +14,14 @@ export function LedgerTable({ t, local, lines, caption, exportName, debitLabel, 
   /** Whether the reader may open journal entries. */
   canOpen: boolean;
   toolbar?: React.ReactNode;
+  pdfHref?: string;
 }) {
   const a = t.accounting;
   return (
     <SpecTable
       caption={caption}
       exportName={exportName}
+      pdfHref={pdfHref}
       rows={lines.map((l, i) => ({
         id: `${l.entry_id ?? "opening"}-${i}`, date: l.entry_date, entry: l.doc_no, entryHref: canOpen && l.entry_id ? `/accounting/journal/${l.entry_id}` : undefined, kind: l.is_reversal ? a.reversal : null,
         doc: l.source_type === "brought_forward" ? a.broughtForward : l.source_no ?? sourceLabel(t, l.source_type), docHref: sourceHref(l.source_type, l.source_id), docKind: l.source_no ? sourceLabel(t, l.source_type) : null,

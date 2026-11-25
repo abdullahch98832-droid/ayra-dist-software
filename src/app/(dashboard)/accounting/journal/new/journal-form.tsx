@@ -62,7 +62,7 @@ function Lines({ accounts, customers, suppliers }: { accounts: Account[]; custom
   const gap = debit > credit ? debit - credit : credit - debit;
   const general = errors.lines?.root?.message ?? (typeof errors.lines?.message === "string" ? errors.lines.message : undefined);
   return (
-    <section className="rounded-xl border bg-card shadow-card">
+    <section className="rounded-2xl border bg-card shadow-card">
       <header className="flex items-center justify-between gap-3 border-b px-5 py-4"><h2 className="text-base font-semibold text-navy">{t.documents.lines}</h2><Button type="button" variant="outline" onClick={() => append({ accountId: "", customerId: "", supplierId: "", debit: "", credit: "" }, { shouldFocus: false })}><Plus aria-hidden />{a.addLine}</Button></header>
       {general && <p role="alert" className="px-5 pt-4 text-sm text-destructive">{message(general)}</p>}
       <ol className="divide-y">

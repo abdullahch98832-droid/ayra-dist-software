@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Ltr } from "@/components/shared/bidi";
 import { formatBucket, formatNumber } from "@/components/shared/format";
 import { StatCard } from "@/components/shared/stat-card";
+import { StatGrid } from "@/components/shared/stat-grid";
 import { SpecTable } from "@/components/tables/spec-table";
 import { PreparePayroll } from "./prepare-payroll";
 
@@ -32,12 +33,12 @@ export default async function PayrollPage({ searchParams }: PageProps<"/payroll"
     <>
       <PageHeader title={p.title} description={p.subtitle} />
       <div className="grid gap-6">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatGrid>
           <StatCard label={p.employees} value={formatNumber(salaried.length, locale)} icon={Users} href="/payroll/employees" />
           <StatCard label={p.salary} value={money(salaried.map((e) => e.base_salary))} icon={Banknote} />
           <StatCard label={p.payable} value={money(employees.map((e) => e.payable))} icon={Banknote} tone={employees.some((e) => e.payable > 0) ? "attention" : "default"} />
           <StatCard label={p.advances} value={money(employees.map((e) => e.advances))} icon={HandCoins} href="/payroll/advances" />
-        </div>
+        </StatGrid>
         {can(ctx, "payroll.manage") && <PreparePayroll month={businessToday().slice(0, 7)} ready={salaried.length > 0} />}
         <SpecTable
           caption={p.tabs.runs}

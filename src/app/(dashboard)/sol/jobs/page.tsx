@@ -22,7 +22,7 @@ export default async function JobsPage({ searchParams }: PageProps<"/sol/jobs">)
   if (!can(ctx, "sol.view")) return <Forbidden />;
   const s = t.sol;
   const query = await searchParams;
-  const filter = { ...listParams(query, ["pending", ...JOB_STATUSES]), typeId: uuidParam(query.type), responsibleId: uuidParam(query.responsible) };
+  const filter = { ...listParams(query, ["pending", ...JOB_STATUSES]), typeId: uuidParam(query.type), responsibleId: uuidParam(query.responsible), orders: false };
   const [{ rows, total }, types, staff] = await Promise.all([loadJobs(filter), loadJobTypes(), loadStaff()]);
   const names = new Map(staff.map((x) => [x.id, x]));
   const today = businessToday();

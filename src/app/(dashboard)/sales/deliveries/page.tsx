@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Truck } from "lucide-react";
 import { loadDeliveries } from "@/features/sales/queries";
+import { loadSupplyStaff } from "@/features/supply/queries";
 import { deliveryOptions } from "@/features/sales/status";
 import { getT } from "@/i18n/server";
 import { can } from "@/lib/auth/session";
@@ -21,7 +22,8 @@ export default async function DeliveriesPage({ searchParams }: PageProps<"/sales
   const { ctx, t, local } = await pageContext();
   const s = t.sales;
   const filter = listParams(await searchParams, STATUSES);
-  const { rows, total } = await loadDeliveries(filter);
+  const [{ rows, total }, staff] = await Promise.all([loadDeliveries(filter), loadSupplyStaff()]);
+  const names = new Map(staff.map((x) => [x.id, x]));
   return (
     <>
       <PageHeader title={s.tabs.deliveries} actions={can(ctx, "sales.dispatch") && <LinkButton href="/inventory/dispatch"><Truck aria-hidden />{s.toDispatch}</LinkButton>} />
@@ -29,14 +31,15 @@ export default async function DeliveriesPage({ searchParams }: PageProps<"/sales
         caption={s.tabs.deliveries}
         rows={rows.map((x) => ({
           id: x.id, no: x.doc_no, noHref: `/sales/deliveries/${x.id}`, date: x.delivery_date, order: x.order?.doc_no, orderHref: x.order ? `/sales/orders/${x.order.id}` : undefined,
-          customer: x.order?.customer ? local(x.order.customer.name, x.order.customer.name_ur) : null, city: x.order?.customer?.city, vehicle: x.vehicle?.registration_no, received: x.received_by, status: x.status,
+          customer: x.order?.customer ? local(x.order.customer.name, x.order.customer.name_ur) : null, city: x.order?.customer?.city, vehicle: x.vehicle?.registration_no, supplier: names.has(x.supplied_by ?? "") ? local(names.get(x.supplied_by ?? "")?.nameEn ?? "", names.get(x.supplied_by ?? "")?.nameUr) : null, received: x.received_by, status: x.status,
         }))}
         columns={[
           { key: "no", label: t.documents.number, kind: "link", primary: true },
           { key: "customer", sub: "city", label: s.customer, kind: "text" },
           { key: "order", label: s.order, kind: "link" },
           { key: "date", label: t.documents.date, kind: "date" },
-          { key: "vehicle", label: s.vehicle, kind: "code", hideBelow: "lg" },
+          { key: "supplier", label: t.supply.supplier, kind: "text" },
+          { key: "vehicle", label: s.vehicle, kind: "code", hideBelow: "2xl" },
           { key: "received", label: s.receivedBy, kind: "text", hideBelow: "xl" },
           { key: "status", label: t.common.status, kind: "status", options: deliveryOptions(t) },
         ]}

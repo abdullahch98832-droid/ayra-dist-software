@@ -46,7 +46,7 @@ export default async function AdvancesPage({ searchParams }: PageProps<"/payroll
           <UrlSelect param="employee" label={p.employee} options={employees.map((e) => ({ value: e.employee_id, label: local(e.full_name, e.full_name_ur) }))} />
         </div>
         {rows.length === 0 ? <EmptyState title={p.advanceEmpty} actions={add} /> : (
-          <ul className="divide-y rounded-xl border bg-card shadow-card">
+          <ul className="divide-y rounded-2xl border bg-card shadow-card">
             {rows.map((a) => {
               const e = names.get(a.employee_id);
               return (

@@ -291,7 +291,7 @@ describe("first administrator provisioning", () => {
       await expect(fresh.as(u, (q) => q("select public.bootstrap_super_admin($1)", [email]))).rejects.toMatchObject({ code: "42501" });
       await expect(fresh.sql("select public.bootstrap_super_admin('nobody@example.com')")).rejects.toThrow(/invite the user first/);
       await fresh.sql("select public.bootstrap_super_admin($1)", [String(email).toUpperCase()]);
-      expect((await fresh.as(u, (q) => q("select * from public.my_permissions()"))).length).toBe(66);
+      expect((await fresh.as(u, (q) => q("select * from public.my_permissions()"))).length).toBe(68);
       const other = await fresh.createUser(null);
       const otherEmail = one(await fresh.sql("select email from auth.users where id = $1", [other])).email;
       await expect(fresh.sql("select public.bootstrap_super_admin($1)", [otherEmail])).rejects.toThrow(/already exists/);

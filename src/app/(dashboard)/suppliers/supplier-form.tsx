@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
 import { saveSupplierAction } from "@/features/parties/supplier-actions";
 import { supplierSchema, type SupplierValues } from "@/features/parties/supplier-schema";
+import { OTHER_VENDORS } from "@/config/vendors";
 import { useI18n } from "@/i18n/context";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import type { ActionResult } from "@/lib/action-result";
@@ -82,7 +83,7 @@ export function SupplierForm({ supplierId, defaults }: { supplierId: string | nu
       </FormSection>
       <FormActions>
         <Button type="submit" size="lg" disabled={pending}>{pending ? t.common.saving : t.common.save}</Button>
-        <Button type="button" size="lg" variant="outline" disabled={pending} onClick={() => router.push("/suppliers")}>{t.common.back}</Button>
+        <Button type="button" size="lg" variant="outline" disabled={pending} onClick={() => router.push(OTHER_VENDORS ? "/suppliers" : "/purchasing/company/account")}>{t.common.back}</Button>
       </FormActions>
     </form>
   );

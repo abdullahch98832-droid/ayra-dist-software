@@ -14,6 +14,7 @@ import { Ltr } from "@/components/shared/bidi";
 import { formatDate } from "@/components/shared/format";
 import { LinkButton } from "@/components/shared/link-button";
 import { StatCard } from "@/components/shared/stat-card";
+import { StatGrid } from "@/components/shared/stat-grid";
 import { SpecTable } from "@/components/tables/spec-table";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -38,11 +39,11 @@ export default async function CollectorPage({ params, searchParams }: PageProps<
         actions={(can(ctx, "receivables.post") || ctx.employeeId === id) && <LinkButton href={`/receivables/cash/deposit?taker=${id}`}><HandCoins aria-hidden />{r.newDeposit}</LinkButton>}
       />
       <div className="grid gap-6">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <StatGrid>
           <StatCard label={r.held} value={money(holder.held)} icon={Wallet} />
           <StatCard label={r.waitingDeposits} value={money(holder.waiting_deposits)} icon={HandCoins} />
           <StatCard label={r.lastCount} value={holder.last_count ? money(holder.last_counted ?? 0) : "—"} icon={Scale} hint={holder.last_count ? <>{formatDate(holder.last_count, locale)} · {r.difference}: {money(holder.last_difference ?? 0)}</> : undefined} />
-        </div>
+        </StatGrid>
         <PeriodFrame key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={r.statement} description={r.statementHint}>
           <SpecTable
             caption={r.statement}

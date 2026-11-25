@@ -14,6 +14,7 @@ import { Ltr } from "@/components/shared/bidi";
 import { formatNumber } from "@/components/shared/format";
 import { LinkButton } from "@/components/shared/link-button";
 import { StatCard } from "@/components/shared/stat-card";
+import { StatGrid } from "@/components/shared/stat-grid";
 import { SpecTable } from "@/components/tables/spec-table";
 import { UrlSelect } from "@/components/tables/url-filters";
 
@@ -47,7 +48,7 @@ export default async function StockPage({ searchParams }: PageProps<"/inventory"
       />
       <div className="grid gap-6">
         {overrideOn && <FormAlert tone="info">{s.overrideOn}</FormAlert>}
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]">
+        <StatGrid>
           <StatCard label={s.productsInStock} value={formatNumber(rows.filter((r) => r.on_hand > 0).length, locale)} icon={Boxes} />
           <StatCard label={s.belowMinimum} value={formatNumber(below, locale)} icon={PackageMinus} tone={below ? "attention" : "default"} href={can(ctx, "reports.view") ? "/reports/low-stock" : undefined} />
           {(negative > 0 || overrideOn) && <StatCard label={s.negative} value={formatNumber(negative, locale)} icon={TriangleAlert} tone={negative ? "attention" : "default"} hint={s.negativeHint} />}
@@ -62,7 +63,7 @@ export default async function StockPage({ searchParams }: PageProps<"/inventory"
               />
             </>
           )}
-        </div>
+        </StatGrid>
         <SpecTable
           caption={s.tabs.stock}
           rows={rows.map((r) => ({

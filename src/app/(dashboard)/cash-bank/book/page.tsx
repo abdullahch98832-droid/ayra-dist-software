@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { documentHref } from "@/features/documents/kinds";
 import { loadAccountBook, loadPaymentAccounts, reportCashAccounts } from "@/features/cash-bank/queries";
 import { businessToday, parsePeriod } from "@/features/dashboard/period";
 import { getT } from "@/i18n/server";
@@ -33,7 +34,7 @@ export default async function AccountBookPage({ searchParams }: PageProps<"/cash
       <PageHeader title={title} />
       {!account ? <EmptyState title={c.empty} description={c.emptyHint} /> : (
         <PeriodFrame key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={account.type === "cash" ? c.cashBook : c.bankBook} description={account.name}>
-          <LedgerTable t={t} local={local} lines={lines} caption={title} exportName={`book-${account.name}-${period.from}-${period.to}`} debitLabel={c.moneyIn} creditLabel={c.moneyOut} canOpen={can(ctx, "accounting.view")}
+          <LedgerTable t={t} local={local} lines={lines} caption={title} exportName={`book-${account.name}-${period.from}-${period.to}`} pdfHref={documentHref(account.type === "cash" ? "cash_book" : "bank_book", { account: account.id, range: "custom", from: period.from, to: period.to })} debitLabel={c.moneyIn} creditLabel={c.moneyOut} canOpen={can(ctx, "accounting.view")}
             toolbar={accounts.length > 1 && <UrlSelect param="account" label={c.chooseAccount} options={accounts.map((a) => ({ value: a.id, label: a.name }))} />} />
         </PeriodFrame>
       )}

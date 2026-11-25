@@ -8,6 +8,7 @@ import { loadPayment, seesAccount } from "@/features/purchasing/queries";
 import { can } from "@/lib/auth/session";
 import { sumPaisa, toPaisa } from "@/lib/utils/money";
 import { ActionButton } from "@/components/documents/action-button";
+import { DocumentLink } from "@/components/documents/document-link";
 import { DocumentStatus } from "@/components/documents/document-status";
 import { Forbidden } from "@/components/layout/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
@@ -35,9 +36,9 @@ export default async function PaymentPage({ params }: PageProps<"/purchasing/[fl
         title={payment.doc_no}
         breadcrumbs={[{ label: p.tabs.payments, href: flowPath(flow, "payments") }]}
         description={<span className="flex flex-wrap items-center gap-3"><DocumentStatus status={payment.status} t={t} /><bdi>{local(payment.supplier.name, payment.supplier.name_ur)}</bdi></span>}
-        actions={payment.status === "posted" && can(ctx, accountPay(flow)) && (
+        actions={<><DocumentLink kind="supplier_receipt" params={{ id }} label={t.docs.pdf} />{payment.status === "posted" && can(ctx, accountPay(flow)) && (
           <ActionButton label={p.voidPayment} icon={<Ban aria-hidden />} variant="outline" action={voidPaymentAction.bind(null, id)} reasonLabel={d.reason} success={p.voided} confirm={{ title: p.voidTitle, description: p.voidHint, tone: "danger" }} />
-        )}
+        )}</>}
       />
       <div className="grid gap-6">
         <SectionCard title={p.payment}>

@@ -39,6 +39,16 @@
   --color-navy: var(--navy);
   --color-navy-deep: var(--navy-deep);
   --color-navy-foreground: var(--navy-foreground);
+  --color-tone-blue: var(--tone-blue);
+  --color-tone-blue-soft: var(--tone-blue-soft);
+  --color-tone-indigo: var(--tone-indigo);
+  --color-tone-indigo-soft: var(--tone-indigo-soft);
+  --color-tone-sky: var(--tone-sky);
+  --color-tone-sky-soft: var(--tone-sky-soft);
+  --color-tone-teal: var(--tone-teal);
+  --color-tone-teal-soft: var(--tone-teal-soft);
+  --color-tone-slate: var(--tone-slate);
+  --color-tone-slate-soft: var(--tone-slate-soft);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -61,15 +71,41 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  --shadow-card: 0 1px 2px rgb(18 38 77 / 0.05), 0 2px 8px -2px rgb(18 38 77 / 0.05);
-  --shadow-overlay: 0 4px 12px -2px rgb(18 38 77 / 0.1), 0 16px 40px -8px rgb(18 38 77 / 0.16);
+  --shadow-card: 0 1px 2px rgb(16 36 76 / 0.04), 0 4px 16px -4px rgb(16 36 76 / 0.07);
+  --shadow-raised: 0 2px 4px rgb(16 36 76 / 0.05), 0 14px 32px -10px rgb(16 36 76 / 0.2);
+  --shadow-overlay: 0 4px 12px -2px rgb(16 36 76 / 0.1), 0 24px 56px -12px rgb(16 36 76 / 0.26);
+  --shadow-action: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 1px 2px rgb(16 36 76 / 0.2), 0 6px 14px -6px rgb(31 86 201 / 0.55);
+
+  --animate-rise: rise 0.4s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  /* Three passes, then still: an endless animation would keep the processor busy on an open page. */
+  --animate-route: route 2.8s linear 3;
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+  @keyframes route {
+    to {
+      stroke-dashoffset: -220;
+    }
+  }
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.7rem;
 
   /* Surfaces: white cards on a cool light grey page. */
-  --background: #f5f7fa;
+  --background: #f4f7fc;
   --foreground: #16233b;
   --card: #ffffff;
   --card-foreground: #16233b;
@@ -78,12 +114,12 @@
   --muted: #f0f3f7;
   --muted-strong: #e4e9f0;
   --muted-foreground: #55627a;
-  --border: #e0e5ed;
-  --input: #cbd3df;
+  --border: #e1e7f0;
+  --input: #c9d2e0;
 
   /* Navy carries headings and the brand; blue is the only interactive colour. */
   --navy: #14284f;
-  --navy-deep: #0d1c3a;
+  --navy-deep: #0a1733;
   --navy-foreground: #ffffff;
   --primary: #1f56c9;
   --primary-hover: #1847ab;
@@ -102,6 +138,22 @@
   --warning: #8a5800;
   --warning-soft: #fdf2da;
 
+  /* Tones tell areas of the business apart (icon tiles). They never carry a state or a chart series. */
+  --tone-blue: #1f56c9;
+  --tone-blue-soft: #e5eefe;
+  --tone-indigo: #4b45c6;
+  --tone-indigo-soft: #ecebfd;
+  --tone-sky: #0a6aa1;
+  --tone-sky-soft: #dff1fb;
+  --tone-teal: #0b7168;
+  --tone-teal-soft: #daf4ef;
+  --tone-slate: #465571;
+  --tone-slate-soft: #e9eef5;
+
+  --gradient-primary: linear-gradient(180deg, #2c66df, #1b4fc0);
+  --gradient-primary-hover: linear-gradient(180deg, #2559cc, #1644a8);
+  --gradient-navy: radial-gradient(120% 140% at 85% -20%, #2a5bc4 0%, #1b3f8b 32%, #122750 62%, #0a1733 100%);
+
   /* Categorical chart order, validated for colour-vision deficiency. Do not reorder or cycle. */
   --chart-1: #1d5fd0;
   --chart-2: #e8793a;
@@ -109,14 +161,14 @@
   --chart-4: #e0a100;
   --chart-5: #7a5af0;
 
-  --sidebar: #ffffff;
-  --sidebar-foreground: #3b4a64;
-  --sidebar-primary: #1f56c9;
+  --sidebar: #0d1d3f;
+  --sidebar-foreground: #c0cce4;
+  --sidebar-primary: #5b94ff;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e9f0fd;
-  --sidebar-accent-foreground: #163f94;
-  --sidebar-border: #e0e5ed;
-  --sidebar-ring: #2f6be6;
+  --sidebar-accent: rgb(255 255 255 / 0.08);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 0.09);
+  --sidebar-ring: #7fabff;
 }
 
 /* ---------------------------------------------------------------------------
@@ -156,12 +208,48 @@
   body {
     @apply bg-background text-foreground;
   }
+  #main-content > * {
+    animation: var(--animate-rise);
+  }
   html[lang="ur"] body {
     line-height: 2;
   }
   ::selection {
-    background: color-mix(in oklch, var(--primary) 18%, transparent);
+    background: color-mix(in srgb, var(--primary) 18%, transparent);
   }
+}
+
+/* Deep navy surface of the sidebar, dashboard banner and sign-in panel. */
+@utility bg-brand {
+  background-color: var(--navy);
+  background-image: var(--gradient-navy);
+}
+@utility bg-sidebar-surface {
+  background-color: var(--sidebar);
+  background-image: radial-gradient(130% 60% at 0% 0%, rgb(64 118 230 / 0.34), transparent 62%), linear-gradient(180deg, #10244d, #0a1733);
+}
+@utility sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.16) transparent;
+}
+/* Filled primary surface: buttons and the active tab. */
+@utility bg-gradient-action {
+  background-color: var(--primary);
+  background-image: var(--gradient-primary);
+}
+/* Surface that reacts to the pointer because it is a link. */
+@utility lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  &:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+    box-shadow: var(--shadow-raised);
+  }
+}
+/* Dot pattern that fades out; decoration behind empty states and banners. */
+@utility dotted {
+  background-image: radial-gradient(currentColor 1px, transparent 1px);
+  background-size: 18px 18px;
 }
 
 /* Unlayered on purpose: these must win over Tailwind utilities. */
@@ -235,6 +323,9 @@ input[lang="ur"] {
   }
   body {
     background: #fff;
+  }
+  #main-content > * {
+    animation: none;
   }
   [data-slot="sidebar"],
   [data-slot="sidebar-gap"],

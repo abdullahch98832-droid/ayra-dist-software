@@ -25,7 +25,7 @@ export function SubNav({ label, items }: { label: string; items: SubNavItem[] })
     nav.current.scrollLeft += tab.left + tab.width / 2 - (bar.left + bar.width / 2);
   }, [pathname]);
   return (
-    <nav ref={nav} aria-label={label} className="no-scrollbar -mx-4 mb-6 overflow-x-auto border-b px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 print:hidden">
+    <nav ref={nav} aria-label={label} className="no-scrollbar mb-6 max-w-full overflow-x-auto rounded-xl border bg-card p-1 shadow-card sm:w-fit print:hidden">
       <ul className="flex w-max gap-1">
         {items.map((item) => {
           const current = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -36,8 +36,8 @@ export function SubNav({ label, items }: { label: string; items: SubNavItem[] })
                 href={item.href}
                 aria-current={current ? "page" : undefined}
                 className={cn(
-                  "block border-b-2 px-3 py-2.5 text-sm whitespace-nowrap outline-none transition-colors focus-visible:bg-accent",
-                  current ? "border-primary font-medium text-primary" : "border-transparent text-muted-foreground hover:border-input hover:text-foreground"
+                  "block rounded-lg px-3.5 py-1.5 text-sm whitespace-nowrap outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/40",
+                  current ? "bg-gradient-action font-medium text-primary-foreground shadow-action" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 )}
               >
                 {item.label}

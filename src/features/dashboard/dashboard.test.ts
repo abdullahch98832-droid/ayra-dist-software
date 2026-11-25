@@ -11,6 +11,8 @@ describe("date filter", () => {
     [{ range: "today" }, today, today],
     [{ range: "yesterday" }, "2026-11-23", "2026-11-23"],
     [{ range: "last7" }, "2026-11-18", today],
+    [{ range: "thisYear" }, "2026-01-01", today],
+    [{ range: "thisWeek" }, "2026-11-23", today],
     [{ range: "lastMonth" }, "2026-10-01", "2026-10-31"],
     [{ range: "last12Months" }, "2025-12-01", today],
     [{ range: "custom", from: "2026-01-05", to: "2026-02-10" }, "2026-01-05", "2026-02-10"],
@@ -64,4 +66,10 @@ describe("change against the previous period", () => {
   ])("%s from %s", (current, previous, expected) => expect(changeFrom(current, previous)).toEqual(expected));
 
   it("has no percentage when the previous period was zero", () => expect(changeFrom(p(5), p(0))).toBeNull());
+});
+
+describe("this week", () => {
+  it.each([["2026-11-23", "2026-11-23"], ["2026-11-29", "2026-11-23"], ["2026-11-30", "2026-11-30"], ["2027-01-01", "2026-12-28"]])("on %s begins on Monday %s", (day, monday) => {
+    expect(parsePeriod({ range: "thisWeek" }, day)).toMatchObject({ from: monday, to: day });
+  });
 });

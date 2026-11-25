@@ -2,6 +2,17 @@
 
 Customers, order takers, orders, deliveries, collections and receivables. Stock moves through the same engine as purchasing and every amount comes from the general ledger. Migration: `20261126100000_sales_distribution.sql`. Rules: [INVENTORY_RULES.md](INVENTORY_RULES.md), [ACCOUNTING_RULES.md](ACCOUNTING_RULES.md).
 
+
+## Suppliers (our staff)
+
+`20261202100000_suppliers.sql`. A supplier is an employee who takes goods to the shops: `/supply-team`. Order takers and suppliers share `order_takers` (`takes_orders`, `is_supplier`), because cash they collect is held in their name until it is deposited; one person can be both.
+
+- The supplier is chosen on dispatch (required once a supplier exists) and can be changed by the office while the goods are on the way (`assign_supplier`).
+- `complete_delivery` records the shop's receipt **and the money in one step**: it settles the invoice of the delivery after anything that came back; more stays on the shop's account. Cash is held by the supplier, or goes to a cash or bank account (reference needed for transfers and cheques).
+- The supplier confirms only own deliveries and only in their own name. Their cash is posted at once; a payment into an account waits for the office, as does anything recorded without `receivables.post`.
+- Role **Supplier** (`dashboard.view`, `sales.view`, `receivables.collect`): own deliveries with order and shop, what the shop pays (`delivery_money`), own cash. Nothing else.
+- Reports: `supply` (every delivery with order taker, supplier, receiver and money) and `supply-work` (per supplier).
+
 ## Screens
 
 | Screen | Content | Needs |

@@ -18,10 +18,10 @@ export const PERMISSIONS = [
   "vehicles.view", "vehicles.manage",
   "expenses.view", "expenses.create", "expenses.post",
   "payroll.view", "payroll.manage", "payroll.post", "payroll.pay",
-  "cash_bank.view", "cash_bank.manage", "cash_bank.transfer", "cash_bank.close",
+  "cash_bank.view", "cash_bank.manage", "cash_bank.transfer", "cash_bank.close", "cash_bank.reconcile",
   "accounting.view", "accounting.journal", "accounting.manage", "accounting.close",
   "costs.view",
-  "reports.view", "reports.financial",
+  "reports.view", "reports.export", "reports.financial",
   "audit.view",
   "settings.manage",
 ] as const;

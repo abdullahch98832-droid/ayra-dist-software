@@ -8,7 +8,7 @@
 |---|---|---|
 | `/expenses` | Register with filters, new voucher, approval, categories | `expenses.view`; `expenses.create` for own vouchers; `expenses.post` to approve, reject and void |
 | `/payroll` | Payroll of a month, payments, employees' statements, advances | `payroll.view`; `payroll.manage`, `payroll.post`, `payroll.pay` |
-| `/cash-bank` | Accounts, cash and bank books, transfers, vouchers, daily closing | `cash_bank.view`; `cash_bank.manage`, `cash_bank.transfer`, `cash_bank.close`; vouchers need `accounting.journal` |
+| `/cash-bank` | Accounts, cash and bank books, transfers, vouchers, daily closing | `cash_bank.view`; `cash_bank.manage`, `cash_bank.transfer`, `cash_bank.close`, `cash_bank.reconcile`; vouchers need `accounting.journal` |
 | `/accounting` | Chart of accounts, general ledger, journal, trial balance, profit and loss, balance sheet, cash flow, periods, checks | `accounting.view`, `reports.financial`, `accounting.journal`, `accounting.close` |
 | `/reports/expenses`, `/reports/payroll` | Reports with print and CSV | as above |
 
@@ -49,6 +49,10 @@ Each account shows opening balance, receipts, payments, deposits, withdrawals, t
 ### Daily cash closing
 
 Count the cash, compare it with the ledger, explain any difference. The difference is booked to **Cash over and short** only if that is chosen. A closed day, and every day before it, accepts no entries in that account. Only the latest closing can be reopened, with a reason.
+
+### Bank reconciliation
+
+A bank statement is compared with the ledger: tick what the bank has seen and complete when the difference is zero. Only the newest can be reopened, with a reason. Nothing is posted. See REPORTS.md.
 
 ### Period closing
 

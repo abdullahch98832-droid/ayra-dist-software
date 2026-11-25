@@ -9,9 +9,11 @@ import type { Locale } from "@/types";
 import { BarListCard } from "@/components/charts/bar-list";
 import { ColumnChartCard } from "@/components/charts/column-chart";
 import { LineChartCard } from "@/components/charts/line-chart";
+import { Sparkline } from "@/components/charts/sparkline";
 import type { ChartPoint } from "@/components/charts/types";
 import { Ltr } from "@/components/shared/bidi";
 import { formatBucket, formatNumber } from "@/components/shared/format";
+import { StatGrid } from "@/components/shared/stat-grid";
 import { StatCard } from "@/components/shared/stat-card";
 
 type Goodness = "higher" | "lower" | "neutral";
@@ -24,7 +26,7 @@ function ChangeLine({ current, previous, better, t, locale }: { current: string;
   const sign = change.direction === "down" ? "−" : change.direction === "up" ? "+" : "";
   const percent = `${sign}${formatNumber(change.permille / 10, locale)}`;
   return (
-    <p className={cn("flex items-center gap-1 text-xs font-medium", good === null ? "text-muted-foreground" : good ? "text-success" : "text-destructive")}>
+    <p className={cn("inline-flex items-center gap-1 rounded-full px-2 whitespace-nowrap py-0.5 text-xs font-medium", good === null ? "bg-muted text-muted-foreground" : good ? "bg-success-soft text-success" : "bg-destructive-soft text-destructive")}>
       <Icon className="size-3.5 rtl:-scale-x-100" aria-hidden />
       <span>{fill(t.dashboard.vsPrevious, { percent: isolateLtr(`${percent}%`) })}</span>
     </p>
@@ -44,6 +46,8 @@ export function PerformanceView({ performance, t, locale }: { performance: Perfo
       <StatCard
         key={key} label={label} icon={icon} hint={hint}
         value={<Ltr className={toPaisa(value) < BigInt(0) ? "text-destructive" : undefined}>{rs(value)}</Ltr>}
+        visual={key === "sales" || key === "expenses" || key === "gross_profit" || key === "net_profit"
+          ? <Sparkline values={series.map((s) => Number(s[key] ?? 0))} className="h-9 w-24 min-w-0 shrink" /> : undefined}
         footer={<ChangeLine current={value} previous={previous[key] ?? "0"} better={better} t={t} locale={locale} />}
       />
     );
@@ -84,7 +88,7 @@ export function PerformanceView({ performance, t, locale }: { performance: Perfo
 
   return (
     <>
-      {figures.length > 0 && <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{figures}</div>}
+      {figures.length > 0 && <StatGrid>{figures}</StatGrid>}
       <div className="grid gap-6 lg:grid-cols-2">
         {performance.sales_scope && (
           <ColumnChartCard title={c.sales} description={c.salesHint} categoryLabel={c.date} emptyText={c.emptyPeriod}
