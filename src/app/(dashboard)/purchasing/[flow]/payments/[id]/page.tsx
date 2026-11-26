@@ -31,6 +31,8 @@ export default async function PaymentPage({ params }: PageProps<"/purchasing/[fl
   const p = t.purchasing;
   const d = t.documents;
   const settled = sumPaisa(payment.supplier_payment_allocations.map((a) => toPaisa(a.amount)));
+  // Paid by more than one person: each with their share, in place of one account.
+  const split = Array.isArray(payment.contributors) && payment.contributors.length > 0;
   return (
     <>
       <PageHeader
@@ -46,13 +48,12 @@ export default async function PaymentPage({ params }: PageProps<"/purchasing/[fl
           <DescriptionList items={[
             { label: d.date, value: formatDate(payment.payment_date, locale) },
             { label: p.paymentAmount, value: <Money amount={toPaisa(payment.amount)} locale={locale} /> },
-            { label: p.paidFrom, value: payment.account?.name },
+            { label: p.paidFrom, value: split ? <ContributorsList contributors={payment.contributors} locale={locale} /> : payment.account?.name },
             { label: p.method, value: p.methods[payment.method] },
             { label: d.reference, value: payment.reference && <Ltr>{payment.reference}</Ltr> },
             { label: p.onAccount, value: payment.status === "posted" ? <Money amount={toPaisa(payment.amount) - settled} locale={locale} /> : null },
             { label: d.journal, value: payment.journal && <Ltr>{payment.journal.doc_no}</Ltr> },
             { label: d.notes, value: payment.notes },
-            ...(Array.isArray(payment.contributors) && payment.contributors.length > 0 ? [{ label: d.split.paidBy, value: <ContributorsList contributors={payment.contributors} locale={locale} /> }] : []),
           ]} />
         </SectionCard>
         {payment.supplier_payment_allocations.length > 0 && (

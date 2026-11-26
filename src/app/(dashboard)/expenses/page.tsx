@@ -41,12 +41,12 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/expense
         caption={x.title}
         rows={rows.map((e) => ({
           id: e.id, no: e.doc_no, noHref: `/expenses/${e.id}`, description: e.description, receipt: e.receipt_path ? null : x.noReceipt, date: e.expense_date, category: e.category && local(e.category.name_en, e.category.name_ur), payee: e.payee, vehicle: e.vehicle?.registration_no, job: e.job?.doc_no,
-          jobHref: e.job && can(ctx, "sol.view") ? `/sol/jobs/${e.job.id}` : undefined, account: peopleNames(e.contributors) ?? e.account?.name, accountSub: peopleNames(e.contributors) ? e.account?.name : null, amount: e.amount, status: expenseStatus(e),
+          jobHref: e.job && can(ctx, "sol.view") ? `/sol/jobs/${e.job.id}` : undefined, account: peopleNames(e.contributors) ?? e.account?.name, amount: e.amount, status: expenseStatus(e),
           ...(editable(e) ? { edit: x.edit, editHref: `/expenses/${e.id}/edit` } : {}),
         }))}
         columns={[
           { key: "no", sub: "receipt", label: x.voucherNo, kind: "link", primary: true }, { key: "date", label: x.date, kind: "date" }, { key: "category", sub: "description", label: x.category, kind: "text" }, { key: "payee", label: x.payee, kind: "text", hideBelow: "lg" },
-          { key: "vehicle", label: x.vehicle, kind: "code", hideBelow: "2xl" }, { key: "job", label: x.job, kind: "link", hideBelow: "2xl" }, { key: "account", sub: "accountSub", label: x.paidFrom, kind: "text", hideBelow: "xl" }, { key: "amount", label: x.amount, kind: "money" },
+          { key: "vehicle", label: x.vehicle, kind: "code", hideBelow: "2xl" }, { key: "job", label: x.job, kind: "link", hideBelow: "2xl" }, { key: "account", label: x.paidFrom, kind: "text", hideBelow: "xl" }, { key: "amount", label: x.amount, kind: "money" },
           { key: "status", label: t.common.status, kind: "status", options: expenseOptions(t) },
           ...(rows.some(editable) ? [{ key: "edit", label: "", kind: "action" as const }] : []),
         ]}

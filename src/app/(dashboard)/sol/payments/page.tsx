@@ -38,13 +38,13 @@ export default async function SolPaymentsPage({ searchParams }: PageProps<"/sol/
         caption={s.tabs.payments}
         rows={rows.map((p) => ({
           id: p.id, no: p.doc_no, noHref: `/receivables/payments/${p.id}`, reference: p.reference, date: p.payment_date, job: p.job?.doc_no, jobHref: p.job ? `/sol/jobs/${p.job.id}` : undefined,
-          client: p.customer ? local(p.customer.name, p.customer.name_ur) : null, method: t.purchasing.methods[p.method], identifier: p.payer_account, account: peopleNames(p.contributors) ?? p.account?.name, accountSub: peopleNames(p.contributors) ? p.account?.name : null, amount: p.amount,
+          client: p.customer ? local(p.customer.name, p.customer.name_ur) : null, method: t.purchasing.methods[p.method], identifier: p.payer_account, account: peopleNames(p.contributors) ?? p.account?.name, amount: p.amount,
           settled: p.status === "posted" && p.sol_job_id ? toDbAmount(settledFor(p, p.sol_job_id)) : null, status: p.status,
           kind: isAdvance(p, p.job) ? s.advance : s.partial,
         }))}
         columns={[
           { key: "no", sub: "reference", label: t.documents.number, kind: "link", primary: true }, { key: "date", sub: "kind", label: t.documents.date, kind: "date" }, { key: "job", label: s.job, kind: "link" },
-          { key: "client", label: s.client, kind: "text", hideBelow: "lg" }, { key: "method", sub: "identifier", label: s.method, kind: "text", hideBelow: "lg" }, { key: "account", sub: "accountSub", label: s.account, kind: "text", hideBelow: "xl" },
+          { key: "client", label: s.client, kind: "text", hideBelow: "lg" }, { key: "method", sub: "identifier", label: s.method, kind: "text", hideBelow: "lg" }, { key: "account", label: s.account, kind: "text", hideBelow: "xl" },
           { key: "amount", label: s.amount, kind: "money" }, { key: "settled", label: s.received, kind: "money", hideBelow: "2xl" }, { key: "status", label: t.common.status, kind: "status", options: documentOptions(t) },
         ]}
         server={{ page: filter.page, pageSize: LIST_PAGE, total }}

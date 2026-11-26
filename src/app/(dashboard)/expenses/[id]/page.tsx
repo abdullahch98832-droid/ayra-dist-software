@@ -39,6 +39,8 @@ export default async function ExpensePage({ params }: PageProps<"/expenses/[id]"
   const status = expenseStatus(e);
   const [receipt, names] = await Promise.all([receiptUrl(e.receipt_path), userNames(ctx, [e.created_by, e.posted_by])]);
   const decided = e.posted_by ? names.get(e.posted_by) : null;
+  // Paid by more than one person: each with their share, in place of one account.
+  const split = Array.isArray(e.contributors) && e.contributors.length > 0;
   return (
     <>
       <PageHeader
@@ -68,7 +70,7 @@ export default async function ExpensePage({ params }: PageProps<"/expenses/[id]"
             { label: x.voucherNo, value: <Ltr>{e.doc_no}</Ltr> }, { label: x.category, value: e.category && local(e.category.name_en, e.category.name_ur) },
             { label: x.amount, value: <Money amount={toPaisa(e.amount)} locale={locale} className="font-semibold" /> }, { label: x.date, value: formatDate(e.expense_date, locale) },
             { label: x.payee, value: e.payee }, { label: x.description, value: e.description },
-            { label: x.method, value: e.method && t.purchasing.methods[e.method] }, { label: x.paidFrom, value: e.account?.name }, { label: x.reference, value: e.reference && <Ltr>{e.reference}</Ltr> },
+            { label: x.method, value: e.method && t.purchasing.methods[e.method] }, { label: x.paidFrom, value: split ? <ContributorsList contributors={e.contributors} locale={locale} /> : e.account?.name }, { label: x.reference, value: e.reference && <Ltr>{e.reference}</Ltr> },
             {
               label: x.receipt,
               value: receipt ? <a href={receipt} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-primary hover:underline"><Paperclip className="size-4" aria-hidden />{x.openReceipt}</a>
@@ -81,7 +83,6 @@ export default async function ExpensePage({ params }: PageProps<"/expenses/[id]"
             ...(e.job ? [{ label: x.job, value: can(ctx, "sol.view") ? <Link href={`/sol/jobs/${e.job.id}`} className="text-primary hover:underline"><Ltr>{e.job.doc_no}</Ltr></Link> : <Ltr>{e.job.doc_no}</Ltr> }] : []),
             ...(e.litres !== null ? [{ label: x.litres, value: formatNumber(e.litres, locale) }] : []), ...(e.odometer !== null ? [{ label: x.odometer, value: formatNumber(e.odometer, locale) }] : []),
             { label: d.journal, value: e.journal && <Ltr>{e.journal.doc_no}</Ltr> },
-            ...(Array.isArray(e.contributors) && e.contributors.length > 0 ? [{ label: d.split.paidBy, value: <ContributorsList contributors={e.contributors} locale={locale} /> }] : []),
           ]} />
         </SectionCard>
         {!e.receipt_path && (own || poster) && (status === "draft" || status === "posted") && <AttachReceipt expenseId={id} />}

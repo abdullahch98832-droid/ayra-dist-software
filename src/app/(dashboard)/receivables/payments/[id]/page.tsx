@@ -46,6 +46,8 @@ export default async function PaymentPage({ params }: PageProps<"/receivables/pa
   const settle = posted && poster && left > BigInt(0);
   const [names, open] = await Promise.all([takerNames(), settle || asked.length ? loadOpenInvoices(payment.customer_id) : []]);
   const collector = names.get(payment.collected_by ?? "");
+  // Received by more than one person: each with their share, in place of one account.
+  const split = Array.isArray(payment.contributors) && payment.contributors.length > 0;
   return (
     <>
       <PageHeader
@@ -69,7 +71,7 @@ export default async function PaymentPage({ params }: PageProps<"/receivables/pa
             { label: r.date, value: formatDate(payment.payment_date, locale) },
             { label: r.amount, value: <Money amount={toPaisa(payment.amount)} locale={locale} className="font-semibold" /> },
             { label: r.method, value: t.purchasing.methods[payment.method] },
-            { label: r.destination, value: payment.account?.name ?? (payment.financial_account_id ? null : r.heldByTaker) },
+            { label: r.destination, value: split ? <ContributorsList contributors={payment.contributors} locale={locale} /> : payment.account?.name ?? (payment.financial_account_id ? null : r.heldByTaker) },
             ...(payment.payer_account ? [{ label: t.sol.payerAccount, value: <Ltr>{payment.payer_account}</Ltr> }] : []),
             ...(payment.sol_job ? [{ label: t.sol.job, value: can(ctx, "sol.view") ? <Link href={`/sol/jobs/${payment.sol_job.id}`} className="text-primary hover:underline"><Ltr>{payment.sol_job.doc_no}</Ltr></Link> : <Ltr>{payment.sol_job.doc_no}</Ltr> }] : []),
             { label: r.collectedBy, value: collector ? local(collector.nameEn, collector.nameUr) : payment.collected_by ? null : r.nobody },
@@ -77,7 +79,6 @@ export default async function PaymentPage({ params }: PageProps<"/receivables/pa
             ...(posted ? [{ label: r.onAccount, value: <Money amount={left} locale={locale} /> }] : []),
             { label: d.journal, value: payment.journal && <Ltr>{payment.journal.doc_no}</Ltr> },
             { label: d.notes, value: payment.notes },
-            ...(Array.isArray(payment.contributors) && payment.contributors.length > 0 ? [{ label: d.split.paidBy, value: <ContributorsList contributors={payment.contributors} locale={locale} /> }] : []),
           ]} />
         </SectionCard>
         {payment.customer_payment_allocations.length > 0 && (
