@@ -49,7 +49,13 @@ export interface DocModel {
   note?: Bi;
 }
 
-export interface Letterhead { name: string; nameUr: string; subtitle: Bi; address: Bi; phone: string; email: string; ntn: string }
+export interface Letterhead {
+  name: string; nameUr: string; subtitle: Bi; address: Bi; phone: string; email: string; ntn: string;
+  /** The business's logo, a JPEG on its own navy background; without it a lettered emblem stands in. */
+  logo?: PdfImage;
+}
+
+import type { PdfImage } from "./writer";
 
 export interface RenderOptions {
   language: DocLanguage;

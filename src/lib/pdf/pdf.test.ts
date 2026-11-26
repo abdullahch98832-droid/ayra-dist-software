@@ -1,15 +1,18 @@
 // Every PDF here is read back by pdf.js, a reader that shares no code with the writer.
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import type { TextItem } from "pdfjs-dist/types/src/display/api";
 import type { Bi, DocLanguage, DocModel } from "./model";
 import { renderPdf } from "./render";
 import { shape } from "./shape";
 import { layoutText, linesWidth } from "./text";
+import { jpegImage } from "./writer";
 
 const b = (en: string, ur: string): Bi => ({ en, ur });
 const options = (language: DocLanguage) => ({
   language, title: "Test", created: new Date("2026-11-25T00:00:00Z"),
-  letterhead: { name: "AYRA HAPPINESS", nameUr: "آئرا ہیپینیس", subtitle: b("Distributor of products", "مصنوعات کے ڈسٹری بیوٹر"), address: b("Lahore", "لاہور"), phone: "042-1234567", email: "", ntn: "1234567-8" },
+  letterhead: { name: "AM TRADERS", nameUr: "اے ایم ٹریڈرز", subtitle: b("Distributor of products", "مصنوعات کے ڈسٹری بیوٹر"), address: b("Lahore", "لاہور"), phone: "042-1234567", email: "", ntn: "1234567-8" },
   words: { page: b("Page {page} of {pages}", "صفحہ {page} از {pages}"), ntn: b("NTN", "این ٹی این"), printed: b("Printed", "پرنٹ") },
 });
 const amount = (i: number) => `${(1234 * (i + 1)).toLocaleString("en")}.50`;
@@ -144,5 +147,24 @@ describe("several documents in one file", () => {
     const { text } = await read(renderPdf([{ ...model(3), watermark: b("DRAFT", "مسودہ") }], options("en")));
     expect(text[0]).toContain("DRAFT");
     expect(text[0]).toContain("1,234.50");
+  });
+});
+
+describe("the logo", () => {
+  const logo = jpegImage(new Uint8Array(readFileSync(path.join(process.cwd(), "src/lib/pdf/brand/am-traders.jpg"))));
+
+  it("is read from the JPEG as it is", () => {
+    expect([logo.width, logo.height]).toEqual([900, 492]);
+  });
+
+  it("is embedded once for all pages, the text still intact", async () => {
+    const bytes = renderPdf([model(70)], { ...options("en"), letterhead: { ...options("en").letterhead, logo } });
+    const file = raw(bytes);
+    expect(file.match(/\/Subtype \/Image /g)).toHaveLength(1);
+    expect(file).toContain("/Filter /DCTDecode");
+    const { pages, text } = await read(bytes);
+    expect(pages.length).toBeGreaterThan(1);
+    expect(text[0]).toContain("AM TRADERS");
+    expect(text[0]).toContain("INV-000123");
   });
 });

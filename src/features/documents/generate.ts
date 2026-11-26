@@ -3,6 +3,7 @@ import { APP_CONFIG } from "@/config/app";
 import { can, type SessionContext } from "@/lib/auth/session";
 import { uuidParam } from "@/lib/page-context";
 import { DOC_LANGUAGES, type DocLanguage, type DocModel } from "@/lib/pdf/model";
+import { letterheadLogo } from "@/lib/pdf/brand";
 import { renderPdf } from "@/lib/pdf/render";
 import type { Locale } from "@/types";
 import { fill } from "@/i18n/format";
@@ -51,7 +52,7 @@ export async function generateDocument(kind: DocumentKind, ctx: SessionContext, 
     title: [(kind === "report" ? list[0]?.title ?? bi((t) => t.docs.kinds.report) : bi((t) => t.docs.kinds[kind]))[language === "ur" ? "ur" : "en"], note].filter(Boolean).join(" "),
     created,
     letterhead: {
-      name, nameUr: settings.company_name_ur, subtitle, address: { en: settings.company_address, ur: settings.company_address_ur }, phone: settings.company_phone, email: settings.company_email, ntn: settings.company_ntn,
+      name, nameUr: settings.company_name_ur, logo: letterheadLogo(), subtitle, address: { en: settings.company_address, ur: settings.company_address_ur }, phone: settings.company_phone, email: settings.company_email, ntn: settings.company_ntn,
     },
     words: { page: bi((t) => t.docs.page), ntn: bi((t) => t.docs.labels.ntn), printed: { en: printed("en", subtitle.en), ur: printed("ur", subtitle.ur) } },
   });

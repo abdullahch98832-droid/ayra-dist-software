@@ -1,4 +1,4 @@
-# AYRA HAPPINESS — Distribution Management System
+# AM TRADERS — Distribution Management System
 
 Business management for a distribution company: purchases from the Ayra company and suppliers, warehouse and inventory, sales and deliveries, SOL, expenses, payroll, cash/bank and accounting. English and Urdu (RTL).
 

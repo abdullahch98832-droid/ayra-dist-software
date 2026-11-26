@@ -9,7 +9,7 @@ import supplyModule from "./modules/supply.en";
 
 const en = {
   common: {
-    appName: "AYRA HAPPINESS",
+    appName: "AM TRADERS",
     subtitle: "Distributor Management System",
     loading: "Loading...",
     save: "Save",

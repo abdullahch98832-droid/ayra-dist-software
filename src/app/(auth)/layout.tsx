@@ -16,7 +16,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
       <div className="grid flex-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
         <aside className="bg-brand relative hidden overflow-hidden text-white lg:flex lg:flex-col lg:gap-8 lg:p-12">
           <span aria-hidden className="dotted pointer-events-none absolute inset-0 text-white/10 [mask-image:radial-gradient(60%_60%_at_50%_45%,black,transparent)]" />
-          <Brand subtitle={t.common.subtitle} tone="white" size="lg" className="relative" />
+          <Brand subtitle={t.common.subtitle} full className="relative" />
           <div className="relative -mx-12 min-h-40 flex-1"><RouteLines className="absolute inset-0 size-full" /></div>
           <div className="relative max-w-lg">
             <p className="font-heading text-3xl leading-tight text-balance xl:text-4xl">{t.auth.brandHeadline}</p>

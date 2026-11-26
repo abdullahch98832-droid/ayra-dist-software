@@ -121,7 +121,22 @@ class Renderer {
     return true;
   }
 
+  /** Width of the emblem `height` points high: the logo keeps its proportions. */
+  private emblemWidth(height: number) {
+    const logo = this.options.letterhead.logo;
+    return logo ? (height * logo.width) / logo.height : height;
+  }
+
   private emblem(x: number, y: number, size: number) {
+    const logo = this.options.letterhead.logo;
+    if (logo) {
+      // The logo is made for navy: a navy panel with rounded corners, the picture just inside it.
+      const width = this.emblemWidth(size);
+      const inset = Math.max(1, size * 0.04);
+      this.page.rect(x, y, width, size, { fill: NAVY, radius: size * 0.14 });
+      this.page.image(logo, x + inset, y + inset, width - inset * 2, size - inset * 2);
+      return;
+    }
     this.page.rect(x, y, size, size, { fill: NAVY, radius: size * 0.24 });
     const line = layoutText("A", { size: size * 0.6, heading: true }, 100, "ltr")[0];
     if (line) this.page.text(line, x + (size - line.width) / 2, y + size * 0.71, WHITE);
@@ -130,10 +145,11 @@ class Renderer {
   private letterhead() {
     const { letterhead: l, words } = this.options;
     const top = 34;
-    const mark = 40;
+    const mark = this.options.letterhead.logo ? 60 : 40;
+    const markWidth = this.emblemWidth(mark);
     const width = this.x1 - this.x0;
-    this.emblem(this.rtl ? this.x1 - mark : this.x0, top, mark);
-    const [bl, br] = this.rtl ? [this.x0 + width * 0.44, this.x1 - mark - 11] : [this.x0 + mark + 11, this.x0 + width * 0.56];
+    this.emblem(this.rtl ? this.x1 - markWidth : this.x0, top, mark);
+    const [bl, br] = this.rtl ? [this.x0 + width * 0.44, this.x1 - markWidth - 11] : [this.x0 + markWidth + 11, this.x0 + width * 0.56];
     let y = this.draw(this.lines(l.name, { size: 18, heading: true }, br - bl, NAVY, true), bl, br, top - 1, this.start);
     if ((this.rtl || this.both) && l.nameUr) y = this.draw(this.lines(l.nameUr, { size: 11, bold: true }, br - bl, NAVY, false), bl, br, y, this.start);
     // Whose paper this is: the distributor's.
@@ -173,9 +189,10 @@ class Renderer {
 
   private runningHead() {
     const top = 26;
-    this.emblem(this.rtl ? this.x1 - 18 : this.x0, top, 18);
+    const markWidth = this.emblemWidth(18);
+    this.emblem(this.rtl ? this.x1 - markWidth : this.x0, top, 18);
     const name = this.lines(this.options.letterhead.name, { size: 10, heading: true }, 200, NAVY, true);
-    this.draw(name, this.x0 + 25, this.x1 - 25, top + (18 - name.height) / 2, this.start);
+    this.draw(name, this.x0 + markWidth + 7, this.x1 - markWidth - 7, top + (18 - name.height) / 2, this.start);
     const title = this.rtl ? this.model.title.ur : this.model.title.en;
     const text = this.lines(this.model.number ? `${title}   ⁦${this.model.number}⁩` : title, { size: 9, bold: true }, 320, MUTED, false);
     this.draw(text, this.x0, this.x1, top + (18 - text.height) / 2, this.end);

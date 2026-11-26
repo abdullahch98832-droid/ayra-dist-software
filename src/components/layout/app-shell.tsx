@@ -12,6 +12,7 @@ import { LanguageMenu } from "./language-menu";
 import { NotificationsMenu } from "./notifications-menu";
 import { SearchPalette } from "./search-palette";
 import { UserMenu, type ShellUser } from "./user-menu";
+import { BrandMark } from "@/components/layout/brand";
 
 export function AppShell({
   user, permissions, notifications, sidebarOpen, databaseUpdate, children,
@@ -44,7 +45,7 @@ export function AppShell({
           </div>
         </header>
         <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-[90rem] flex-1 px-4 py-6 outline-none sm:px-6 lg:px-8 print:max-w-none print:p-0">
-          <p className="hidden font-heading text-lg text-navy print:block">{APP_CONFIG.name}</p>
+          <p className="hidden items-center gap-2 font-heading text-lg text-navy print:flex"><BrandMark className="size-9" />{APP_CONFIG.name}</p>
           <DatabaseUpdateProvider value={databaseUpdate}>
             <DatabaseUpdateBanner />
             {children}

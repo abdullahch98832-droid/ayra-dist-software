@@ -78,6 +78,12 @@ export class Page {
     this.content.push("q", `${rgb(color)} RG ${num(width)} w${dash ? ` [${dash.map(num).join(" ")}] 0 d` : ""}`, `${num(x1)} ${this.y(y1)} m ${num(x2)} ${this.y(y2)} l S`, "Q");
   }
 
+  /** Draws a JPEG image into the box whose top left corner is (x, y). */
+  image(image: PdfImage, x: number, y: number, width: number, height: number) {
+    const name = this.pdf.useImage(image);
+    this.content.push("q", `${num(width)} 0 0 ${num(height)} ${num(x)} ${this.y(y + height)} cm`, `/${name} Do`, "Q");
+  }
+
   /** Draws a laid out line with its left edge at `x`. */
   text(line: Line, x: number, baseline: number, color: Color) {
     for (const piece of line.pieces) this.content.push(...this.piece(piece, x + piece.x, this.height - baseline, color));
@@ -120,13 +126,42 @@ export class Page {
   }
 }
 
+/** A baseline JPEG in RGB, embedded as it is. */
+export interface PdfImage { data: Uint8Array; width: number; height: number }
+
+/** Width and height of a JPEG, read from its frame header. */
+export function jpegImage(data: Uint8Array): PdfImage {
+  let at = 2;
+  while (at + 9 < data.length) {
+    if (data[at] !== 0xff) throw new Error("Not a JPEG");
+    const marker = data[at + 1] ?? 0;
+    const length = ((data[at + 2] ?? 0) << 8) | (data[at + 3] ?? 0);
+    if (marker >= 0xc0 && marker <= 0xc2) {
+      return { data, height: ((data[at + 5] ?? 0) << 8) | (data[at + 6] ?? 0), width: ((data[at + 7] ?? 0) << 8) | (data[at + 8] ?? 0) };
+    }
+    at += 2 + length;
+  }
+  throw new Error("JPEG without a frame header");
+}
+
 export interface PdfInfo { title: string; author: string; creator: string; language: string; created: Date }
 
 /** A PDF 1.7 file with embedded, subset fonts. */
 export class PdfDocument {
   readonly pages: Page[] = [];
   private fonts = new Map<FontKey, EmbeddedFont>();
+  private images = new Map<PdfImage, string>();
   constructor(private info: PdfInfo) {}
+
+  /** The resource name of an image, embedded once however often it is drawn. */
+  useImage(image: PdfImage): string {
+    let name = this.images.get(image);
+    if (!name) {
+      name = `Im${this.images.size + 1}`;
+      this.images.set(image, name);
+    }
+    return name;
+  }
 
   embed(key: FontKey): EmbeddedFont {
     let font = this.fonts.get(key);
@@ -157,7 +192,8 @@ export class PdfDocument {
     const catalog = reserve();
     const tree = reserve();
     const fontIds = [...this.fonts.values()].map((font) => `/${font.name} ${this.writeFont(font, add, stream)} 0 R`);
-    const resources = add(`<</Font <<${fontIds.join(" ")}>> /ProcSet [/PDF /Text]>>`);
+    const imageIds = [...this.images].map(([image, name]) => `/${name} ${stream(image.data, ` /Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode`, false)} 0 R`);
+    const resources = add(`<</Font <<${fontIds.join(" ")}>>${imageIds.length ? ` /XObject <<${imageIds.join(" ")}>>` : ""} /ProcSet [/PDF /Text /ImageC]>>`);
     const kids = this.pages.map((page) => {
       const content = stream(encoder.encode(page.content.join("\n")));
       return add(`<</Type /Page /Parent ${tree} 0 R /MediaBox [0 0 ${num(page.width)} ${num(page.height)}] /Resources ${resources} 0 R /Contents ${content} 0 R>>`);

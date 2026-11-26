@@ -21,6 +21,8 @@ export default function GlobalError({ error, retry }: { error: unknown; retry: (
       <body style={{ margin: 0, minHeight: "100vh", display: "grid", placeItems: "center", padding: 24, background: "#f5f7fa", color: "#16233b", fontFamily: "system-ui, sans-serif", textAlign: "center" }}>
         <title>{t.states.errorTitle}</title>
         <div style={{ maxWidth: 440 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- the error page renders without the app's image pipeline */}
+          <img src={APP_CONFIG.logo.mark} alt="" width={56} height={56} style={{ borderRadius: 12 }} />
           <p dir="ltr" style={{ color: "#14284f", letterSpacing: "0.08em" }}>{APP_CONFIG.name}</p>
           <h1 style={{ fontSize: 20, color: "#14284f" }}>{t.states.errorTitle}</h1>
           <p style={{ color: "#55627a", lineHeight: 1.8 }}>{t.states.errorHint}</p>

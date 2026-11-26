@@ -10,7 +10,7 @@ import supplyModule from "./modules/supply.ur";
 
 const ur: Dictionary = {
   common: {
-    appName: "آئرا ہیپینیس",
+    appName: "اے ایم ٹریڈرز",
     subtitle: "ڈسٹری بیوٹر مینجمنٹ سسٹم",
     loading: "لوڈ ہو رہا ہے...",
     save: "محفوظ کریں",

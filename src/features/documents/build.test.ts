@@ -30,7 +30,7 @@ async function text(bytes: Uint8Array) {
 }
 const render = (kind: DocumentKind, data: unknown, language: DocLanguage) => renderPdf([buildDocument(kind, documentSchema.parse(data), settings)], {
   language, title: kind, created: new Date("2026-11-26T00:00:00Z"),
-  letterhead: { name: "AYRA HAPPINESS", nameUr: "", subtitle: { en: "Distributor", ur: "ڈسٹری بیوٹر" }, address: { en: "", ur: "" }, phone: "", email: "", ntn: "" },
+  letterhead: { name: "AM TRADERS", nameUr: "", subtitle: { en: "Distributor", ur: "ڈسٹری بیوٹر" }, address: { en: "", ur: "" }, phone: "", email: "", ntn: "" },
   words: { page: { en: "Page {page} of {pages}", ur: "صفحہ {page} از {pages}" }, ntn: { en: "NTN", ur: "این ٹی این" }, printed: { en: "Printed", ur: "پرنٹ" } },
 });
 

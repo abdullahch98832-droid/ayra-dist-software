@@ -1,4 +1,4 @@
--- Read-only. Compares this database with the migrations up to 20261208100000_report_people.sql.
+-- Read-only. Compares this database with the migrations up to 20261209100000_am_traders.sql.
 -- Result "ok" = identical. Any other row names something that differs or is missing.
 with expected(kind, name, hash) as (values
   ('columns', 'public.account_openings', 'bfd02c1e3aabcacb1fc52284325eea16'),

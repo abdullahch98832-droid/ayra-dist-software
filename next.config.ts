@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   // HarfBuzz is WebAssembly: it is loaded from node_modules, and traced together with the fonts of the documents.
   serverExternalPackages: ["harfbuzzjs"],
   outputFileTracingIncludes: {
-    "/documents/**": ["./src/lib/pdf/fonts/*.ttf", "./node_modules/harfbuzzjs/dist/*"],
+    "/documents/**": ["./src/lib/pdf/fonts/*.ttf", "./src/lib/pdf/brand/*.jpg", "./node_modules/harfbuzzjs/dist/*"],
   },
   experimental: {
     serverActions: {

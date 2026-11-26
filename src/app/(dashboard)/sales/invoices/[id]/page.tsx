@@ -19,6 +19,7 @@ import { formatDate, formatNumber } from "@/components/shared/format";
 import { LinkButton } from "@/components/shared/link-button";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { SpecTable } from "@/components/tables/spec-table";
+import { BrandMark } from "@/components/layout/brand";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT()).sales.invoice };
@@ -70,9 +71,12 @@ export default async function InvoicePage({ params }: PageProps<"/sales/invoices
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
         <article className="rounded-2xl border bg-card p-5 shadow-card sm:p-8 print:border-0 print:p-0 print:shadow-none">
           <header className="flex flex-wrap items-start justify-between gap-6 border-b pb-5">
-            <div className="min-w-0">
-              <p className="font-heading text-xl text-navy">{APP_CONFIG.name}</p>
-              <p className="text-sm text-muted-foreground">{s.invoice}</p>
+            <div className="flex min-w-0 items-center gap-3">
+              <BrandMark className="size-12" />
+              <div className="min-w-0">
+                <p className="font-heading text-xl text-navy">{APP_CONFIG.name}</p>
+                <p className="text-sm text-muted-foreground">{s.invoice}</p>
+              </div>
             </div>
             <dl className="grid grid-cols-[auto_auto] gap-x-6 gap-y-1 text-sm">
               {([
