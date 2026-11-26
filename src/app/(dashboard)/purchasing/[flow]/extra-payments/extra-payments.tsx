@@ -45,15 +45,12 @@ export function ExtraPayments({ rows, pay, today, accounts }: { rows: ExtraPayme
         <span className={cn(r.isVoid && "text-muted-foreground line-through")}>
           <bdi className="font-medium break-words">{r.name}</bdi>
           <Ltr className="block text-xs text-muted-foreground">{r.number}</Ltr>
-          {r.contributors.length > 0 && (
-            <span className="mt-0.5 block text-xs text-muted-foreground">{x.givenBy}: {r.contributors.map((c) => `${c.name} (${c.amount})`).join(", ")}</span>
-          )}
         </span>
       ),
     },
     { id: "when", header: x.date, sortValue: (r) => r.paidAt, cell: (r) => <bdi className="whitespace-nowrap">{formatDate(r.date, locale)}</bdi> },
     { id: "kind", header: x.kind, hideBelow: "xl", sortValue: (r) => `${r.direction}-${r.kind}`, cell: kindBadge },
-    { id: "account", header: t.accounting.account, hideBelow: "lg", sortValue: (r) => r.account, cell: (r) => <span><bdi>{r.account}</bdi><span className="block text-xs text-muted-foreground">{t.purchasing.methods[r.method]}{r.reference && <> · <bdi>{r.reference}</bdi></>}</span></span> },
+    { id: "account", header: t.accounting.account, hideBelow: "lg", sortValue: (r) => r.account, cell: (r) => <span><bdi>{r.contributors.length > 0 ? r.contributors.map((c) => c.name).join(", ") : r.account}</bdi><span className="block text-xs text-muted-foreground">{t.purchasing.methods[r.method]}{r.reference && <> · <bdi>{r.reference}</bdi></>}</span></span> },
     { id: "notes", header: x.notes, hideBelow: "2xl", cell: (r) => <bdi className="text-sm break-words text-muted-foreground">{r.isVoid ? r.voidReason : r.notes || "—"}</bdi> },
     {
       id: "amount", header: x.amount, align: "end", sortValue: (r) => toPaisa(r.amount),
