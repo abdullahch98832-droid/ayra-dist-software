@@ -5,7 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { recordPaymentAction } from "@/features/purchasing/actions";
 import { flowPath, type Flow } from "@/features/purchasing/flow";
 import type { FlowSupplier } from "@/features/purchasing/queries";
+import { checkContributorsSum } from "@/features/payments/contributors";
 import { PAYMENT_METHODS, paymentSchema, type PaymentValues } from "@/features/purchasing/schema";
+import { ContributorsField, type ContributorsForm } from "@/components/forms/contributors-field";
 import { useI18n } from "@/i18n/context";
 import { formatPaisa, parseRupees, sumPaisa, toDbAmount, toPaisa, type Paisa } from "@/lib/utils/money";
 import { DocumentForm } from "@/components/documents/document-form";
@@ -44,6 +46,7 @@ const withBills = (bills: OpenBill[]) => paymentSchema.superRefine((v, ctx) => {
     if (bill && paisa(a.amount) > toPaisa(bill.outstanding)) ctx.addIssue({ code: "custom", message: "allocationTooHigh", path: ["allocations", i, "amount"] });
   });
   if (sumPaisa(v.allocations.map((a) => paisa(a.amount))) > paisa(v.amount)) ctx.addIssue({ code: "custom", message: "allocationsExceed", path: ["amount"] });
+  checkContributorsSum(v.contributors, v.amount, ctx);
 });
 
 export function PaymentForm({ flow, defaults, suppliers, accounts, bills, balances }: {
@@ -99,6 +102,7 @@ export function PaymentForm({ flow, defaults, suppliers, accounts, bills, balanc
               <Field id="notes" label={d.notes} optional className="sm:col-span-2 lg:col-span-3" error={errors.notes?.message}><Textarea id="notes" rows={2} {...form.register("notes")} /></Field>
               <Balance form={form} balances={balances} />
             </FormSection>
+            <ContributorsField form={form as unknown as ContributorsForm} />
             <Allocations form={form} bills={bills} />
           </>
         );

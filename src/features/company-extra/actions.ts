@@ -13,8 +13,11 @@ export async function saveExtraAction(id: string | null, values: unknown): Promi
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("save_company_extra_payment", {
       p_id: sqlNull(id === null ? null : z.uuid().parse(id)),
-      // Times are entered as they read in Pakistan.
-      p_doc: { name: v.name, paid_at: `${v.date}T${v.time}:00+05:00`, amount: v.amount, kind: v.kind, financial_account_id: v.accountId, method: v.method, reference: orNull(v.reference), notes: orNull(v.notes), client_request_id: v.requestId },
+      p_doc: {
+        name: v.name, paid_on: v.date, amount: v.amount, direction: v.direction, kind: v.kind,
+        contributors: v.contributors.map((c) => ({ name: c.name, amount: c.amount })),
+        financial_account_id: v.accountId, method: v.method, reference: orNull(v.reference), notes: orNull(v.notes), client_request_id: v.requestId,
+      },
     });
     if (error) throw error;
     return data;

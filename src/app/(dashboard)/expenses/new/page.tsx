@@ -39,7 +39,7 @@ export default async function NewExpensePage({ searchParams }: PageProps<"/expen
           cancelPath={job ? `/sol/jobs/${job}` : vehicle ? `/vehicles/${vehicle}` : "/expenses"}
           defaults={{
             date: businessToday(), categoryId: "", amount: "", accountId: cash.length === 1 ? cash[0]?.id ?? "" : "", method: "cash", reference: "", payee: "", description: "", vehicleId: vehicles.some((v) => v.id === vehicle) ? vehicle ?? "" : "",
-            jobId: jobs.some((j) => j.id === job) ? job ?? "" : "", litres: "", odometer: "", receiptPath: "", noReceiptReason: "", requestId: crypto.randomUUID(),
+            jobId: jobs.some((j) => j.id === job) ? job ?? "" : "", litres: "", odometer: "", receiptPath: "", noReceiptReason: "", requestId: crypto.randomUUID(), contributors: [],
           }}
         />
       )}

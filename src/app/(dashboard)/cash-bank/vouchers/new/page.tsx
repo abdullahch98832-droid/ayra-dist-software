@@ -26,7 +26,7 @@ export default async function NewVoucherPage({ searchParams }: PageProps<"/cash-
       {active.length === 0 ? <FormAlert tone="info">{c.noAccounts}</FormAlert> : (
         <VoucherForm
           key={kind} accounts={active.map((a) => ({ id: a.id, label: accountLabel(a) }))} counters={counters.map((a) => ({ id: a.account_id, code: a.code, nameEn: a.name_en, nameUr: a.name_ur }))}
-          defaults={{ kind, date: businessToday(), accountId: active.length === 1 ? active[0]?.id ?? "" : "", counterId: "", amount: "", party: "", method: "cash", reference: "", description: "", requestId: crypto.randomUUID() }}
+          defaults={{ kind, date: businessToday(), accountId: active.length === 1 ? active[0]?.id ?? "" : "", counterId: "", amount: "", party: "", method: "cash", reference: "", description: "", requestId: crypto.randomUUID(), contributors: [] }}
         />
       )}
     </>

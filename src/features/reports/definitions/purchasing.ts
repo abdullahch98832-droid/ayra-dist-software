@@ -301,21 +301,27 @@ const all: ReportDefinition[] = [
     slug: "company-extra", group: "company", title: bi((t) => t.supply.extra.title), hint: bi((t) => t.supply.extra.reportHint), icon: HandCoins, permissions: ["company.view"], dates: "period",
     async load(input) {
       const rows = await reportCompanyExtra(input.period);
-      const amount = sumOf(rows.map((x) => x.amount));
-      const of = (kind: string) => sumOf(rows.filter((x) => x.kind === kind).map((x) => x.amount));
+      const received = sumOf(rows.filter((x) => x.direction === "in").map((x) => x.amount));
+      const extra = sumOf(rows.filter((x) => x.direction === "out" && x.kind === "extra").map((x) => x.amount));
+      const owed = sumOf(rows.filter((x) => x.direction === "out" && x.kind === "account").map((x) => x.amount));
+      const paidOut = sumOf(rows.filter((x) => x.direction === "out").map((x) => x.amount));
+      const given = (value: unknown) => (Array.isArray(value) ? value.map((p) => `${(p as { name: string }).name} (${(p as { amount: number }).amount})`).join(", ") : "");
       return {
         figures: [
-          { key: "total", label: bi((t) => t.supply.extra.total), value: { money: amount }, icon: HandCoins }, { key: "extra", label: bi((t) => t.supply.extra.extraTotal), value: { money: of("extra") }, icon: Banknote }, { key: "account", label: bi((t) => t.supply.extra.accountTotal), value: { money: of("account") }, icon: WalletCards },
+          { key: "received", label: bi((t) => t.supply.extra.received), value: { money: received }, icon: HandCoins }, { key: "extra", label: bi((t) => t.supply.extra.extraTotal), value: { money: extra }, icon: Banknote }, { key: "account", label: bi((t) => t.supply.extra.accountTotal), value: { money: owed }, icon: WalletCards },
         ],
         tables: [{
-          key: "payments", title: bi((t) => t.supply.extra.title), search: ["name", "no", "reference", "notes"], empty: bi((t) => t.supply.extra.empty),
-          rows: rows.map((x): ReportRow => ({ id: `${x.payment_id}-${x.entry_date}`, name: x.name, no: x.doc_no, date: x.entry_date, at: x.paid_at, kind: bi((t) => (x.kind === "account" ? t.supply.extra.accountTotal : t.supply.extra.extraTotal)), account: x.account, method: biKey((t) => t.purchasing.methods, x.method), reference: x.reference, notes: x.notes, amount: x.amount })),
+          key: "payments", title: bi((t) => t.supply.extra.title), search: ["name", "no", "reference", "notes", "given"], empty: bi((t) => t.supply.extra.empty),
+          rows: rows.map((x): ReportRow => ({ id: `${x.payment_id}-${x.entry_date}`, name: x.name, no: x.doc_no, date: x.entry_date, type: x.direction === "in" ? bi((t) => t.supply.extra.inLabel) : bi((t) => (x.kind === "account" ? t.supply.extra.accountTotal : t.supply.extra.extraTotal)), account: x.account, method: biKey((t) => t.purchasing.methods, x.method), reference: x.reference, given: given(x.contributors), notes: x.notes, amount: x.amount })),
           columns: [
-            col("name", (t) => t.supply.extra.name, "text", { sub: "no", subLabel: bi((t) => t.documents.number), primary: true }), col("at", (t) => t.supply.extra.time, "datetime"), col("date", (t) => t.documents.date, "date", { ...xxl, screenOnly: true }), col("kind", (t) => t.supply.extra.kind, "text", lg),
-            col("account", (t) => t.supply.extra.paidFrom, "text", { sub: "method", subLabel: bi((t) => t.supply.extra.method), hideBelow: "lg" }), col("reference", (t) => t.supply.extra.reference, "text", xxl), col("notes", (t) => t.supply.extra.notes, "text", { ...xxl, screenOnly: true }), col("amount", (t) => t.supply.extra.amount, "money", total),
+            col("name", (t) => t.supply.extra.name, "text", { sub: "no", subLabel: bi((t) => t.documents.number), primary: true }), col("date", (t) => t.documents.date, "date"), col("type", (t) => t.supply.extra.kind, "text", lg), col("given", (t) => t.supply.extra.givenBy, "text", { ...xxl, screenOnly: true }),
+            col("account", (t) => t.accounting.account, "text", { sub: "method", subLabel: bi((t) => t.supply.extra.method), hideBelow: "lg" }), col("reference", (t) => t.supply.extra.reference, "text", xxl), col("notes", (t) => t.supply.extra.notes, "text", { ...xxl, screenOnly: true }), col("amount", (t) => t.supply.extra.amount, "money", total),
           ],
         }],
-        checks: await ledgerChecks(input, [{ label: bi((t) => t.supply.extra.check), report: amount, keys: ["AYRA_EXTRA", "AP_PRINCIPAL"], sources: ["company_extra"], from: input.period.from, to: input.period.to, debit: true }]),
+        checks: await ledgerChecks(input, [
+          { label: bi((t) => t.supply.extra.check), report: paidOut, keys: ["AYRA_EXTRA", "AP_PRINCIPAL"], sources: ["company_extra"], from: input.period.from, to: input.period.to, debit: true },
+          { label: bi((t) => t.supply.extra.checkIn), report: received, keys: ["CAPITAL"], sources: ["company_extra"], from: input.period.from, to: input.period.to, debit: false },
+        ]),
         notes: [bi((t) => t.analytics.notes.reversals)],
       };
     },

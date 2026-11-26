@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { checkContributorsSum, contributorsField } from "@/features/payments/contributors";
 import { SOL_METHODS } from "@/features/sol/schema";
 import { isoDate, optionalDecimal, optionalId, optionalQuantity, positiveMoney, requiredId, requiredText, text } from "@/lib/validation/common";
 
@@ -9,7 +10,9 @@ export type ExpenseStatus = (typeof EXPENSE_STATUSES)[number];
 export const expenseSchema = z.object({
   date: isoDate, categoryId: requiredId, amount: positiveMoney, accountId: requiredId, method: z.enum(EXPENSE_METHODS), reference: text(120), payee: requiredText(120), description: requiredText(500),
   vehicleId: optionalId, jobId: optionalId, litres: optionalDecimal, odometer: optionalQuantity, receiptPath: text(200), noReceiptReason: text(200), requestId: z.uuid(),
+  contributors: contributorsField,
 }).superRefine((v, ctx) => {
+  checkContributorsSum(v.contributors, v.amount, ctx);
   if (v.receiptPath === "" && v.noReceiptReason === "") ctx.addIssue({ code: "custom", message: "required", path: ["noReceiptReason"] });
 });
 export type ExpenseValues = z.infer<typeof expenseSchema>;

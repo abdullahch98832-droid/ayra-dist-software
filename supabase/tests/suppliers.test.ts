@@ -155,12 +155,13 @@ describe("extra payments to the Ayra company", () => {
     await sound();
   });
 
-  it("can be corrected: name, time, amount, date, account and kind", async () => {
+  it("can be corrected: name, amount, date, account and kind (no time of day)", async () => {
     const id = await save(null, doc());
     const entries = async () => Number(one(await db.sql("select count(*) n from public.journal_entries where source_id = $1", [id])).n);
-    await save(id, doc({ name: "Banners", paid_at: `${today}T18:00:00+05:00`, notes: "By hand" }));
+    await save(id, doc({ name: "Banners", notes: "By hand" }));
     expect(await entries()).toBe(1); // nothing in the accounts changed
-    expect(one(await db.sql("select name n, (paid_at at time zone 'Asia/Karachi')::text t from public.company_extra_payments where id = $1", [id]))).toEqual({ n: "Banners", t: `${today} 18:00:00` });
+    // The day is kept at noon, so no time of day is stored.
+    expect(one(await db.sql("select name n, (paid_at at time zone 'Asia/Karachi')::text t from public.company_extra_payments where id = $1", [id]))).toEqual({ n: "Banners", t: `${today} 12:00:00` });
     const before = [await gl("AYRA_EXTRA"), await gl("AP_PRINCIPAL")];
     await save(id, doc({ name: "Banners", amount: "3000" }));
     expect([await entries(), (await gl("AYRA_EXTRA")) - (before[0] ?? 0)]).toEqual([3, 49950]);
@@ -182,6 +183,28 @@ describe("extra payments to the Ayra company", () => {
     await call(b.admin, "void_company_extra_payment", id, "Entered twice");
     expect((await gl("AYRA_EXTRA")) - before).toBe(-250050);
     await expect(save(id, doc())).rejects.toThrow(/voided/);
+    await sound();
+  });
+
+  it("records money received as owner's capital, the other way round", async () => {
+    const [cap, c] = [await gl("CAPITAL"), await cashBalance()];
+    const id = await save(null, doc({ name: "Initial investment", amount: "500000", direction: "in" }));
+    // Money came into the account; capital went up by the same.
+    expect([(await gl("CAPITAL")) - cap, (await cashBalance()) - c]).toEqual([-50000000, 50000000]);
+    const row = one(await db.sql("select direction, kind, (paid_at at time zone 'Asia/Karachi')::date::text d from public.company_extra_payments where id = $1", [id]));
+    expect([row.direction, row.kind]).toEqual(["in", "capital"]);
+    const rep = one(await db.as(b.admin, (q) => q("select direction, amount::text a from public.report_company_extra('2020-01-01', $1) where payment_id = $2", [today, id])));
+    expect([rep.direction, rep.a]).toEqual(["in", "500000.00"]);
+    await sound();
+  });
+
+  it("keeps who gave how much, and insists the amounts add up", async () => {
+    const people = [{ name: "Abdullah", amount: "300000" }, { name: "Bilal", amount: "200000" }];
+    await expect(save(null, doc({ amount: "500000", direction: "in", contributors: [{ name: "Abdullah", amount: "300000" }] }))).rejects.toThrow(/add up/);
+    await expect(save(null, doc({ amount: "500000", direction: "in", contributors: [{ name: " ", amount: "500000" }] }))).rejects.toThrow(/name/);
+    const id = await save(null, doc({ name: "Pooled investment", amount: "500000", direction: "in", contributors: people }));
+    const stored = one(await db.sql("select contributors from public.company_extra_payments where id = $1", [id]));
+    expect(stored.contributors).toEqual(people.map((p) => ({ name: p.name, amount: Number(p.amount) })));
     await sound();
   });
 

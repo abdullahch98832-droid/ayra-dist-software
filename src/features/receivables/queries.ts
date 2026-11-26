@@ -38,7 +38,7 @@ export async function loadPayments(filter: ListFilter & { customerId?: string | 
 export async function loadPayment(id: string) {
   const supabase = await createClient();
   const { data, error } = await supabase.from("customer_payments").select(
-    "id, doc_no, payment_date, amount, method, reference, payer_account, notes, status, void_reason, customer_id, collected_by, financial_account_id, requested_allocations, customer:customers!customer_payments_customer_id_fkey(name, name_ur), account:financial_accounts!customer_payments_financial_account_id_fkey(name), journal:journal_entries!customer_payments_journal_entry_id_fkey(doc_no), customer_payment_allocations(id, amount, invoice:sales_invoices!customer_payment_allocations_sales_invoice_id_fkey(id, doc_no), job:sol_jobs!customer_payment_allocations_sol_job_id_fkey(id, doc_no)), sol_job:sol_jobs!customer_payments_sol_job_id_fkey(id, doc_no)"
+    "id, doc_no, payment_date, amount, method, reference, payer_account, notes, status, void_reason, customer_id, collected_by, financial_account_id, requested_allocations, contributors, customer:customers!customer_payments_customer_id_fkey(name, name_ur), account:financial_accounts!customer_payments_financial_account_id_fkey(name), journal:journal_entries!customer_payments_journal_entry_id_fkey(doc_no), customer_payment_allocations(id, amount, invoice:sales_invoices!customer_payment_allocations_sales_invoice_id_fkey(id, doc_no), job:sol_jobs!customer_payment_allocations_sol_job_id_fkey(id, doc_no)), sol_job:sol_jobs!customer_payments_sol_job_id_fkey(id, doc_no)"
   ).eq("id", id).maybeSingle();
   if (error) throw error;
   return data;

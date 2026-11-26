@@ -155,7 +155,7 @@ export async function recordSolPaymentAction(values: unknown): Promise<ActionRes
       p_job_id: v.jobId,
       p_doc: {
         date: v.date, amount: v.amount, method: v.method, financial_account_id: v.accountId, payer_account: maskAccount(v.payerAccount), reference: orNull(v.reference),
-        notes: orNull(v.notes), client_request_id: v.requestId,
+        notes: orNull(v.notes), client_request_id: v.requestId, contributors: v.contributors,
       },
     });
     if (error) throw error;

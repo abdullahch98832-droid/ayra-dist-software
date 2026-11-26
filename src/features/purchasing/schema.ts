@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { contributorsField } from "@/features/payments/contributors";
 import { isoDate, money, optionalDate, optionalId, optionalMoney, optionalQuantity, positiveMoney, quantity, requiredId, requiredText, text } from "@/lib/validation/common";
 
 const line = { productId: requiredId, unitId: requiredId };
@@ -42,5 +43,6 @@ export const PAYMENT_METHODS = ["cash", "bank_transfer", "cheque", "online", "ot
 export const paymentSchema = z.object({
   supplierId: requiredId, date: isoDate, amount: positiveMoney, accountId: requiredId, method: z.enum(PAYMENT_METHODS), reference: text(120), notes: text(500), requestId,
   allocations: z.array(z.object({ billId: z.uuid(), amount: optionalMoney })),
+  contributors: contributorsField,
 });
 export type PaymentValues = z.infer<typeof paymentSchema>;

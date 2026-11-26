@@ -13,6 +13,7 @@ import { allocationIssues, InvoiceAllocations, paisaOf, type AllocationValues } 
 import { Field, NativeSelect } from "@/components/forms/field";
 import { FormSection } from "@/components/forms/form-section";
 import { MoneyInput } from "@/components/forms/money-input";
+import { ContributorsField, type ContributorsForm } from "@/components/forms/contributors-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -89,6 +90,7 @@ export function PaymentForm({ defaults, customer, invoices: initial, accounts, t
               <Field id="notes" label={t.documents.notes} optional className="sm:col-span-2" error={errors.notes?.message}><Textarea id="notes" rows={2} {...form.register("notes")} /></Field>
               <Outcome form={form} poster={poster} me={me} />
             </FormSection>
+            <ContributorsField form={form as unknown as ContributorsForm} />
             {chosen && <Allocations form={form} invoices={invoices} />}
           </>
         );

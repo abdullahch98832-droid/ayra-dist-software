@@ -35,7 +35,7 @@ export default async function NewPaymentPage({ searchParams }: PageProps<"/recei
         defaults={{
           customerId: customer?.id ?? "", date: businessToday(), amount: invoice?.outstanding ?? "", method: "cash", destination: collector && isTaker ? HELD : accounts.length === 1 ? accounts[0]?.id ?? "" : "",
           collectedBy: collector ?? active.find((x) => x.id === customer?.orderTakerId)?.id ?? "", reference: "", notes: "", requestId: crypto.randomUUID(),
-          allocations: invoices.map((i) => ({ invoiceId: i.id, amount: i.id === invoice?.id ? i.outstanding : "" })),
+          allocations: invoices.map((i) => ({ invoiceId: i.id, amount: i.id === invoice?.id ? i.outstanding : "" })), contributors: [],
         }}
       />
     </>

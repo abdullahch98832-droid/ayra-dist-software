@@ -172,7 +172,7 @@ export async function loadPayments(flow: Flow, filter: ListFilter) {
 export async function loadPayment(id: string) {
   const supabase = await createClient();
   const { data, error } = await supabase.from("supplier_payments").select(
-    "id, doc_no, payment_date, amount, method, reference, notes, status, supplier_id, supplier:suppliers!supplier_payments_supplier_id_fkey(name, name_ur, is_principal), account:financial_accounts!supplier_payments_financial_account_id_fkey(name), journal:journal_entries!supplier_payments_journal_entry_id_fkey(doc_no), supplier_payment_allocations(id, amount, invoice:supplier_invoices!supplier_payment_allocations_supplier_invoice_id_fkey(id, invoice_number, doc_no))"
+    "id, doc_no, payment_date, amount, method, reference, notes, status, supplier_id, contributors, supplier:suppliers!supplier_payments_supplier_id_fkey(name, name_ur, is_principal), account:financial_accounts!supplier_payments_financial_account_id_fkey(name), journal:journal_entries!supplier_payments_journal_entry_id_fkey(doc_no), supplier_payment_allocations(id, amount, invoice:supplier_invoices!supplier_payment_allocations_supplier_invoice_id_fkey(id, invoice_number, doc_no))"
   ).eq("id", id).maybeSingle();
   if (error) throw error;
   return data;

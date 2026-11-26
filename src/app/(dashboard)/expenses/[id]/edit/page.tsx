@@ -36,7 +36,7 @@ export default async function EditExpensePage({ params }: PageProps<"/expenses/[
         defaults={{
           date: e.expense_date, categoryId: e.category_id, amount: toDbAmount(toPaisa(e.amount)), accountId: e.financial_account_id, method: (e.method ?? "cash") as ExpenseValues["method"], reference: e.reference ?? "", payee: e.payee ?? "",
           description: e.description ?? "", vehicleId: e.vehicle_id ?? "", jobId: e.sol_job_id ?? "", litres: e.litres === null ? "" : String(e.litres), odometer: e.odometer === null ? "" : String(e.odometer),
-          receiptPath: e.receipt_path ?? "", noReceiptReason: e.no_receipt_reason ?? "", requestId: crypto.randomUUID(),
+          receiptPath: e.receipt_path ?? "", noReceiptReason: e.no_receipt_reason ?? "", requestId: crypto.randomUUID(), contributors: [],
         }}
       />
     </>

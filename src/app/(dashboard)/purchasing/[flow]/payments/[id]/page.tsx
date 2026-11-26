@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Ban } from "lucide-react";
+import { ContributorsList } from "@/features/payments/contributors-list";
 import { voidPaymentAction } from "@/features/purchasing/actions";
 import { accountPay, flowOf, flowPath } from "@/features/purchasing/flow";
 import { purchasingPage } from "@/features/purchasing/page-context";
@@ -51,6 +52,7 @@ export default async function PaymentPage({ params }: PageProps<"/purchasing/[fl
             { label: p.onAccount, value: payment.status === "posted" ? <Money amount={toPaisa(payment.amount) - settled} locale={locale} /> : null },
             { label: d.journal, value: payment.journal && <Ltr>{payment.journal.doc_no}</Ltr> },
             { label: d.notes, value: payment.notes },
+            ...(Array.isArray(payment.contributors) && payment.contributors.length > 0 ? [{ label: d.split.paidBy, value: <ContributorsList contributors={payment.contributors} locale={locale} /> }] : []),
           ]} />
         </SectionCard>
         {payment.supplier_payment_allocations.length > 0 && (

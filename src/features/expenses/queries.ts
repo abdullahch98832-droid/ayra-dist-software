@@ -7,7 +7,7 @@ import { sqlNull } from "@/lib/supabase/rpc";
 import { createClient } from "@/lib/supabase/server";
 
 const COLUMNS =
-  "id, doc_no, expense_date, amount, payee, description, method, reference, litres, odometer, status, void_reason, no_receipt_reason, receipt_path, category_id, vehicle_id, sol_job_id, financial_account_id, journal_entry_id, created_by, created_at, posted_by, posted_at, category:expense_categories!expenses_category_id_fkey(name_en, name_ur, vehicle_kind), account:financial_accounts!expenses_financial_account_id_fkey(name), vehicle:vehicles!expenses_vehicle_id_fkey(id, registration_no, name), job:sol_jobs!expenses_sol_job_id_fkey(id, doc_no), journal:journal_entries!expenses_journal_entry_id_fkey(doc_no)";
+  "id, doc_no, expense_date, amount, payee, description, method, reference, litres, odometer, status, void_reason, no_receipt_reason, receipt_path, category_id, vehicle_id, sol_job_id, financial_account_id, journal_entry_id, created_by, created_at, posted_by, posted_at, contributors, category:expense_categories!expenses_category_id_fkey(name_en, name_ur, vehicle_kind), account:financial_accounts!expenses_financial_account_id_fkey(name), vehicle:vehicles!expenses_vehicle_id_fkey(id, registration_no, name), job:sol_jobs!expenses_sol_job_id_fkey(id, doc_no), journal:journal_entries!expenses_journal_entry_id_fkey(doc_no)";
 
 export async function loadExpenses(filter: ListFilter & { vehicleId?: string | null; jobId?: string | null; categoryId?: string | null }) {
   const supabase = await createClient();

@@ -31,7 +31,7 @@ export default async function NewPaymentPage({ params, searchParams }: PageProps
         flow={flow} suppliers={suppliers} accounts={accounts} bills={bills} balances={balances}
         defaults={{
           supplierId, date: businessToday(), amount: bill?.outstanding ?? "", accountId: accounts.length === 1 ? accounts[0]?.id ?? "" : "", method: "cash", reference: "", notes: "", requestId: crypto.randomUUID(),
-          allocations: bills.filter((b) => b.supplierId === supplierId).map((b) => ({ billId: b.id, amount: b.id === bill?.id ? b.outstanding : "" })),
+          allocations: bills.filter((b) => b.supplierId === supplierId).map((b) => ({ billId: b.id, amount: b.id === bill?.id ? b.outstanding : "" })), contributors: [],
         }}
       />
     </>

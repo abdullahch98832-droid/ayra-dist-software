@@ -58,6 +58,16 @@ const operations = {
     journal: "Accounting entry",
     stockOnHand: "On hand",
     baseQuantity: "In base units",
+    split: {
+      more: "Paid or received by more than one person",
+      hint: "List who paid or received, and how much each. The amounts must add up to the total.",
+      add: "Add person",
+      name: "Name",
+      amount: "Amount",
+      remove: "Remove",
+      sum: "The people's amounts must add up to the total.",
+      paidBy: "Paid by",
+    },
   },
   catalog: {
     title: "Products",

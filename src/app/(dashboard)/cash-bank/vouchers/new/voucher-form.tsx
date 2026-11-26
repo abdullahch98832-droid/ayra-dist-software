@@ -8,6 +8,7 @@ import { DocumentForm } from "@/components/documents/document-form";
 import { Field, NativeSelect } from "@/components/forms/field";
 import { FormSection } from "@/components/forms/form-section";
 import { MoneyInput } from "@/components/forms/money-input";
+import { ContributorsField, type ContributorsForm } from "@/components/forms/contributors-field";
 import { Input } from "@/components/ui/input";
 
 export function VoucherForm({ defaults, accounts, counters }: { defaults: VoucherValues; accounts: { id: string; label: string }[]; counters: { id: string; code: string; nameEn: string; nameUr: string | null }[] }) {
@@ -28,6 +29,7 @@ export function VoucherForm({ defaults, accounts, counters }: { defaults: Vouche
             <Field id="date" label={c.date} required error={errors.date?.message}><Input id="date" type="date" dir="ltr" max={defaults.date} {...form.register("date")} /></Field>
             <Field id="reference" label={c.reference} optional error={errors.reference?.message}><Input id="reference" dir="ltr" {...form.register("reference")} /></Field>
             <Field id="description" label={c.description} required className="sm:col-span-2" error={errors.description?.message}><Input id="description" {...form.register("description")} /></Field>
+          <ContributorsField form={form as unknown as ContributorsForm} className="sm:col-span-2 lg:col-span-3" />
           </FormSection>
         );
       }}

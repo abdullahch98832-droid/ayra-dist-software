@@ -31,15 +31,15 @@ export default async function ExtraPaymentsPage({ params, searchParams }: PagePr
   const pay = can(ctx, "company.pay");
   const [rows, accounts] = await Promise.all([loadExtraPayments(period), pay ? loadPaymentAccounts() : []]);
   const live = rows.filter((r) => !r.isVoid);
-  const sum = (kind?: "extra" | "account") => <Ltr>{formatPaisa(sumPaisa(live.filter((r) => !kind || r.kind === kind).map((r) => toPaisa(r.amount))), locale)}</Ltr>;
+  const sum = (pick: (r: (typeof live)[number]) => boolean) => <Ltr>{formatPaisa(sumPaisa(live.filter(pick).map((r) => toPaisa(r.amount))), locale)}</Ltr>;
   return (
     <>
       <PageHeader title={x.title} description={x.hint} />
       <PeriodFrame compact key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={x.title} description={x.reportHint}>
         <StatGrid>
-          <StatCard label={x.total} value={sum()} icon={Banknote} />
-          <StatCard label={x.extraTotal} value={sum("extra")} icon={Coins} />
-          <StatCard label={x.accountTotal} value={sum("account")} icon={WalletCards} />
+          <StatCard label={x.received} value={sum((r) => r.direction === "in")} icon={Banknote} />
+          <StatCard label={x.extraTotal} value={sum((r) => r.direction === "out" && r.kind === "extra")} icon={Coins} />
+          <StatCard label={x.accountTotal} value={sum((r) => r.direction === "out" && r.kind === "account")} icon={WalletCards} />
         </StatGrid>
         <ExtraPayments rows={rows} pay={pay} today={today} accounts={accounts.map((a) => ({ id: a.id, name: a.masked ? `${a.name} · ${a.masked}` : a.name, isActive: a.isActive }))} />
       </PeriodFrame>

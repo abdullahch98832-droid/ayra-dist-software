@@ -13,6 +13,7 @@ import { DocumentForm } from "@/components/documents/document-form";
 import { Field, NativeSelect, useMessage } from "@/components/forms/field";
 import { FormSection } from "@/components/forms/form-section";
 import { MoneyInput } from "@/components/forms/money-input";
+import { ContributorsField, type ContributorsForm } from "@/components/forms/contributors-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -75,6 +76,7 @@ export function ExpenseForm({ save, openAfter, maxDate, defaults, accounts, cate
             <Receipt />
             <p className="text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">{x.salariesNote}</p>
             <Field id="description" label={x.description} required className="sm:col-span-2 lg:col-span-3" error={errors.description?.message}><Textarea id="description" rows={2} {...form.register("description")} /></Field>
+          <ContributorsField form={form as unknown as ContributorsForm} className="sm:col-span-2 lg:col-span-3" />
           </FormSection>
         );
       }}

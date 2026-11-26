@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { checkContributorsSum, contributorsField } from "@/features/payments/contributors";
 import { SOL_METHODS } from "@/features/sol/schema";
 import { isoDate, money, optionalQuantity, optionalSignedMoney, positiveMoney, requiredId, requiredText, text } from "@/lib/validation/common";
 
@@ -23,7 +24,8 @@ export type TransferValues = z.infer<typeof transferSchema>;
 export const VOUCHER_KINDS = ["receipt", "payment"] as const;
 export const voucherSchema = z.object({
   kind: z.enum(VOUCHER_KINDS), date: isoDate, accountId: requiredId, counterId: requiredId, amount: positiveMoney, party: text(120), method: z.enum(BANK_METHODS), reference: text(120), description: requiredText(300), requestId: z.uuid(),
-});
+  contributors: contributorsField,
+}).superRefine((v, ctx) => checkContributorsSum(v.contributors, v.amount, ctx));
 export type VoucherValues = z.infer<typeof voucherSchema>;
 
 const signedMoney = optionalSignedMoney.refine((v) => v.trim() !== "", "required");

@@ -41,7 +41,7 @@ export default async function NewSolPaymentPage({ searchParams }: PageProps<"/so
           jobs={payable} accounts={active.map((a) => ({ id: a.id, label: accountLabel(a) }))} poster={poster}
           defaults={{
             jobId: payable.some((j) => j.id === wanted) ? wanted ?? "" : "", date: businessToday(), amount: "", method: "cash", accountId: cash.length === 1 ? cash[0]?.id ?? "" : "", payerAccount: "", reference: "", notes: "",
-            requestId: crypto.randomUUID(),
+            requestId: crypto.randomUUID(), contributors: [],
           }}
         />
       )}

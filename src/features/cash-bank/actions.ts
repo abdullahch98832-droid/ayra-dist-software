@@ -55,7 +55,7 @@ export async function recordVoucherAction(values: unknown): Promise<ActionResult
     const { data, error } = await supabase.rpc("record_cash_voucher", {
       p_doc: {
         kind: v.kind, date: v.date, financial_account_id: v.accountId, counter_account_id: v.counterId, amount: v.amount, party_name: orNull(v.party), method: v.method, reference: orNull(v.reference),
-        description: v.description, client_request_id: v.requestId,
+        description: v.description, client_request_id: v.requestId, contributors: v.contributors,
       },
     });
     if (error) throw error;

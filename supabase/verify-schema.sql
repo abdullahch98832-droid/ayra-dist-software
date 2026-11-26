@@ -1,4 +1,4 @@
--- Read-only. Compares this database with the migrations up to 20261202100000_suppliers.sql.
+-- Read-only. Compares this database with the migrations up to 20261203100000_company_money.sql.
 -- Result "ok" = identical. Any other row names something that differs or is missing.
 with expected(kind, name, hash) as (values
   ('columns', 'public.account_openings', 'bfd02c1e3aabcacb1fc52284325eea16'),
@@ -13,7 +13,7 @@ with expected(kind, name, hash) as (values
   ('columns', 'public.cash_reconciliations', '4c028636774f938df42a8abf83f61ab7'),
   ('columns', 'public.cash_vouchers', '43530f14c9c780a9e6456f9e2decca4c'),
   ('columns', 'public.chart_of_accounts', 'eff110100f7450714bb3626802be324f'),
-  ('columns', 'public.company_extra_payments', '21c20d6da7bae0375aac5a52280f52c6'),
+  ('columns', 'public.company_extra_payments', '600efaff86b7b268cb04a01662b4fdf0'),
   ('columns', 'public.customer_notes', '16ab6591161d7c6ee59e23bbfb82d427'),
   ('columns', 'public.customer_payment_allocations', '1018070ab7b92f05941e2d8236a8111e'),
   ('columns', 'public.customer_payments', '25bbc3f2f2495ef3655de17ca0589e32'),
@@ -155,7 +155,7 @@ with expected(kind, name, hash) as (values
   ('function', 'private.is_own_receipt(text)', 'ec28f08bf1ee3cfe1fa87c62a80e57b1'),
   ('function', 'private.is_sol_order(uuid)', '6d8f17760687866a1f9797df915dc332'),
   ('function', 'private.is_supplier()', '0d9bef018ae1d56bb84d8f524a0b5396'),
-  ('function', 'private.ledger_checks()', '740e08d8073ee418b843f9540bdaffc5'),
+  ('function', 'private.ledger_checks()', '1f47df8ab22c74017105866be62cce6a'),
   ('function', 'private.lock_posting()', '944b2ad65376586ab8731eba63474a45'),
   ('function', 'private.mask_account(text)', '5877b4fd55407811756529e99df983ef'),
   ('function', 'private.mask_payer_account()', '50c8ef4f6d365b02fc49c70723fbd854'),
@@ -172,7 +172,7 @@ with expected(kind, name, hash) as (values
   ('function', 'private.payment_unallocated(uuid)', '27b3d6af8d11980cba1a9f8369281d5c'),
   ('function', 'private.period_checklist(uuid)', '7ba690ccc68384130d91c221e76a8a8c'),
   ('function', 'private.post_cash_deposit(uuid)', '580601efa675c4af73560ee1629f4a30'),
-  ('function', 'private.post_company_extra(uuid)', '2a12c165f9efe734ca1af7afd538f538'),
+  ('function', 'private.post_company_extra(uuid)', '67e1ad23f69c858a18a7a7fdeac3df07'),
   ('function', 'private.post_customer_payment(uuid)', 'da5e548a3d89da61246c933883ed8629'),
   ('function', 'private.post_customer_return(uuid)', 'aa56093dfe7f0d3792e214a10c7b3539'),
   ('function', 'private.post_journal(date, text, text, uuid, jsonb, uuid)', 'f77869f984799f6595550906f7f78833'),
@@ -336,7 +336,7 @@ with expected(kind, name, hash) as (values
   ('function', 'public.report_cash_accounts(date, date)', '870d732e22fe56948cd4070c7a2a00bf'),
   ('function', 'public.report_collections(date, date, uuid, text)', 'b8d3ec39b371e2dcb9ddbf3ea927cd31'),
   ('function', 'public.report_company(date, date)', '81d877e60b5b6175df06880fd277b3e5'),
-  ('function', 'public.report_company_extra(date, date)', '91a93cdad1857e704fa7255b0b8b6465'),
+  ('function', 'public.report_company_extra(date, date)', '9fd16c78fcf5cbb3e6045c575364aae2'),
   ('function', 'public.report_damaged_stock(date, date)', 'adfcb300b4baa97fb8e16ce64ba35e00'),
   ('function', 'public.report_deliveries(date, date, text)', 'ab50269f6674325baef47a5cf638e25f'),
   ('function', 'public.report_expense_accounts(date, date)', '2755f28fa48ec83cdfd5434d6348721c'),
@@ -373,7 +373,7 @@ with expected(kind, name, hash) as (values
   ('function', 'public.reverse_manual_journal(uuid, date, text)', 'f701136bc90f5a9c784f17330aaa73d9'),
   ('function', 'public.sales_summary()', '7a1e05c272c6d937219e2354c8f731de'),
   ('function', 'public.save_bank_reconciliation(uuid, jsonb, uuid[])', '9a53ee74bf8b58f1ef5d8d3df37ffb5d'),
-  ('function', 'public.save_company_extra_payment(uuid, jsonb)', '0435f3384bae7e76b9b63389b549fc2d'),
+  ('function', 'public.save_company_extra_payment(uuid, jsonb)', 'b3fc293e8ca450836951da7e229eb7f2'),
   ('function', 'public.save_customer(uuid, jsonb)', '445d770ea0f97f600bb9ea0e39f731f5'),
   ('function', 'public.save_customer_return(uuid, jsonb, jsonb)', '10f2f7c811cc21c3a60439b62df86daa'),
   ('function', 'public.save_delivery(uuid, jsonb, jsonb)', 'cecdca6116e0e8016bf3f138845bb19f'),

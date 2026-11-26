@@ -69,7 +69,7 @@ If the shop pays into the bank, choose the bank account instead and enter the re
 - **Receivables** — *Outstanding*: what every shop owes and for how long; *Payments*: record or check payments; *Cash with staff*: cash held by order takers and suppliers, and its hand-over; *Credit and debit notes*.
 
 ### Purchasing
-- **Purchases from Ayra** — *Purchase orders*, *Goods received*, *Bills*, *Returns*, *Payments* for goods, **Extra payments**, and *Account* with everything owed. **Ayra details** on the Account page changes Ayra's phone, address and payment terms.
+- **Purchases from Ayra** — *Purchase orders*, *Goods received*, *Bills*, *Returns*, *Payments* for goods, **Company money** (money received or paid beside the goods), and *Account* with everything owed. **Ayra details** on the Account page changes Ayra's phone, address and payment terms.
 
 ### Stock
 - **Products** — list, units, prices, picture, minimum stock.
@@ -101,21 +101,20 @@ If the shop pays into the bank, choose the bank account instead and enter the re
 | Money from a shop later | Receivables → Payments → **Record payment** |
 | Cash handed over by a supplier or order taker | Receivables → Cash with staff → **Record deposit** |
 | Payment to Ayra for goods | Purchases from Ayra → Payments |
-| **Extra payment to Ayra** | Purchases from Ayra → **Extra payments** |
+| **Investment received, or extra money paid to Ayra** | Purchases from Ayra → **Company money** |
 | Petrol, rent, food and so on | Expenses → New voucher |
 | Salary | Payroll |
 | Money between cash and bank | Cash & bank → Transfers |
 | Owner's money in or out, loans | Cash & bank → Receipts and payments |
 
-### Extra payments to Ayra
+### Company money (received and paid)
 
-**Add payment**: name (what it is for, or who received it), date, time, amount, the account it was paid from and the method.
+**Purchases from Ayra → Company money** records money that moves beside the bills of goods. Press **Add entry** and first choose **money in or out**:
 
-*Counts as:*
-- **Extra cost** — money beside the goods. What you owe for goods does not change.
-- **Part of what we owe for goods** — reduces what you owe Ayra.
+- **Money received (in)** — cash put into the business, such as the owner's investment. Choose the account it was **received into**. Under **Given by** you can list the people who gave it and how much each; the amounts must add up to the total. The money goes to owner's capital.
+- **Money paid (out)** — extra money paid to Ayra. Choose the account it was **paid from** and, under *Counts as*, whether it is an **extra cost** (does not change what you owe for goods) or **part of what we owe for goods** (reduces what you owe Ayra).
 
-To change a payment press the **pencil**: name, time, date, amount, account and type can all be corrected. The accounts are corrected with it and the old values stay in the history. **Void** cancels a payment with a reason. Days and months that are closed must be reopened first.
+Every entry has a name, a **date** (no time of day), an amount, an account and a method. To change one press the **pencil**; the accounts are corrected and the old values stay in the history. **Void** cancels an entry with a reason. Closed days and months must be reopened first. You need at least one cash or bank account (add one under **Cash & bank**) before recording here.
 
 ## 5. SOL: distributors of other cities
 
@@ -143,7 +142,7 @@ Open **Reports**, choose one, choose the dates (today, yesterday, this week, thi
 |---|---|
 | Inventory | Current stock, stock valuation, fast and slow moving, low stock, damaged, product-wise profit |
 | Sales | Daily, monthly, customer-wise, product-wise, order takers, **supplier performance**, **supplier deliveries**, territories, pending collections |
-| Ayra company | Total purchases, purchase history, delivery performance, goods received, account, payments, **extra payments**, returns, adjustments, dues |
+| Ayra company | Total purchases, purchase history, delivery performance, goods received, account, payments, **company money (received and paid)**, returns, adjustments, dues |
 | SOL | **Distributor orders**, job register, contracts, payments, expenses, profitability |
 | Financial | Daily and monthly profit and loss, cash flow, expenses, receivables and payables aging, bank reconciliation |
 | Operations | Deliveries, expenses, payroll, vehicles |

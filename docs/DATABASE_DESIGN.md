@@ -1,6 +1,6 @@
 # Database Design
 
-> **Status:** implemented as migrations in `supabase/migrations/` and verified by 245 automated tests on PostgreSQL 17 (`npm run test:db`). See [SUPABASE_SETUP.md](SUPABASE_SETUP.md).
+> **Status:** implemented as migrations in `supabase/migrations/` and verified by 247 automated tests on PostgreSQL 17 (`npm run test:db`). See [SUPABASE_SETUP.md](SUPABASE_SETUP.md).
 
 ## Conventions
 
@@ -41,6 +41,7 @@
 | `20261130100000_reports` | `reports.export`, `cash_bank.reconcile`; business reports from posted entries, `ledger_total` to compare with, recorded exports, bank reconciliation |
 | `20261201100000_distributor` | wording of a distributor; SOL orders of other distributors: `purchase_orders.sol_job_id`, price paid to Ayra as cost of the order |
 | `20261202100000_suppliers` | suppliers as staff, supplier and money of a delivery, extra payments to the Ayra company, vendors |
+| `20261203100000_company_money` | company money in/out (investment received, extra paid to Ayra), the people who gave it, no time of day |
 
 With every new migration, set `app_settings.schema_version` and update `src/config/database.ts` (a test enforces it). Until that migration has been applied, administrators see a notice naming the file and affected pages say the database needs an update.
 
@@ -229,7 +230,7 @@ Clients insert and edit **drafts** directly (RLS + column privileges). Every sta
 | `start_bank_reconciliation`, `save_…`, `complete_…`, `reopen_…`, `delete_bank_reconciliation` | Bank reconciliation |
 | `save_sol_order`, `order_sol_goods`, `report_sol_orders` | Distributor orders and their goods from Ayra |
 | `save_supply_staff`, `assign_supplier`, `delivery_money`, `report_supply`, `report_suppliers_work` | Suppliers (staff) |
-| `save_company_extra_payment`, `void_company_extra_payment`, `report_company_extra` | Extra payments to Ayra |
+| `save_company_extra_payment`, `void_company_extra_payment`, `report_company_extra` | Company money received and paid |
 | `my_permissions` | Permissions of the signed-in user |
 | `trial_balance`, `profit_and_loss` | Financial reports (require `reports.financial`) |
 | `admin_list_users`, `admin_assign_role`, `admin_link_employee`, `admin_set_user_status` | User administration |

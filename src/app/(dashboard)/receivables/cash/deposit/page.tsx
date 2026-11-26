@@ -27,7 +27,7 @@ export default async function DepositPage({ searchParams }: PageProps<"/receivab
       <PageHeader title={t.receivables.newDeposit} breadcrumbs={[{ label: t.receivables.tabs.cash, href: "/receivables/cash" }]} />
       <DepositForm
         holders={holders} accounts={accounts} poster={poster}
-        defaults={{ employeeId: holder?.id ?? "", date: businessToday(), amount: holder && toPaisa(holder.held) > BigInt(0) ? holder.held : "", accountId: accounts.length === 1 ? accounts[0]?.id ?? "" : "", reference: "", notes: "", requestId: crypto.randomUUID() }}
+        defaults={{ employeeId: holder?.id ?? "", date: businessToday(), amount: holder && toPaisa(holder.held) > BigInt(0) ? holder.held : "", accountId: accounts.length === 1 ? accounts[0]?.id ?? "" : "", reference: "", notes: "", requestId: crypto.randomUUID(), contributors: [] }}
       />
     </>
   );

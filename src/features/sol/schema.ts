@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { checkContributorsSum, contributorsField } from "@/features/payments/contributors";
 import { decimalQuantity, isoDate, money, optionalDate, optionalDecimal, optionalId, optionalMoney, optionalQuantity, positiveMoney, requiredId, requiredText, text } from "@/lib/validation/common";
 
 const requestId = z.uuid();
@@ -63,7 +64,9 @@ export type SolReturnValues = z.infer<typeof solReturnSchema>;
 export const SOL_METHODS = ["cash", "bank_transfer", "cheque", "other"] as const;
 export const solPaymentSchema = z.object({
   jobId: requiredId, date: isoDate, amount: positiveMoney, method: z.enum(SOL_METHODS), accountId: requiredId, payerAccount: text(60), reference: text(120), notes: text(500), requestId,
+  contributors: contributorsField,
 }).superRefine((v, ctx) => {
+  checkContributorsSum(v.contributors, v.amount, ctx);
   if (["bank_transfer", "cheque"].includes(v.method) && v.reference === "") ctx.addIssue({ code: "custom", message: "required", path: ["reference"] });
 });
 export type SolPaymentValues = z.infer<typeof solPaymentSchema>;

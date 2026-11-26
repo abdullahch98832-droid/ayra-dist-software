@@ -137,9 +137,15 @@ Distributor (2026-11-25):
 
 Suppliers and extra payments (2026-11-25):
 - **CONFIRMED** — Suppliers are the distributor's own staff who take the order taker's orders to the shops. A delivery names its supplier, the shop's receipt and the money received.
-- **CONFIRMED** — Extra payments to the Ayra company have an own name, time and amount and can be edited.
+- **CONFIRMED** — Extra payments to the Ayra company have an own name and amount and can be edited.
 - **CONFIRMED** — Goods are bought only from the Ayra company. Vendor screens are hidden (`NEXT_PUBLIC_OTHER_VENDORS=true` shows them again); no data is deleted.
 - ASSUMPTION — An extra payment is a cost unless it is marked as part of what is owed for goods.
+
+Company money, received and paid (2026-11-26):
+- **CONFIRMED** — The "Company money" screen records both money received (in) and money paid (out), each marked. Expenses stay in the separate Expenses section.
+- **CONFIRMED** — Entries carry a date only, with no time of day.
+- **CONFIRMED** — Money received may list several people who gave it and how much each; the amounts must add up to the total.
+- ASSUMPTION — Money received is booked as owner's capital.
 - ASSUMPTION — A supplier's own cash is posted without approval, as that of an order taker.
 - **OPEN** — Do suppliers earn a commission, or should a shortage in their cash be taken from their salary?
 

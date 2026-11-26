@@ -5,6 +5,7 @@ import { Ban, CheckCheck, Trash2 } from "lucide-react";
 import { z } from "zod";
 import { deleteReceivableDraftAction, postPaymentAction, voidPaymentAction } from "@/features/receivables/actions";
 import { loadOpenInvoices, loadPayment } from "@/features/receivables/queries";
+import { ContributorsList } from "@/features/payments/contributors-list";
 import { DOCUMENT_TONE } from "@/features/sales/status";
 import { takerNames } from "@/features/takers/queries";
 import { fill } from "@/i18n/format";
@@ -76,6 +77,7 @@ export default async function PaymentPage({ params }: PageProps<"/receivables/pa
             ...(posted ? [{ label: r.onAccount, value: <Money amount={left} locale={locale} /> }] : []),
             { label: d.journal, value: payment.journal && <Ltr>{payment.journal.doc_no}</Ltr> },
             { label: d.notes, value: payment.notes },
+            ...(Array.isArray(payment.contributors) && payment.contributors.length > 0 ? [{ label: d.split.paidBy, value: <ContributorsList contributors={payment.contributors} locale={locale} /> }] : []),
           ]} />
         </SectionCard>
         {payment.customer_payment_allocations.length > 0 && (

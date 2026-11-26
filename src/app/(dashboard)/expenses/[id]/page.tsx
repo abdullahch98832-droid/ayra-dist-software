@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Ban, CheckCheck, Paperclip, Pencil, Trash2, X } from "lucide-react";
+import { ContributorsList } from "@/features/payments/contributors-list";
 import { deleteExpenseAction, postExpenseAction, rejectExpenseAction, voidExpenseAction } from "@/features/expenses/actions";
 import { loadExpense, receiptUrl, userNames } from "@/features/expenses/queries";
 import { expenseStatus } from "@/features/expenses/schema";
@@ -79,6 +80,7 @@ export default async function ExpensePage({ params }: PageProps<"/expenses/[id]"
             ...(e.job ? [{ label: x.job, value: can(ctx, "sol.view") ? <Link href={`/sol/jobs/${e.job.id}`} className="text-primary hover:underline"><Ltr>{e.job.doc_no}</Ltr></Link> : <Ltr>{e.job.doc_no}</Ltr> }] : []),
             ...(e.litres !== null ? [{ label: x.litres, value: formatNumber(e.litres, locale) }] : []), ...(e.odometer !== null ? [{ label: x.odometer, value: formatNumber(e.odometer, locale) }] : []),
             { label: d.journal, value: e.journal && <Ltr>{e.journal.doc_no}</Ltr> },
+            ...(Array.isArray(e.contributors) && e.contributors.length > 0 ? [{ label: d.split.paidBy, value: <ContributorsList contributors={e.contributors} locale={locale} /> }] : []),
           ]} />
         </SectionCard>
         {!e.receipt_path && (own || poster) && (status === "draft" || status === "posted") && <AttachReceipt expenseId={id} />}

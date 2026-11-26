@@ -240,6 +240,7 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          contributors: Json
         }
         Insert: { [key: string]: never }
         Update: { [key: string]: never }
@@ -312,6 +313,7 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          contributors: Json
         }
         Insert: { [key: string]: never }
         Update: { [key: string]: never }
@@ -411,6 +413,8 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          direction: string
+          contributors: Json
         }
         Insert: { [key: string]: never }
         Update: { [key: string]: never }
@@ -540,6 +544,7 @@ export type Database = {
           sol_job_id: string | null
           payer_account: string | null
           delivery_id: string | null
+          contributors: Json
         }
         Insert: {
           id?: string
@@ -1243,6 +1248,7 @@ export type Database = {
           odometer: number | null
           void_reason: string | null
           no_receipt_reason: string | null
+          contributors: Json
         }
         Insert: { [key: string]: never }
         Update: { [key: string]: never }
@@ -3502,6 +3508,7 @@ export type Database = {
           created_by: string | null
           updated_at: string
           updated_by: string | null
+          contributors: Json
         }
         Insert: {
           id?: string
@@ -5306,11 +5313,13 @@ export type Database = {
           entry_date: string
           name: string
           paid_at: string
+          direction: string
           kind: string
           account: string
           method: Database["public"]["Enums"]["payment_method"]
           reference: string
           notes: string
+          contributors: Json
           status: string
           amount: number
         }[]

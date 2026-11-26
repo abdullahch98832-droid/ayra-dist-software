@@ -19,7 +19,7 @@ export async function recordPaymentAction(values: unknown): Promise<ActionResult
     const { data, error } = await supabase.rpc("record_customer_payment", {
       p_doc: {
         customer_id: v.customerId, date: v.date, amount: v.amount, method: v.method, financial_account_id: v.destination === HELD ? null : v.destination,
-        collected_by: orNull(v.collectedBy), reference: orNull(v.reference), notes: orNull(v.notes), client_request_id: v.requestId,
+        collected_by: orNull(v.collectedBy), reference: orNull(v.reference), notes: orNull(v.notes), client_request_id: v.requestId, contributors: v.contributors,
       },
       p_allocations: v.allocations.filter(chosen).map((a) => ({ invoice_id: a.invoiceId, amount: a.amount })),
     });
@@ -84,7 +84,7 @@ export async function recordDepositAction(values: unknown): Promise<ActionResult
   return runAction(["receivables.collect", "receivables.post"], depositSchema, values, async (v) => {
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("record_cash_deposit", {
-      p_doc: { employee_id: v.employeeId, date: v.date, amount: v.amount, financial_account_id: v.accountId, reference: orNull(v.reference), notes: orNull(v.notes), client_request_id: v.requestId },
+      p_doc: { employee_id: v.employeeId, date: v.date, amount: v.amount, financial_account_id: v.accountId, reference: orNull(v.reference), notes: orNull(v.notes), client_request_id: v.requestId, contributors: v.contributors },
     });
     if (error) throw error;
     return data;

@@ -9,7 +9,7 @@ Reports are offered under **Reports**, in the areas below. Each has a screen, a 
 | Inventory | Current stock, Stock valuation, Fast-moving, Slow-moving, Low stock, Damaged stock, Product-wise profit, Stock movement history |
 | Sales | Daily, Monthly, Customer-wise, Product-wise, Order taker performance, Supplier performance, Supplier deliveries, Territory performance, Pending collections, Collections |
 | Vendors | Total purchases, Supplier payments, Supplier balances, Delivery performance, Purchase history |
-| Ayra company | Goods received, Purchase value and account, Payments made, Extra payments, Returns, Adjustments, Pending company dues |
+| Ayra company | Goods received, Purchase value and account, Payments made, Company money (received and paid), Returns, Adjustments, Pending company dues |
 | SOL | Distributor orders, Job register, Total contracts, Payments received, Pending payments, Job expenses, Profitability |
 | Financial | Daily and Monthly profit and loss, Cash flow, Expense breakdown, Receivables aging, Payables aging, Bank reconciliation |
 | Operations | Deliveries, Expenses, Payroll, Vehicles, Vehicle trips |
@@ -39,7 +39,7 @@ Reports of money are calculated from **posted journal lines** where the ledger h
 | Payables aging, Supplier balances, Pending dues | Payables on that day |
 | Purchases, Purchase history, Goods received | Payables, entries of goods receipts |
 | Supplier payments, Payments made, Returns, Adjustments | Payables, entries of those documents |
-| Extra payments to Ayra | extra cost and Ayra payable, entries of extra payments |
+| Company money (received/paid) | received as owner's capital, extra cost and Ayra payable |
 | Purchase value and account | opening, movement and closing of the company's account |
 | Stock valuation | Inventory |
 | Distributor orders, Job register, Total contracts, Profitability | SOL income of completed jobs |
