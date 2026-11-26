@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Ban, Pencil, Plus, Trash2 } from "lucide-react";
@@ -104,7 +104,14 @@ function ExtraForm({ payment, today, accounts, onDone }: { payment: ExtraPayment
   const people = useFieldArray({ control: form.control, name: "contributors" });
   const direction = form.watch("direction");
   const isIn = direction === "in";
+  const hasPeople = people.fields.length > 0;
   const noAccounts = activeAccounts.length === 0 && !payment;
+
+  useEffect(() => {
+    if (hasPeople && !form.getValues("accountId") && activeAccounts.length > 0) {
+      form.setValue("accountId", activeAccounts[0]!.id);
+    }
+  }, [hasPeople, activeAccounts, form]);
   // Show the moment the people's amounts do not add up to the total.
   const paisa = (s: string) => { try { return toPaisa(s || "0"); } catch { return ZERO; } };
   const watched = form.watch("contributors");
@@ -137,9 +144,11 @@ function ExtraForm({ payment, today, accounts, onDone }: { payment: ExtraPayment
         <div className="grid gap-4 sm:grid-cols-2">
           <Field id="extra-date" label={x.date} required error={errors.date?.message}><Input id="extra-date" type="date" dir="ltr" max={today} {...form.register("date")} /></Field>
           <Field id="extra-amount" label={x.amount} required error={errors.amount?.message}><MoneyInput id="extra-amount" {...form.register("amount")} /></Field>
-          <Field id="extra-account" label={isIn ? x.receivedInto : x.paidFrom} required error={errors.accountId?.message}>
-            <NativeSelect id="extra-account" {...form.register("accountId")}><option value="">{t.documents.choose}</option>{accounts.filter((a) => a.isActive || a.id === payment?.accountId).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</NativeSelect>
-          </Field>
+          {!hasPeople && (
+            <Field id="extra-account" label={isIn ? x.receivedInto : x.paidFrom} required error={errors.accountId?.message}>
+              <NativeSelect id="extra-account" {...form.register("accountId")}><option value="">{t.documents.choose}</option>{accounts.filter((a) => a.isActive || a.id === payment?.accountId).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</NativeSelect>
+            </Field>
+          )}
           <Field id="extra-method" label={x.method} required error={errors.method?.message}>
             <NativeSelect id="extra-method" {...form.register("method")}>{EXTRA_METHODS.map((m) => <option key={m} value={m}>{t.purchasing.methods[m]}</option>)}</NativeSelect>
           </Field>
