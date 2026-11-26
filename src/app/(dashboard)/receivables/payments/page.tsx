@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Banknote } from "lucide-react";
+import { peopleNames } from "@/features/payments/contributors";
 import { loadPayments, seesAllCollections } from "@/features/receivables/queries";
 import { PAYMENT_METHODS } from "@/features/receivables/schema";
 import { documentOptions } from "@/features/sales/status";
@@ -41,7 +42,7 @@ export default async function PaymentsPage({ searchParams }: PageProps<"/receiva
           const settled = sumPaisa(p.customer_payment_allocations.map((a) => toPaisa(a.amount)));
           return {
             id: p.id, no: p.doc_no, noHref: `/receivables/payments/${p.id}`, customer: p.customer ? local(p.customer.name, p.customer.name_ur) : null, date: p.payment_date, method: t.purchasing.methods[p.method], reference: p.reference,
-            collector: collector ? local(collector.nameEn, collector.nameUr) : null, held: p.financial_account_id ? null : r.heldByTaker, amount: p.amount, onAccount: p.status === "posted" ? toDbAmount(toPaisa(p.amount) - settled) : null, status: p.status,
+            collector: collector ? local(collector.nameEn, collector.nameUr) : null, held: p.financial_account_id ? null : r.heldByTaker, people: peopleNames(p.contributors), amount: p.amount, onAccount: p.status === "posted" ? toDbAmount(toPaisa(p.amount) - settled) : null, status: p.status,
           };
         })}
         columns={[
@@ -50,6 +51,7 @@ export default async function PaymentsPage({ searchParams }: PageProps<"/receiva
           { key: "date", label: t.documents.date, kind: "date" },
           { key: "method", sub: "held", label: r.method, kind: "text", hideBelow: "lg" },
           { key: "collector", label: r.collectedBy, kind: "text", hideBelow: "xl" },
+          ...(rows.some((p) => peopleNames(p.contributors)) ? [{ key: "people", label: t.documents.split.paidBy, kind: "text" as const, hideBelow: "lg" as const }] : []),
           { key: "amount", label: r.amount, kind: "money" },
           { key: "onAccount", label: r.onAccount, kind: "money", hideBelow: "xl" },
           { key: "status", label: t.common.status, kind: "status", options: documentOptions(t) },

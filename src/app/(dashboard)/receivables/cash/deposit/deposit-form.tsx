@@ -11,7 +11,7 @@ import { paisaOf } from "@/components/documents/invoice-allocations";
 import { Field, NativeSelect } from "@/components/forms/field";
 import { FormSection } from "@/components/forms/form-section";
 import { MoneyInput } from "@/components/forms/money-input";
-import { ContributorsField, type ContributorsForm } from "@/components/forms/contributors-field";
+import { ContributorsField, SingleAccount, SplitOption, type ContributorsForm } from "@/components/forms/contributors-field";
 import { Ltr } from "@/components/shared/bidi";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,16 +42,18 @@ export function DepositForm({ defaults, holders, accounts, poster }: { defaults:
             </Field>
             <Field id="amount" label={r.amount} required error={errors.amount?.message}><MoneyInput id="amount" {...form.register("amount")} /></Field>
             <Field id="date" label={r.date} required error={errors.date?.message}><Input id="date" type="date" dir="ltr" {...form.register("date")} /></Field>
-            <Field id="accountId" label={r.depositTo} required error={errors.accountId?.message}>
-              <NativeSelect id="accountId" {...form.register("accountId")}>
-                <option value="">{t.documents.choose}</option>
-                {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-              </NativeSelect>
-            </Field>
+            <SingleAccount form={form as unknown as ContributorsForm}>
+              <Field id="accountId" label={r.depositTo} required error={errors.accountId?.message}>
+                <NativeSelect id="accountId" {...form.register("accountId")}>
+                  <option value="">{t.documents.choose}</option>
+                  {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                <SplitOption accounts={accounts} /></NativeSelect>
+              </Field>
+            </SingleAccount>
             <Field id="reference" label={t.documents.reference} optional error={errors.reference?.message}><Input id="reference" dir="ltr" {...form.register("reference")} /></Field>
             <Held control={form.control} holders={holders} />
             <Field id="notes" label={t.documents.notes} optional className="sm:col-span-2 lg:col-span-3" error={errors.notes?.message}><Textarea id="notes" rows={2} {...form.register("notes")} /></Field>
-          <ContributorsField form={form as unknown as ContributorsForm} className="sm:col-span-2 lg:col-span-3" />
+          <ContributorsField form={form as unknown as ContributorsForm} accounts={accounts.map((a) => ({ id: a.id, label: a.name }))} className="sm:col-span-2 lg:col-span-3" />
           </FormSection>
         );
       }}

@@ -63,7 +63,7 @@ export async function loadTransfers(filter: ListFilter) {
 export async function loadVouchers(filter: ListFilter & { kind: string }) {
   const supabase = await createClient();
   let query = supabase.from("cash_vouchers").select(
-    "id, doc_no, kind, voucher_date, amount, party_name, method, reference, description, status, void_reason, account:financial_accounts!cash_vouchers_financial_account_id_fkey(name), counter:chart_of_accounts!cash_vouchers_counter_account_id_fkey(code, name_en, name_ur)", { count: "exact" });
+    "id, doc_no, kind, voucher_date, amount, party_name, method, reference, description, status, void_reason, contributors, account:financial_accounts!cash_vouchers_financial_account_id_fkey(name), counter:chart_of_accounts!cash_vouchers_counter_account_id_fkey(code, name_en, name_ur)", { count: "exact" });
   if (filter.status) query = query.eq("status", filter.status as "posted");
   if (filter.kind) query = query.eq("kind", filter.kind);
   if (filter.q) query = query.or(`doc_no.ilike.%${filter.q}%,reference.ilike.%${filter.q}%,party_name.ilike.%${filter.q}%,description.ilike.%${filter.q}%`);

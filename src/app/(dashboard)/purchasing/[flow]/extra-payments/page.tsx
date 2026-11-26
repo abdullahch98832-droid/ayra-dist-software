@@ -10,6 +10,7 @@ import { pageContext } from "@/lib/page-context";
 import { formatPaisa, sumPaisa, toPaisa } from "@/lib/utils/money";
 import { PeriodFrame } from "@/components/dashboard/period-frame";
 import { Forbidden } from "@/components/layout/forbidden";
+import { DocumentLink } from "@/components/documents/document-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Ltr } from "@/components/shared/bidi";
 import { StatCard } from "@/components/shared/stat-card";
@@ -34,7 +35,7 @@ export default async function ExtraPaymentsPage({ params, searchParams }: PagePr
   const sum = (pick: (r: (typeof live)[number]) => boolean) => <Ltr>{formatPaisa(sumPaisa(live.filter(pick).map((r) => toPaisa(r.amount))), locale)}</Ltr>;
   return (
     <>
-      <PageHeader title={x.title} description={x.hint} />
+      <PageHeader title={x.title} description={x.hint} actions={can(ctx, "reports.export") && <DocumentLink kind="report" params={{ report: "company-extra", table: "payments", range: "custom", from: period.from, to: period.to }} label={t.docs.pdf} />} />
       <PeriodFrame compact key={`${period.preset}-${period.from}-${period.to}`} period={period} today={today} title={x.title} description={x.reportHint}>
         <StatGrid>
           <StatCard label={x.received} value={sum((r) => r.direction === "in")} icon={Banknote} />

@@ -13,7 +13,7 @@ import { DocumentForm } from "@/components/documents/document-form";
 import { Field, NativeSelect, useMessage } from "@/components/forms/field";
 import { FormSection } from "@/components/forms/form-section";
 import { MoneyInput } from "@/components/forms/money-input";
-import { ContributorsField, type ContributorsForm } from "@/components/forms/contributors-field";
+import { ContributorsField, SingleAccount, SplitOption, type ContributorsForm } from "@/components/forms/contributors-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -54,9 +54,11 @@ export function ExpenseForm({ save, openAfter, maxDate, defaults, accounts, cate
             </Field>
             <Field id="amount" label={x.amount} required error={errors.amount?.message}><MoneyInput id="amount" {...form.register("amount")} /></Field>
             <Field id="date" label={x.date} required error={errors.date?.message}><Input id="date" type="date" dir="ltr" max={latest} {...form.register("date")} /></Field>
-            <Field id="accountId" label={x.paidFrom} required error={errors.accountId?.message}>
-              <NativeSelect id="accountId" {...form.register("accountId")}><option value="">{t.documents.choose}</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}</NativeSelect>
-            </Field>
+            <SingleAccount form={form as unknown as ContributorsForm}>
+              <Field id="accountId" label={x.paidFrom} required error={errors.accountId?.message}>
+                <NativeSelect id="accountId" {...form.register("accountId")}><option value="">{t.documents.choose}</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}<SplitOption accounts={accounts} /></NativeSelect>
+              </Field>
+            </SingleAccount>
             <Field id="method" label={x.method} required error={errors.method?.message}>
               <NativeSelect id="method" {...form.register("method")}>{EXPENSE_METHODS.map((m) => <option key={m} value={m}>{t.purchasing.methods[m]}</option>)}</NativeSelect>
             </Field>
@@ -76,7 +78,7 @@ export function ExpenseForm({ save, openAfter, maxDate, defaults, accounts, cate
             <Receipt />
             <p className="text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">{x.salariesNote}</p>
             <Field id="description" label={x.description} required className="sm:col-span-2 lg:col-span-3" error={errors.description?.message}><Textarea id="description" rows={2} {...form.register("description")} /></Field>
-          <ContributorsField form={form as unknown as ContributorsForm} className="sm:col-span-2 lg:col-span-3" />
+          <ContributorsField form={form as unknown as ContributorsForm} accounts={accounts} className="sm:col-span-2 lg:col-span-3" />
           </FormSection>
         );
       }}

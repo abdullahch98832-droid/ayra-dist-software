@@ -1,6 +1,6 @@
 # Database Design
 
-> **Status:** implemented as migrations in `supabase/migrations/` and verified by 247 automated tests on PostgreSQL 17 (`npm run test:db`). See [SUPABASE_SETUP.md](SUPABASE_SETUP.md).
+> **Status:** implemented as migrations in `supabase/migrations/` and verified by 251 automated tests on PostgreSQL 17 (`npm run test:db`). See [SUPABASE_SETUP.md](SUPABASE_SETUP.md).
 
 ## Conventions
 
@@ -42,6 +42,10 @@
 | `20261201100000_distributor` | wording of a distributor; SOL orders of other distributors: `purchase_orders.sol_job_id`, price paid to Ayra as cost of the order |
 | `20261202100000_suppliers` | suppliers as staff, supplier and money of a delivery, extra payments to the Ayra company, vendors |
 | `20261203100000_company_money` | company money in/out (investment received, extra paid to Ayra), the people who gave it, no time of day |
+| `20261204100000_payment_people` | optional split of who paid or received how much on every payment, deposit, expense and voucher (a record only; must add up to the total) |
+| `20261205100000_expense_corrections` | approved expense vouchers can be corrected by an approver: the old entry is reversed and a corrected one posted |
+| `20261206100000_more_documents` | printable purchase returns, company money vouchers, cash vouchers and cash deposits; receipts and vouchers print who paid how much |
+| `20261207100000_split_accounts` | money paid or received by more than one person: each person is a cash or bank account and their share is posted to it |
 
 With every new migration, set `app_settings.schema_version` and update `src/config/database.ts` (a test enforces it). Until that migration has been applied, administrators see a notice naming the file and affected pages say the database needs an update.
 

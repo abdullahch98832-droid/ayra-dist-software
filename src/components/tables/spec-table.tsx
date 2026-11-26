@@ -28,8 +28,8 @@ const decimalText = (hundredths: bigint, locale: "en" | "ur") => formatNumber(Nu
 export interface SpecColumn {
   key: string;
   label: string;
-  /** `link` reads its address from `<key>Href`. Money is a decimal string or PostgREST number. */
-  kind: "text" | "link" | "code" | "date" | "datetime" | "quantity" | "decimal" | "money" | "percent" | "status";
+  /** `link` and `action` (a small button) read their address from `<key>Href`. Money is a decimal string or PostgREST number. */
+  kind: "text" | "link" | "action" | "code" | "date" | "datetime" | "quantity" | "decimal" | "money" | "percent" | "status";
   /** Second line in small print, read from this key. */
   sub?: string;
   hideBelow?: "lg" | "xl" | "2xl";
@@ -66,6 +66,7 @@ export function SpecTable({ rows, columns, caption, empty, toolbar, searchKeys, 
 
   const render = (c: SpecColumn, row: SpecRow): React.ReactNode => {
     const value = row[c.key];
+    if (c.kind === "action") return value && row[`${c.key}Href`] ? <LinkButton variant="outline" size="sm" href={String(row[`${c.key}Href`])}>{String(value)}</LinkButton> : null;
     if (value === null || value === undefined || value === "") return "—";
     switch (c.kind) {
       case "link":
@@ -110,11 +111,11 @@ export function SpecTable({ rows, columns, caption, empty, toolbar, searchKeys, 
 
   const end = (c: SpecColumn) => c.kind === "quantity" || c.kind === "decimal" || c.kind === "money" || c.kind === "percent";
   const tableColumns: DataTableColumn<SpecRow>[] = columns.map((c) => ({
-    id: c.key, header: c.label, primary: c.primary, hideBelow: c.hideBelow, align: end(c) ? "end" : "start",
+    id: c.key, header: c.label, primary: c.primary, hideBelow: c.hideBelow, align: end(c) || c.kind === "action" ? "end" : "start",
     cell: (row) => c.sub && row[c.sub]
       ? <div className="min-w-0">{render(c, row)}<div className="text-xs text-muted-foreground"><bdi>{String(row[c.sub])}</bdi></div></div>
       : render(c, row),
-    sortValue: (row) => sortValue(c, row),
+    sortValue: c.kind === "action" ? undefined : (row) => sortValue(c, row),
     footer: c.total ? (matching) => footer(c, matching) : undefined,
   }));
 
@@ -124,8 +125,9 @@ export function SpecTable({ rows, columns, caption, empty, toolbar, searchKeys, 
       toast.add({ title: allowed?.code === "permissionDenied" ? t.analytics.exportForbidden : t.analytics.exportFailed, type: "error" });
       return;
     }
-    const header = columns.flatMap((c) => (c.sub ? [c.label, ""] : [c.label]));
-    const body = rows.map((row) => columns.flatMap((c) => {
+    const data = columns.filter((c) => c.kind !== "action");
+    const header = data.flatMap((c) => (c.sub ? [c.label, ""] : [c.label]));
+    const body = rows.map((row) => data.flatMap((c) => {
       const value = row[c.key];
       const text = c.kind === "status" ? c.options?.[String(value)]?.label ?? value : value;
       return c.sub ? [text, row[c.sub]] : [text];

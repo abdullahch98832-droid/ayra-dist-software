@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useState, useTransition } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Ban, Pencil, Plus, Trash2 } from "lucide-react";
+import { Ban, FileText, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { saveExtraAction, voidExtraAction } from "@/features/company-extra/actions";
 import type { ExtraPayment } from "@/features/company-extra/queries";
+import { documentHref } from "@/features/documents/kinds";
 import { EXTRA_KINDS, EXTRA_METHODS, extraSchema, type ExtraValues } from "@/features/company-extra/schema";
 import { useI18n } from "@/i18n/context";
 import { cn } from "@/lib/utils";
@@ -14,9 +15,11 @@ import type { ActionResult } from "@/lib/action-result";
 import { toPaisa } from "@/lib/utils/money";
 import { ActionButton } from "@/components/documents/action-button";
 import { ActionError } from "@/components/forms/action-error";
+import { ContributorsField, SingleAccount, SplitOption, type ContributorsForm } from "@/components/forms/contributors-field";
 import { Field, NativeSelect } from "@/components/forms/field";
 import { MoneyInput } from "@/components/forms/money-input";
 import { Ltr, Money } from "@/components/shared/bidi";
+import { LinkButton } from "@/components/shared/link-button";
 import { formatDate } from "@/components/shared/format";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { DataTable, type DataTableColumn } from "@/components/tables/data-table";
@@ -63,14 +66,19 @@ export function ExtraPayments({ rows, pay, today, accounts }: { rows: ExtraPayme
         return <span className={cn(net < ZERO && "text-muted-foreground")}>{net < ZERO ? "−" : ""}<Money amount={net < ZERO ? -net : net} locale={locale} /></span>;
       },
     },
-    ...(pay ? [{
-      id: "actions", header: "", cell: (r: ExtraPayment) => r.isVoid ? null : (
+    {
+      id: "actions", header: "", cell: (r: ExtraPayment) => (
         <span className="flex justify-end gap-1">
-          <Button variant="ghost" size="icon-sm" aria-label={`${x.edit}: ${r.name}`} onClick={() => setEditing(r)}><Pencil /></Button>
-          <ActionButton label={x.void} icon={<Ban aria-hidden />} variant="ghost" action={voidExtraAction.bind(null, r.id)} reasonLabel={t.documents.reason} success={x.voided} confirm={{ title: x.voidTitle, description: x.voidHint, tone: "danger" }} />
+          <LinkButton variant="ghost" size="icon-sm" aria-label={`${t.docs.pdf}: ${r.number}`} href={documentHref("company_money", { id: r.id })}><FileText /></LinkButton>
+          {pay && !r.isVoid && (
+            <>
+              <Button variant="ghost" size="icon-sm" aria-label={`${x.edit}: ${r.name}`} onClick={() => setEditing(r)}><Pencil /></Button>
+              <ActionButton label={x.void} icon={<Ban aria-hidden />} variant="ghost" action={voidExtraAction.bind(null, r.id)} reasonLabel={t.documents.reason} success={x.voided} confirm={{ title: x.voidTitle, description: x.voidHint, tone: "danger" }} />
+            </>
+          )}
         </span>
       ),
-    } satisfies DataTableColumn<ExtraPayment>] : []),
+    },
   ];
   const add = pay && <Button onClick={() => setEditing("new")}><Plus aria-hidden />{x.add}</Button>;
   return (
@@ -93,26 +101,15 @@ function ExtraForm({ payment, today, accounts, onDone }: { payment: ExtraPayment
   const activeAccounts = accounts.filter((a) => a.isActive);
   const [defaults] = useState<ExtraValues>(() =>
     payment
-      ? { name: payment.name, date: payment.date, amount: payment.amount, direction: payment.direction, kind: payment.kind, accountId: payment.accountId, method: payment.method, reference: payment.reference, notes: payment.notes, contributors: payment.contributors, requestId: crypto.randomUUID() }
+      ? { name: payment.name, date: payment.date, amount: payment.amount, direction: payment.direction, kind: payment.kind, accountId: payment.accountId, method: payment.method, reference: payment.reference, notes: payment.notes, contributors: payment.contributors.map((c) => ({ accountId: c.accountId || (accounts.find((x) => x.name.trim().toLowerCase() === c.name.trim().toLowerCase())?.id ?? ""), amount: c.amount })), requestId: crypto.randomUUID() }
       : { name: "", date: today, amount: "", direction: "out", kind: "extra", accountId: activeAccounts[0]?.id ?? "", method: "cash", reference: "", notes: "", contributors: [], requestId: crypto.randomUUID() },
   );
   const form = useForm<ExtraValues>({ resolver: zodResolver(extraSchema), defaultValues: defaults });
   const { errors } = form.formState;
-  const people = useFieldArray({ control: form.control, name: "contributors" });
-  const direction = form.watch("direction");
-  const isIn = direction === "in";
-  const hasPeople = people.fields.length > 0;
+  const isIn = useWatch({ control: form.control, name: "direction" }) === "in";
   const noAccounts = activeAccounts.length === 0 && !payment;
-
-  useEffect(() => {
-    if (hasPeople && !form.getValues("accountId") && activeAccounts.length > 0) {
-      form.setValue("accountId", activeAccounts[0]!.id);
-    }
-  }, [hasPeople, activeAccounts, form]);
-  // Show the moment the people's amounts do not add up to the total.
-  const paisa = (s: string) => { try { return toPaisa(s || "0"); } catch { return ZERO; } };
-  const watched = form.watch("contributors");
-  const contribMismatch = (watched?.length ?? 0) > 0 && watched.reduce((sum, c) => sum + paisa(c?.amount ?? ""), ZERO) !== paisa(form.watch("amount"));
+  const choices = accounts.filter((a) => a.isActive || a.id === payment?.accountId || payment?.contributors.some((c) => c.accountId === a.id));
+  const split = form as unknown as ContributorsForm;
 
   const submit = form.handleSubmit((values) => startTransition(async () => {
     const res = await saveExtraAction(payment?.id ?? null, values);
@@ -141,11 +138,11 @@ function ExtraForm({ payment, today, accounts, onDone }: { payment: ExtraPayment
         <div className="grid gap-4 sm:grid-cols-2">
           <Field id="extra-date" label={x.date} required error={errors.date?.message}><Input id="extra-date" type="date" dir="ltr" max={today} {...form.register("date")} /></Field>
           <Field id="extra-amount" label={x.amount} required error={errors.amount?.message}><MoneyInput id="extra-amount" {...form.register("amount")} /></Field>
-          {!hasPeople && (
+          <SingleAccount form={split}>
             <Field id="extra-account" label={isIn ? x.receivedInto : x.paidFrom} required error={errors.accountId?.message}>
-              <NativeSelect id="extra-account" {...form.register("accountId")}><option value="">{t.documents.choose}</option>{accounts.filter((a) => a.isActive || a.id === payment?.accountId).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</NativeSelect>
+              <NativeSelect id="extra-account" {...form.register("accountId")}><option value="">{t.documents.choose}</option>{choices.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}<SplitOption accounts={choices} /></NativeSelect>
             </Field>
-          )}
+          </SingleAccount>
           <Field id="extra-method" label={x.method} required error={errors.method?.message}>
             <NativeSelect id="extra-method" {...form.register("method")}>{EXTRA_METHODS.map((m) => <option key={m} value={m}>{t.purchasing.methods[m]}</option>)}</NativeSelect>
           </Field>
@@ -157,21 +154,7 @@ function ExtraForm({ payment, today, accounts, onDone }: { payment: ExtraPayment
           <NativeSelect id="extra-kind" {...form.register("kind")}>{EXTRA_KINDS.map((k) => <option key={k} value={k}>{x.kinds[k]}</option>)}</NativeSelect>
         </Field>
       )}
-      <fieldset className="grid gap-2 rounded-xl border p-4">
-        <legend className="px-1 text-sm font-medium">{isIn ? x.givenBy : t.documents.split.paidBy}</legend>
-        <p className="text-xs text-muted-foreground">{x.givenByHint}</p>
-        {people.fields.map((f, i) => (
-          <div key={f.id} className="grid grid-cols-[minmax(0,1fr)_9rem_auto] items-start gap-2">
-            <Input aria-label={x.personName} placeholder={x.personName} {...form.register(`contributors.${i}.name`)} />
-            <MoneyInput aria-label={x.personAmount} placeholder={x.personAmount} {...form.register(`contributors.${i}.amount`)} />
-            <Button type="button" variant="ghost" size="icon-sm" aria-label={x.removePerson} onClick={() => people.remove(i)}><Trash2 /></Button>
-          </div>
-        ))}
-        <div>
-          <Button type="button" variant="outline" size="sm" onClick={() => people.append({ name: "", amount: "" })}><Plus aria-hidden />{x.addPerson}</Button>
-        </div>
-        {contribMismatch && <p role="alert" className="text-xs text-destructive">{x.contributorsSum}</p>}
-      </fieldset>
+      {!noAccounts && <ContributorsField form={split} accounts={choices.map((a) => ({ id: a.id, label: a.name }))} />}
       <Field id="extra-notes" label={x.notes} optional error={errors.notes?.message}><Textarea id="extra-notes" rows={2} {...form.register("notes")} /></Field>
       {payment && <p className="text-xs text-muted-foreground">{x.editNote}</p>}
       <DialogFooter>

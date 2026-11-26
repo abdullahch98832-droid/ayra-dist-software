@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { maskAccount } from "@/lib/utils/mask";
 import { money, orNull, positiveMoney } from "@/lib/validation/common";
 import { arrivalSchema, buySchema, jobSchema, orderSchema, plannedSchema, sentLines, serviceSchema, solPaymentSchema, solReturnSchema, typeSchema } from "./schema";
+import { contributorsDoc } from "@/features/payments/contributors";
 
 const uuid = z.uuid();
 const idOrNull = (id: string | null) => sqlNull(id === null ? null : uuid.parse(id));
@@ -155,7 +156,7 @@ export async function recordSolPaymentAction(values: unknown): Promise<ActionRes
       p_job_id: v.jobId,
       p_doc: {
         date: v.date, amount: v.amount, method: v.method, financial_account_id: v.accountId, payer_account: maskAccount(v.payerAccount), reference: orNull(v.reference),
-        notes: orNull(v.notes), client_request_id: v.requestId, contributors: v.contributors,
+        notes: orNull(v.notes), client_request_id: v.requestId, contributors: contributorsDoc(v.contributors),
       },
     });
     if (error) throw error;

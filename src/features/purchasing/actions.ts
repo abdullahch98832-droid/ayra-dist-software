@@ -8,6 +8,7 @@ import { sqlNull } from "@/lib/supabase/rpc";
 import { createClient } from "@/lib/supabase/server";
 import { orNull } from "@/lib/validation/common";
 import { billSchema, orderSchema, paymentSchema, receiptSchema, receivedLines, returnSchema } from "./schema";
+import { contributorsDoc } from "@/features/payments/contributors";
 
 const uuid = z.uuid();
 const idOrNull = (id: string | null) => sqlNull(id === null ? null : uuid.parse(id));
@@ -77,7 +78,7 @@ export async function recordPaymentAction(values: unknown): Promise<ActionResult
     const { data, error } = await supabase.rpc("record_supplier_payment", {
       p_doc: {
         supplier_id: v.supplierId, date: v.date, amount: v.amount, financial_account_id: v.accountId, method: v.method,
-        reference: orNull(v.reference), notes: orNull(v.notes), client_request_id: v.requestId, contributors: v.contributors,
+        reference: orNull(v.reference), notes: orNull(v.notes), client_request_id: v.requestId, contributors: contributorsDoc(v.contributors),
       },
       p_allocations: v.allocations.filter((a) => /[1-9]/.test(a.amount)).map((a) => ({ invoice_id: a.billId, amount: a.amount })),
     });

@@ -87,7 +87,7 @@ describe("sales documents", () => {
     }
     const nobody = await db.createUser(null);
     expect(await doc(nobody, "sales_invoice", id)).toBeNull();
-    for (const kind of ["purchase_order", "goods_receipt", "purchase_invoice", "delivery_challan", "sol_invoice", "sol_challan", "customer_receipt", "supplier_receipt", "expense_voucher", "salary_slip", "salary_slips"]) {
+    for (const kind of ["purchase_order", "goods_receipt", "purchase_invoice", "delivery_challan", "sol_invoice", "sol_challan", "customer_receipt", "supplier_receipt", "expense_voucher", "salary_slip", "salary_slips", "supplier_return", "company_money", "cash_voucher", "cash_deposit"]) {
       expect(await doc(nobody, kind, randomUUID())).toBeNull();
     }
     await expect(doc(b.admin, "secrets", id)).rejects.toMatchObject({ code: "22023" });
@@ -156,6 +156,40 @@ describe("purchase documents", () => {
     const paid = await doc(b.admin, "supplier_receipt", bill.pid);
     expect(paid.totals).toEqual({ total: "700.00", allocated: "650.00", unallocated: "50.00" });
     expect(paid.balance).toBe("800.00");
+  });
+});
+
+describe("returns and money vouchers", () => {
+  it("a purchase return adds up and never says what the goods cost", async () => {
+    const s = await supplier(db);
+    const p = await product(db, b);
+    await receive(db, b, s, p, 10, b.units.PCS, "10.00");
+    const id = await db.as(b.admin, async (q) => {
+      const r = one(await q("insert into public.supplier_returns (supplier_id, warehouse_id, reason) values ($1, $2, 'Broken seals') returning id", [s, b.mainWarehouse])).id as string;
+      await q("insert into public.supplier_return_items (supplier_return_id, product_id, unit_id, quantity, unit_price) values ($1, $2, $3, 3, 12.50)", [r, p, b.units.PCS]);
+      await q("select public.post_supplier_return($1)", [r]);
+      return r;
+    });
+    const d = await doc(b.admin, "supplier_return", id);
+    expect(d.totals).toEqual({ lines: "37.50", total: "37.50" });
+    expect(sum(d.lines, "total")).toBe(paisa(d.totals.total));
+    expect(d).toMatchObject({ status: "posted", notes: "Broken seals", recorded_by: "Owner" });
+    expect(JSON.stringify(d)).not.toMatch(/cost/i);
+  });
+
+  it("company money, cash vouchers and expenses print who paid how much", async () => {
+    const mudassar = one(await db.sql("insert into public.financial_accounts (name, account_type) values ('Mudassar Rao', 'cash') returning id")).id as string;
+    const people = [{ account_id: cash, amount: "300" }, { account_id: mudassar, amount: "200.25" }];
+    const printed = [{ name: "Cash in hand", amount: "300.00" }, { name: "Mudassar Rao", amount: "200.25" }];
+    const money = await call("save_company_extra_payment", null, json({ name: "Investment", paid_on: today, amount: "500.25", direction: "in", financial_account_id: cash, method: "cash", contributors: people, client_request_id: randomUUID() }));
+    expect(await doc(b.admin, "company_money", money)).toMatchObject({ direction: "in", description: "Investment", account: "Cash in hand", status: "posted", people: printed, totals: { total: "500.25" } });
+    const capital = one(await db.sql("select id from public.chart_of_accounts where system_key = 'CAPITAL'")).id;
+    const voucher = await call("record_cash_voucher", json({ kind: "receipt", financial_account_id: cash, counter_account_id: capital, amount: "500.25", method: "cash", description: "Capital", contributors: people, client_request_id: randomUUID() }));
+    expect(await doc(b.admin, "cash_voucher", voucher)).toMatchObject({ direction: "in", description: "Capital", category: { en: expect.stringContaining("Capital") }, people: printed, totals: { total: "500.25" } });
+    const category = one(await db.sql("select id from public.expense_categories where code = 'RENT'")).id;
+    const expense = await call("record_expense", json({ category_id: category, amount: "500.25", financial_account_id: cash, method: "cash", payee: "Landlord", description: "Rent", no_receipt_reason: "none", contributors: people, client_request_id: randomUUID() }));
+    expect((await doc(b.admin, "expense_voucher", expense)).people).toEqual(printed);
+    expect((await doc(b.admin, "company_money", money)).people.reduce((n: number, x: any) => n + paisa(x.amount), 0)).toBe(paisa("500.25"));
   });
 });
 

@@ -34,6 +34,10 @@ const docs: typeof en = {
     sol_receipt: "ایس او ایل وصولی کی رسید",
     expense_voucher: "خرچ واؤچر",
     salary_slip: "تنخواہ سلپ",
+    supplier_return: "خریداری کی واپسی",
+    company_money: "کمپنی رقم واؤچر",
+    cash_voucher: "نقد واؤچر",
+    cash_deposit: "نقد جمع",
     salary_slips: "تنخواہ سلپس",
     report: "رپورٹ",
     customer_statement: "گاہک کا کھاتہ",
@@ -58,6 +62,7 @@ const docs: typeof en = {
     product: "مصنوعات", item: "تفصیل", quantity: "مقدار", unit: "اکائی", price: "قیمت (روپے)", discount: "رعایت (روپے)", tax: "ٹیکس (روپے)", amount: "رقم (روپے)", total: "کل (روپے)", cost: "لاگت (روپے)", value: "مالیت (روپے)",
     ordered: "آرڈر شدہ", accepted: "قبول", damaged: "خراب", rejected: "مسترد", returned: "واپس", payments: "ادائیگیاں", number: "نمبر", invoiceTotal: "انوائس کی کل رقم (روپے)", settled: "ادا ہوا (روپے)", settles: "اس ادائیگی سے ادا ہونے والی رقوم",
     lines: "سطریں", pieces: "کل مقدار",
+    paidBy: "کس نے ادا کیا", person: "نام", direction: "رقم", moneyIn: "وصول (آمد)", moneyOut: "ادا (خرچ)", countsAs: "شمار", counterAccount: "کھاتہ", party: "فریق",
   },
   totals: {
     gross: "مجموعی رقم", discount: "رعایت", net: "خالص رقم", tax: "سیلز ٹیکس", total: "کل", returned: "واپسی", credited: "کریڈٹ", paid: "ادا شدہ", outstanding: "بقایا", balance: "گاہک کا بیلنس",

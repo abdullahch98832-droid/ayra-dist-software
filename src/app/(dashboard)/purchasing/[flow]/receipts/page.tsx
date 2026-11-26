@@ -6,6 +6,7 @@ import { loadFlowSuppliers, loadReceipts } from "@/features/purchasing/queries";
 import { can } from "@/lib/auth/session";
 import { LIST_PAGE, listParams } from "@/lib/list-params";
 import { ListFilters } from "@/components/documents/list-filters";
+import { DocumentLink } from "@/components/documents/document-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { LinkButton } from "@/components/shared/link-button";
 import { SpecTable } from "@/components/tables/spec-table";
@@ -25,7 +26,7 @@ export default async function ReceiptsPage({ params, searchParams }: PageProps<"
   const add = can(ctx, "purchasing.create") && <LinkButton href={flowPath(flow, "receipts", "new")}><PackageCheck aria-hidden />{p.newReceipt}</LinkButton>;
   return (
     <>
-      <PageHeader title={p.tabs.receipts} description={p.flows[flow]} actions={add} />
+      <PageHeader title={p.tabs.receipts} description={p.flows[flow]} actions={<>{can(ctx, "reports.export") && <DocumentLink kind="report" params={{ report: flow === "company" ? "company-goods" : "purchases", table: flow === "company" ? "lines" : "purchases" }} label={t.docs.pdf} />}{add}</>} />
       <SpecTable
         caption={p.tabs.receipts}
         rows={receipts.map((r) => ({

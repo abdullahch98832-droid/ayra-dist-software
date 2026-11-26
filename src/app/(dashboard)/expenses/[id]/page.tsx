@@ -55,6 +55,7 @@ export default async function ExpensePage({ params }: PageProps<"/expenses/[id]"
               </>
             )}
             {status === "draft" && poster && <ActionButton label={x.reject} icon={<X aria-hidden />} variant="outline" action={rejectExpenseAction.bind(null, id)} reasonLabel={d.reason} success={x.rejected} confirm={{ title: x.rejectTitle, description: x.rejectHint, tone: "danger" }} />}
+            {status === "posted" && poster && <LinkButton variant="outline" href={`/expenses/${id}/edit`}><Pencil aria-hidden />{x.edit}</LinkButton>}
             {status === "posted" && poster && <ActionButton label={x.void} icon={<Ban aria-hidden />} variant="outline" action={voidExpenseAction.bind(null, id)} reasonLabel={d.reason} success={x.voided} confirm={{ title: x.voidTitle, description: x.voidHint, tone: "danger" }} />}
             {status === "draft" && poster && <ActionButton label={x.post} icon={<CheckCheck aria-hidden />} action={postExpenseAction.bind(null, id)} success={x.posted} confirm={{ title: x.postTitle, description: x.postHint }} />}
           </>

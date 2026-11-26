@@ -7,6 +7,7 @@ import { sqlNull } from "@/lib/supabase/rpc";
 import { createClient } from "@/lib/supabase/server";
 import { orNull } from "@/lib/validation/common";
 import { extraSchema } from "./schema";
+import { contributorsDoc } from "@/features/payments/contributors";
 
 export async function saveExtraAction(id: string | null, values: unknown): Promise<ActionResult<string>> {
   return runAction("company.pay", extraSchema, values, async (v) => {
@@ -15,7 +16,7 @@ export async function saveExtraAction(id: string | null, values: unknown): Promi
       p_id: sqlNull(id === null ? null : z.uuid().parse(id)),
       p_doc: {
         name: v.name, paid_on: v.date, amount: v.amount, direction: v.direction, kind: v.kind,
-        contributors: v.contributors.map((c) => ({ name: c.name, amount: c.amount })),
+        contributors: contributorsDoc(v.contributors),
         financial_account_id: v.accountId, method: v.method, reference: orNull(v.reference), notes: orNull(v.notes), client_request_id: v.requestId,
       },
     });

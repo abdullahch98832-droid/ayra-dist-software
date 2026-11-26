@@ -198,13 +198,29 @@ describe("extra payments to the Ayra company", () => {
     await sound();
   });
 
-  it("keeps who gave how much, and insists the amounts add up", async () => {
-    const people = [{ name: "Abdullah", amount: "300000" }, { name: "Bilal", amount: "200000" }];
-    await expect(save(null, doc({ amount: "500000", direction: "in", contributors: [{ name: "Abdullah", amount: "300000" }] }))).rejects.toThrow(/add up/);
-    await expect(save(null, doc({ amount: "500000", direction: "in", contributors: [{ name: " ", amount: "500000" }] }))).rejects.toThrow(/name/);
-    const id = await save(null, doc({ name: "Pooled investment", amount: "500000", direction: "in", contributors: people }));
-    const stored = one(await db.sql("select contributors from public.company_extra_payments where id = $1", [id]));
-    expect(stored.contributors).toEqual(people.map((p) => ({ name: p.name, amount: Number(p.amount) })));
+  it("puts each person's share in their own account, and insists the amounts add up", async () => {
+    const account = async (name: string) => one(await db.sql("insert into public.financial_accounts (name, account_type) values ($1, 'cash') returning id", [name])).id as string;
+    const [aftab, mudassar] = [await account("Aftab Chattha"), await account("Mudassar Rao")];
+    const balance = async (id: string) => paisa(one(await db.sql("select private.gl_balance(gl_account_id)::text v from public.financial_accounts where id = $1", [id])).v);
+    const people = [{ account_id: aftab, amount: "300000" }, { account_id: mudassar, amount: "200000" }];
+    const invest = (extra: Record<string, unknown>) => doc({ name: "Pooled investment", amount: "500000", direction: "in", financial_account_id: cash, ...extra });
+    await expect(save(null, invest({ contributors: [people[0]!, { account_id: mudassar, amount: "100000" }] }))).rejects.toThrow(/add up/);
+    await expect(save(null, invest({ contributors: [{ name: "Abdullah", amount: "250000" }, { name: "Bilal", amount: "250000" }] }))).rejects.toThrow(/account of each person/);
+    await expect(save(null, invest({ contributors: [people[0]!, { account_id: aftab, amount: "200000" }] }))).rejects.toThrow(/listed once/);
+    await expect(save(null, invest({ contributors: [{ account_id: aftab, amount: "500000" }] }))).rejects.toThrow(/two people/);
+    const before = { cash: await balance(cash), aftab: await balance(aftab), mudassar: await balance(mudassar) };
+    const id = await save(null, invest({ contributors: people }));
+    const stored = one(await db.sql("select contributors, financial_account_id from public.company_extra_payments where id = $1", [id]));
+    expect(stored.contributors).toEqual([{ account_id: aftab, name: "Aftab Chattha", amount: 300000 }, { account_id: mudassar, name: "Mudassar Rao", amount: 200000 }]);
+    expect(stored.financial_account_id).toBe(aftab);
+    expect([await balance(cash) - before.cash, await balance(aftab) - before.aftab, await balance(mudassar) - before.mudassar]).toEqual([0, 30000000, 20000000]);
+    // Paid out by both: each account gives its share. A change of shares is posted again.
+    const out = await save(null, doc({ name: "Boards", amount: "1000", contributors: [{ account_id: aftab, amount: "600" }, { account_id: mudassar, amount: "400" }] }));
+    await save(out, doc({ name: "Boards", amount: "1000", contributors: [{ account_id: aftab, amount: "100" }, { account_id: mudassar, amount: "900" }] }));
+    expect([await balance(aftab) - before.aftab, await balance(mudassar) - before.mudassar]).toEqual([30000000 - 10000, 20000000 - 90000]);
+    // Back to one account: everything from it.
+    await save(out, doc({ name: "Boards", amount: "1000", financial_account_id: mudassar, contributors: [] }));
+    expect([await balance(aftab) - before.aftab, await balance(mudassar) - before.mudassar]).toEqual([30000000, 20000000 - 100000]);
     await sound();
   });
 

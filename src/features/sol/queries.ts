@@ -126,7 +126,7 @@ export async function loadSolDelivery(id: string) {
 }
 
 const PAYMENT_COLUMNS =
-  "id, doc_no, payment_date, created_at, amount, method, reference, payer_account, status, sol_job_id, account:financial_accounts!customer_payments_financial_account_id_fkey(name), job:sol_jobs!customer_payments_sol_job_id_fkey(id, doc_no, completed_at, status), customer:customers!customer_payments_customer_id_fkey(name, name_ur), customer_payment_allocations(amount, sol_job_id)";
+  "id, doc_no, payment_date, created_at, amount, method, reference, payer_account, status, sol_job_id, contributors, account:financial_accounts!customer_payments_financial_account_id_fkey(name), job:sol_jobs!customer_payments_sol_job_id_fkey(id, doc_no, completed_at, status), customer:customers!customer_payments_customer_id_fkey(name, name_ur), customer_payment_allocations(amount, sol_job_id)";
 
 export async function loadSolPayments(filter: ListFilter & { method?: string }) {
   const supabase = await createClient();

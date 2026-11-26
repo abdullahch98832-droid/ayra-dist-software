@@ -3,6 +3,7 @@ import { ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { voidVoucherAction } from "@/features/cash-bank/actions";
 import { loadVouchers } from "@/features/cash-bank/queries";
 import { VOUCHER_KINDS } from "@/features/cash-bank/schema";
+import { peopleNames } from "@/features/payments/contributors";
 import { DOCUMENT_TONE } from "@/features/sales/status";
 import { fill } from "@/i18n/format";
 import { getT } from "@/i18n/server";
@@ -12,6 +13,7 @@ import { pageContext } from "@/lib/page-context";
 import { toPaisa } from "@/lib/utils/money";
 import { ActionButton } from "@/components/documents/action-button";
 import { Forbidden } from "@/components/layout/forbidden";
+import { DocumentLink } from "@/components/documents/document-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Ltr, Money } from "@/components/shared/bidi";
 import { formatDate } from "@/components/shared/format";
@@ -53,11 +55,12 @@ export default async function VouchersPage({ searchParams }: PageProps<"/cash-ba
               <li key={x.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                 <div className="min-w-0">
                   <p className="text-sm font-medium break-words"><Ltr>{x.doc_no}</Ltr> · {x.description}</p>
-                  <p className="text-xs text-muted-foreground">{c.voucherKinds[x.kind as "receipt"]} · <bdi>{x.account?.name}</bdi> · <bdi>{x.counter && local(x.counter.name_en, x.counter.name_ur)}</bdi>{x.party_name && <> · <bdi>{x.party_name}</bdi></>} · <bdi>{formatDate(x.voucher_date, locale)}</bdi>{x.void_reason && <> · {fill(t.payroll.voidNote, { reason: x.void_reason })}</>}</p>
+                  <p className="text-xs text-muted-foreground">{c.voucherKinds[x.kind as "receipt"]} · <bdi>{peopleNames(x.contributors) ?? x.account?.name}</bdi> · <bdi>{x.counter && local(x.counter.name_en, x.counter.name_ur)}</bdi>{x.party_name && <> · <bdi>{x.party_name}</bdi></>} · <bdi>{formatDate(x.voucher_date, locale)}</bdi>{x.void_reason && <> · {fill(t.payroll.voidNote, { reason: x.void_reason })}</>}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <Money amount={toPaisa(x.kind === "payment" ? -x.amount : x.amount)} locale={locale} className="text-sm font-semibold" />
                   <StatusBadge tone={DOCUMENT_TONE[x.status] ?? "gray"}>{t.purchasing.statuses[x.status]}</StatusBadge>
+                  <DocumentLink kind="cash_voucher" params={{ id: x.id }} label={t.docs.pdf} />
                   {x.status === "posted" && may && <ActionButton label={c.void} variant="outline" action={voidVoucherAction.bind(null, x.id)} reasonLabel={t.documents.reason} success={c.voided} confirm={{ title: c.voidTitle, description: c.voidHint, tone: "danger" }} />}
                 </div>
               </li>

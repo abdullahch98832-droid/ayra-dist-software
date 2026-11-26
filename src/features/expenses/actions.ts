@@ -9,6 +9,7 @@ import { authorizeAny, runAction } from "@/lib/server-action";
 import { createClient } from "@/lib/supabase/server";
 import { orNull } from "@/lib/validation/common";
 import { categorySchema, expenseSchema, type ExpenseValues } from "./schema";
+import { contributorsDoc } from "@/features/payments/contributors";
 
 const uuid = z.uuid();
 const RECEIPT_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "application/pdf": "pdf" };
@@ -36,7 +37,7 @@ export async function uploadReceiptAction(formData: FormData): Promise<ActionRes
 const document = (v: ExpenseValues) => ({
   date: v.date, category_id: v.categoryId, amount: v.amount, financial_account_id: v.accountId, method: v.method, reference: orNull(v.reference), payee: v.payee, description: v.description,
   vehicle_id: orNull(v.vehicleId), sol_job_id: orNull(v.jobId), litres: v.vehicleId === "" ? null : orNull(v.litres), odometer: v.vehicleId === "" ? null : orNull(v.odometer),
-  receipt_path: orNull(v.receiptPath), no_receipt_reason: v.receiptPath === "" ? orNull(v.noReceiptReason) : null, client_request_id: v.requestId, contributors: v.contributors,
+  receipt_path: orNull(v.receiptPath), no_receipt_reason: v.receiptPath === "" ? orNull(v.noReceiptReason) : null, client_request_id: v.requestId, contributors: contributorsDoc(v.contributors),
 });
 
 export async function recordExpenseAction(values: unknown): Promise<ActionResult<string>> {

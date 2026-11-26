@@ -8,7 +8,7 @@ import { DocumentForm } from "@/components/documents/document-form";
 import { Field, NativeSelect } from "@/components/forms/field";
 import { FormSection } from "@/components/forms/form-section";
 import { MoneyInput } from "@/components/forms/money-input";
-import { ContributorsField, type ContributorsForm } from "@/components/forms/contributors-field";
+import { ContributorsField, SingleAccount, SplitOption, type ContributorsForm } from "@/components/forms/contributors-field";
 import { Input } from "@/components/ui/input";
 
 export function VoucherForm({ defaults, accounts, counters }: { defaults: VoucherValues; accounts: { id: string; label: string }[]; counters: { id: string; code: string; nameEn: string; nameUr: string | null }[] }) {
@@ -21,7 +21,9 @@ export function VoucherForm({ defaults, accounts, counters }: { defaults: Vouche
         const { errors } = form.formState;
         return (
           <FormSection title={c.voucherKinds[defaults.kind]} description={c.voucherHint} className="lg:grid-cols-3">
-            <Field id="accountId" label={c.name} required error={errors.accountId?.message}><NativeSelect id="accountId" {...form.register("accountId")}><option value="">{t.documents.choose}</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}</NativeSelect></Field>
+            <SingleAccount form={form as unknown as ContributorsForm}>
+              <Field id="accountId" label={c.name} required error={errors.accountId?.message}><NativeSelect id="accountId" {...form.register("accountId")}><option value="">{t.documents.choose}</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}<SplitOption accounts={accounts} /></NativeSelect></Field>
+            </SingleAccount>
             <Field id="counterId" label={c.counter} required error={errors.counterId?.message}><NativeSelect id="counterId" {...form.register("counterId")}><option value="">{t.documents.choose}</option>{counters.map((a) => <option key={a.id} value={a.id}>{a.code} · {locale === "ur" && a.nameUr ? a.nameUr : a.nameEn}</option>)}</NativeSelect></Field>
             <Field id="amount" label={c.amount} required error={errors.amount?.message}><MoneyInput id="amount" {...form.register("amount")} /></Field>
             <Field id="party" label={c.partyName} optional error={errors.party?.message}><Input id="party" {...form.register("party")} /></Field>
@@ -29,7 +31,7 @@ export function VoucherForm({ defaults, accounts, counters }: { defaults: Vouche
             <Field id="date" label={c.date} required error={errors.date?.message}><Input id="date" type="date" dir="ltr" max={defaults.date} {...form.register("date")} /></Field>
             <Field id="reference" label={c.reference} optional error={errors.reference?.message}><Input id="reference" dir="ltr" {...form.register("reference")} /></Field>
             <Field id="description" label={c.description} required className="sm:col-span-2" error={errors.description?.message}><Input id="description" {...form.register("description")} /></Field>
-          <ContributorsField form={form as unknown as ContributorsForm} className="sm:col-span-2 lg:col-span-3" />
+          <ContributorsField form={form as unknown as ContributorsForm} accounts={accounts} className="sm:col-span-2 lg:col-span-3" />
           </FormSection>
         );
       }}

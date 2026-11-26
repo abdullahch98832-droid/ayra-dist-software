@@ -1,6 +1,7 @@
 import "server-only";
 import { APP_CONFIG } from "@/config/app";
 import type { Period } from "@/features/dashboard/period";
+import { readContributors } from "@/features/payments/contributors";
 import { fetchAll } from "@/lib/supabase/fetch-all";
 import { createClient } from "@/lib/supabase/server";
 import { toDbAmount, toPaisa } from "@/lib/utils/money";
@@ -8,16 +9,6 @@ import { toDbAmount, toPaisa } from "@/lib/utils/money";
 /** The calendar date of an instant as it reads in Pakistan. */
 function wallDate(instant: string): string {
   return new Intl.DateTimeFormat("sv-SE", { timeZone: APP_CONFIG.timeZone, dateStyle: "short" }).format(new Date(instant)).slice(0, 10);
-}
-
-/** The people who gave part of the money, as stored on the row. */
-function readContributors(value: unknown): { name: string; amount: string }[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap((c) =>
-    c && typeof c === "object" && "name" in c && "amount" in c
-      ? [{ name: String((c as { name: unknown }).name), amount: toDbAmount(toPaisa((c as { amount: unknown }).amount as number)) }]
-      : [],
-  );
 }
 
 /** Payments of a period as they stand now, newest first, voided ones included. */

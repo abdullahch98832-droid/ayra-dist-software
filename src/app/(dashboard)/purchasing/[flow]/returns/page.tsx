@@ -6,6 +6,7 @@ import { loadFlowSuppliers, loadReturns } from "@/features/purchasing/queries";
 import { can } from "@/lib/auth/session";
 import { LIST_PAGE, listParams } from "@/lib/list-params";
 import { ListFilters } from "@/components/documents/list-filters";
+import { DocumentLink } from "@/components/documents/document-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { LinkButton } from "@/components/shared/link-button";
 import { SpecTable } from "@/components/tables/spec-table";
@@ -25,7 +26,7 @@ export default async function ReturnsPage({ params, searchParams }: PageProps<"/
   const add = can(ctx, "purchasing.create") && <LinkButton href={flowPath(flow, "returns", "new")}><Undo2 aria-hidden />{p.newReturn}</LinkButton>;
   return (
     <>
-      <PageHeader title={p.tabs.returns} description={p.flows[flow]} actions={add} />
+      <PageHeader title={p.tabs.returns} description={p.flows[flow]} actions={<>{flow === "company" && can(ctx, "reports.export") && <DocumentLink kind="report" params={{ report: "company-returns", table: "entries" }} label={t.docs.pdf} />}{add}</>} />
       <SpecTable
         caption={p.tabs.returns}
         rows={returns.map((r) => ({ id: r.id, no: r.doc_no, noHref: flowPath(flow, "returns", r.id), date: r.return_date, supplier: local(r.supplier.name, r.supplier.name_ur), reason: r.reason, status: r.status, total: r.total_amount }))}

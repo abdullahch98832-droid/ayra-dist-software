@@ -161,7 +161,7 @@ export async function loadReturn(id: string) {
 export async function loadPayments(flow: Flow, filter: ListFilter) {
   const supabase = await createClient();
   let query = supabase.from("supplier_payments")
-    .select("id, doc_no, payment_date, amount, method, reference, status, supplier:suppliers!supplier_payments_supplier_id_fkey!inner(name, name_ur, is_principal), supplier_payment_allocations(amount)", { count: "exact" })
+    .select("id, doc_no, payment_date, amount, method, reference, status, contributors, supplier:suppliers!supplier_payments_supplier_id_fkey!inner(name, name_ur, is_principal), supplier_payment_allocations(amount)", { count: "exact" })
     .eq("supplier.is_principal", isPrincipal(flow));
   if (filter.status) query = query.eq("status", filter.status as "draft");
   if (filter.supplierId) query = query.eq("supplier_id", filter.supplierId);

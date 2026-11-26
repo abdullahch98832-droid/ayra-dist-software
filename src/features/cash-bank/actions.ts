@@ -8,6 +8,7 @@ import { sqlNull } from "@/lib/supabase/rpc";
 import { createClient } from "@/lib/supabase/server";
 import { orNull } from "@/lib/validation/common";
 import { accountSchema, closingSchema, openingSchema, reconciliationSaveSchema, reconciliationSchema, transferSchema, voucherSchema } from "./schema";
+import { contributorsDoc } from "@/features/payments/contributors";
 
 export async function saveAccountAction(id: string | null, values: unknown): Promise<ActionResult<string>> {
   return runAction("cash_bank.manage", accountSchema, values, async (v) => {
@@ -55,7 +56,7 @@ export async function recordVoucherAction(values: unknown): Promise<ActionResult
     const { data, error } = await supabase.rpc("record_cash_voucher", {
       p_doc: {
         kind: v.kind, date: v.date, financial_account_id: v.accountId, counter_account_id: v.counterId, amount: v.amount, party_name: orNull(v.party), method: v.method, reference: orNull(v.reference),
-        description: v.description, client_request_id: v.requestId, contributors: v.contributors,
+        description: v.description, client_request_id: v.requestId, contributors: contributorsDoc(v.contributors),
       },
     });
     if (error) throw error;

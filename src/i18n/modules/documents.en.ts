@@ -33,6 +33,10 @@ const docs = {
     expense_voucher: "Expense voucher",
     salary_slip: "Salary slip",
     salary_slips: "Salary slips",
+    supplier_return: "Purchase return",
+    company_money: "Company money voucher",
+    cash_voucher: "Cash voucher",
+    cash_deposit: "Cash deposit",
     report: "Report",
     customer_statement: "Customer statement",
     supplier_statement: "Company account statement",
@@ -56,6 +60,7 @@ const docs = {
     product: "Product", item: "Item", quantity: "Quantity", unit: "Unit", price: "Price (Rs)", discount: "Discount (Rs)", tax: "Tax (Rs)", amount: "Amount (Rs)", total: "Total (Rs)", cost: "Cost (Rs)", value: "Value (Rs)",
     ordered: "Ordered", accepted: "Accepted", damaged: "Damaged", rejected: "Rejected", returned: "Returned", payments: "Payments", number: "Number", invoiceTotal: "Invoice total (Rs)", settled: "Settled (Rs)", settles: "Settled by this payment",
     lines: "Lines", pieces: "Total quantity",
+    paidBy: "Paid by", person: "Name", direction: "Money", moneyIn: "Received (in)", moneyOut: "Paid (out)", countsAs: "Counts as", counterAccount: "Ledger account", party: "Party",
   },
   totals: {
     gross: "Gross amount", discount: "Discount", net: "Net amount", tax: "Sales tax", total: "Total", returned: "Returned", credited: "Credited", paid: "Paid", outstanding: "Outstanding", balance: "Customer balance",

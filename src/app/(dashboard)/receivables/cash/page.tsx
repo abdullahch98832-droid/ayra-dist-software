@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { HandCoins, Wallet } from "lucide-react";
 import { deleteReceivableDraftAction, postDepositAction, voidDepositAction } from "@/features/receivables/actions";
 import { loadCash, loadDeposits, seesAllCollections } from "@/features/receivables/queries";
+import { peopleNames } from "@/features/payments/contributors";
 import { DOCUMENT_TONE } from "@/features/sales/status";
 import { loadCollectors, takerNames } from "@/features/takers/queries";
 import { getT } from "@/i18n/server";
@@ -11,6 +12,7 @@ import { pageContext, uuidParam } from "@/lib/page-context";
 import { formatPaisa, sumPaisa, toPaisa } from "@/lib/utils/money";
 import { ActionButton } from "@/components/documents/action-button";
 import { Forbidden } from "@/components/layout/forbidden";
+import { DocumentLink } from "@/components/documents/document-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Ltr, Money } from "@/components/shared/bidi";
 import { formatDate } from "@/components/shared/format";
@@ -91,10 +93,11 @@ export default async function CashPage({ searchParams }: PageProps<"/receivables
                   <li key={x.id} className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-3 first:pt-0">
                     <div className="min-w-0 flex-1 basis-56">
                       <p className="text-sm font-medium"><Ltr>{x.doc_no}</Ltr> · <bdi>{name && local(name.nameEn, name.nameUr)}</bdi></p>
-                      <p className="text-xs text-muted-foreground"><bdi>{formatDate(x.deposit_date, locale)}</bdi> · <bdi>{x.account?.name}</bdi>{x.reference && <> · <Ltr>{x.reference}</Ltr></>}{x.void_reason && <> · {x.void_reason}</>}</p>
+                      <p className="text-xs text-muted-foreground"><bdi>{formatDate(x.deposit_date, locale)}</bdi> · <bdi>{peopleNames(x.contributors) ?? x.account?.name}</bdi>{x.reference && <> · <Ltr>{x.reference}</Ltr></>}{x.void_reason && <> · {x.void_reason}</>}</p>
                     </div>
                     <div className="flex items-center gap-3"><Money amount={toPaisa(x.amount)} locale={locale} className="font-semibold" /><StatusBadge tone={DOCUMENT_TONE[x.status] ?? "gray"}>{t.purchasing.statuses[x.status]}</StatusBadge></div>
                     <div className="flex gap-2">
+                      <DocumentLink kind="cash_deposit" params={{ id: x.id }} label={t.docs.pdf} />
                       {x.status === "draft" && (poster || x.employee_id === ctx.employeeId) && <ActionButton label={t.documents.deleteDraft} variant="outline" action={deleteReceivableDraftAction.bind(null, "cash_deposits", x.id)} success={t.documents.deleted} confirm={{ title: t.documents.confirmDeleteTitle, description: t.documents.confirmDelete, tone: "danger" }} />}
                       {x.status === "draft" && poster && <ActionButton label={r.confirmDeposit} action={postDepositAction.bind(null, x.id)} success={r.depositConfirmed} confirm={{ title: r.confirmDepositTitle, description: r.depositHint }} />}
                       {x.status === "posted" && poster && <ActionButton label={r.voidDeposit} variant="outline" action={voidDepositAction.bind(null, x.id)} reasonLabel={t.documents.reason} success={r.voided} confirm={{ title: r.voidDepositTitle, description: r.voidDepositHint, tone: "danger" }} />}

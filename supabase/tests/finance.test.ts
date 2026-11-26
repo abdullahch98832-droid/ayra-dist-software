@@ -166,6 +166,41 @@ describe("expense vouchers", () => {
     await refused(rows(await db.createUser("viewer"), "expense_register", today, today));
   });
 
+  it("can be corrected after approval by reversing the entry, and take each person's share from their account", async () => {
+    const before = { cash: await book(cash), till: await book(till), bank: await book(bank), gas: await gl("6420") };
+    const people = [{ account_id: cash, amount: "600.00" }, { account_id: till, amount: "400.00" }];
+    const id = await voucher(b.admin, "GAS", "1000.00", { contributors: people });
+    const first = one(await db.sql("select journal_entry_id j, contributors c from public.expenses where id = $1", [id]));
+    expect(first.c).toEqual([{ account_id: cash, name: "Main cash", amount: 600 }, { account_id: till, name: "Till", amount: 400 }]);
+    expect([before.cash - await book(cash), before.till - await book(till)]).toEqual([60000, 40000]);
+    const doc = { category_id: cats.GAS, amount: "1200.00", financial_account_id: bank, method: "cash", payee: "Vendor", description: "Test", contributors: [] };
+    await expect(call(b.admin, "update_expense", id, json({ ...doc, contributors: people }))).rejects.toThrow(/add up to the total/);
+    await call(b.admin, "update_expense", id, json(doc));
+    const now = one(await db.sql("select status::text s, journal_entry_id j, contributors c from public.expenses where id = $1", [id]));
+    expect([now.s, now.j === first.j, now.c]).toEqual(["posted", false, []]);
+    expect(one(await db.sql("select reversed_by is not null r from public.journal_entries where id = $1", [first.j])).r).toBe(true);
+    expect([before.cash - await book(cash), before.till - await book(till), before.bank - await book(bank), await gl("6420") - before.gas]).toEqual([0, 0, 120000, 120000]);
+    // Only the payee changes: the entry stays as it is.
+    await call(b.admin, "update_expense", id, json({ ...doc, payee: "Other vendor" }));
+    expect(one(await db.sql("select journal_entry_id j from public.expenses where id = $1", [id])).j).toBe(now.j);
+    await checks();
+  });
+
+  it("split between people: every kind of payment puts each share in that person's account", async () => {
+    const before = { cash: await book(cash), till: await book(till) };
+    const split = (a: string, b2: string) => [{ account_id: cash, amount: a }, { account_id: till, amount: b2 }];
+    const s = await supplier(db);
+    await call(b.admin, "record_supplier_payment", json({ supplier_id: s, amount: "100.00", financial_account_id: bank, method: "cash", contributors: split("70.00", "30.00"), ...req() }), json([]));
+    const c = await customer(db);
+    await call(b.admin, "record_customer_payment", json({ customer_id: c, amount: "50.00", financial_account_id: bank, method: "cash", contributors: split("20.00", "30.00"), ...req() }), json([]));
+    await cashVoucher("receipt", acc.CAPITAL!, "40.00", { contributors: split("15.00", "25.00") });
+    // Paid out 70 + 30; received 20 + 30 and 15 + 25.
+    expect([await book(cash) - before.cash, await book(till) - before.till]).toEqual([-7000 + 2000 + 1500, -3000 + 3000 + 2500]);
+    const stored = one(await db.sql("select financial_account_id f from public.supplier_payments where supplier_id = $1", [s]));
+    expect(stored.f).toBe(cash);
+    await checks();
+  });
+
   it("leave salaries to payroll, so that they are counted once", async () => {
     await expect(voucher(b.admin, "SALARIES", "100")).rejects.toThrow(/recorded in Payroll/);
     const id = await voucher(await db.createUser("data_entry"), "WATER", "10");

@@ -13,7 +13,7 @@ import { allocationIssues, InvoiceAllocations, paisaOf, type AllocationValues } 
 import { Field, NativeSelect } from "@/components/forms/field";
 import { FormSection } from "@/components/forms/form-section";
 import { MoneyInput } from "@/components/forms/money-input";
-import { ContributorsField, type ContributorsForm } from "@/components/forms/contributors-field";
+import { ContributorsField, SingleAccount, SplitOption, type ContributorsForm } from "@/components/forms/contributors-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -71,13 +71,15 @@ export function PaymentForm({ defaults, customer, invoices: initial, accounts, t
               <Field id="method" label={r.method} required error={errors.method?.message}>
                 <NativeSelect id="method" {...form.register("method")}>{PAYMENT_METHODS.map((m) => <option key={m} value={m}>{t.purchasing.methods[m]}</option>)}</NativeSelect>
               </Field>
-              <Field id="destination" label={r.destination} required error={errors.destination?.message}>
-                <NativeSelect id="destination" {...form.register("destination")}>
-                  <option value="">{t.documents.choose}</option>
-                  {takers.length > 0 && <option value={HELD}>{r.heldByTaker}</option>}
-                  {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                </NativeSelect>
-              </Field>
+              <SingleAccount form={form as unknown as ContributorsForm}>
+                <Field id="destination" label={r.destination} required error={errors.destination?.message}>
+                  <NativeSelect id="destination" {...form.register("destination")}>
+                    <option value="">{t.documents.choose}</option>
+                    {takers.length > 0 && <option value={HELD}>{r.heldByTaker}</option>}
+                    {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                  <SplitOption accounts={accounts} /></NativeSelect>
+                </Field>
+              </SingleAccount>
               {collector ? null : (
                 <Field id="collectedBy" label={r.collectedBy} optional error={errors.collectedBy?.message}>
                   <NativeSelect id="collectedBy" {...form.register("collectedBy")}>
@@ -90,7 +92,7 @@ export function PaymentForm({ defaults, customer, invoices: initial, accounts, t
               <Field id="notes" label={t.documents.notes} optional className="sm:col-span-2" error={errors.notes?.message}><Textarea id="notes" rows={2} {...form.register("notes")} /></Field>
               <Outcome form={form} poster={poster} me={me} />
             </FormSection>
-            <ContributorsField form={form as unknown as ContributorsForm} />
+            <ContributorsField form={form as unknown as ContributorsForm} account="destination" accounts={accounts.map((a) => ({ id: a.id, label: a.name }))} />
             {chosen && <Allocations form={form} invoices={invoices} />}
           </>
         );

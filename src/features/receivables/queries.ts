@@ -26,7 +26,7 @@ export async function loadOpenInvoices(customerId: string): Promise<OpenInvoice[
 export async function loadPayments(filter: ListFilter & { customerId?: string | null; takerId?: string | null; method?: string }) {
   const supabase = await createClient();
   let query = supabase.from("customer_payments")
-    .select("id, doc_no, payment_date, amount, method, reference, status, financial_account_id, collected_by, customer:customers!customer_payments_customer_id_fkey(name, name_ur), customer_payment_allocations(amount)", { count: "exact" });
+    .select("id, doc_no, payment_date, amount, method, reference, status, financial_account_id, collected_by, contributors, customer:customers!customer_payments_customer_id_fkey(name, name_ur), customer_payment_allocations(amount)", { count: "exact" });
   if (filter.status) query = query.eq("status", filter.status as "draft");
   if (filter.customerId) query = query.eq("customer_id", filter.customerId);
   if (filter.takerId) query = query.eq("collected_by", filter.takerId);
@@ -66,7 +66,7 @@ export async function loadCollectorStatement(employeeId: string, from: string, t
 export async function loadDeposits(filter: ListFilter & { takerId: string | null }) {
   const supabase = await createClient();
   let query = supabase.from("cash_deposits")
-    .select("id, doc_no, deposit_date, amount, reference, status, void_reason, employee_id, account:financial_accounts!cash_deposits_financial_account_id_fkey(name)", { count: "exact" });
+    .select("id, doc_no, deposit_date, amount, reference, status, void_reason, employee_id, contributors, account:financial_accounts!cash_deposits_financial_account_id_fkey(name)", { count: "exact" });
   if (filter.status) query = query.eq("status", filter.status as "draft");
   if (filter.takerId) query = query.eq("employee_id", filter.takerId);
   return listPage(query.order("created_at", { ascending: false }).range(firstRow(filter.page), lastRow(filter.page)));

@@ -51,6 +51,19 @@ function paymentsTable(doc: DocumentData): Block[] {
   }];
 }
 
+/** Who paid or received, and how much each; only when more than one person did. */
+function peopleTable(doc: DocumentData): Block[] {
+  if (!doc.people?.length) return [];
+  return [{
+    type: "table", title: L("paidBy"), columns: [{ label: L("person"), flex: 1 }, { label: L("amount"), figure: true }],
+    rows: doc.people.map((p) => [text(p.name), figure(p.amount)]),
+  }];
+}
+/** The one account, unless more than one person paid: then each share's account is in the "Paid by" table. */
+const oneAccount = (doc: DocumentData): Cell => text(doc.people?.length ? null : doc.account);
+const direction = (doc: DocumentData): Cell => (doc.direction ? { text: L(doc.direction === "in" ? "moneyIn" : "moneyOut") } : text(null));
+const status = (doc: DocumentData): Cell => ({ text: biKey((t) => t.purchasing.statuses, doc.status) });
+
 const notes = (doc: DocumentData): Block[] => (doc.notes ? [{ type: "text", title: L("notes"), text: doc.notes }] : []);
 const invoiceNote = (settings: DocumentSettings) => ({ en: settings.document_note, ur: settings.document_note_ur });
 
@@ -189,7 +202,7 @@ function customerReceipt(doc: DocumentData, kind: "customer_receipt" | "sol_rece
   return {
     title: title(kind), number: doc.number, watermark: mark(doc.status), party: partyOf(doc, kind === "sol_receipt" ? L("client") : L("customer")),
     meta: meta({ label: L("date"), value: date(doc.date) }, { label: L("method"), value: method(doc.method) }, { label: L("reference"), value: code(doc.reference) }, { label: L("payerAccount"), value: code(doc.payer_account) },
-      { label: L("account"), value: text(doc.account) }, { label: L("collector"), value: named(doc.collector) }, { label: L("job"), value: code(job?.number) }, { label: L("recordedBy"), value: text(doc.recorded_by) }, { label: L("reason"), value: text(doc.void_reason) }),
+      { label: L("account"), value: oneAccount(doc) }, { label: L("collector"), value: named(doc.collector) }, { label: L("job"), value: code(job?.number) }, { label: L("recordedBy"), value: text(doc.recorded_by) }, { label: L("reason"), value: text(doc.void_reason) }),
     blocks: [
       { type: "totals", rows: total(T("received"), t.total, { strong: true }) },
       ...(doc.lines?.length ? [{
@@ -200,6 +213,7 @@ function customerReceipt(doc: DocumentData, kind: "customer_receipt" | "sol_rece
         ...total(T("allocated"), t.allocated, { show: !isZero(t.allocated) }), ...total(T("unallocated"), t.unallocated, { show: !isZero(t.unallocated) }),
         ...total(T("contract"), job?.contract, { line: true }), ...total(T("paid"), job?.paid), ...total(T("outstanding"), job?.outstanding, { cell: owed(job?.outstanding) }), ...total(T("balance"), doc.balance ?? undefined, { line: true }),
       ] },
+      ...peopleTable(doc),
       ...notes(doc),
     ],
     signatures: S("cashier", "customer", "authorised"),
@@ -210,7 +224,7 @@ function supplierReceipt(doc: DocumentData): DocModel {
   const t = doc.totals ?? {};
   return {
     title: title("supplier_receipt"), number: doc.number, watermark: mark(doc.status), party: partyOf(doc, doc.party?.principal ? L("company") : L("supplier")),
-    meta: meta({ label: L("date"), value: date(doc.date) }, { label: L("method"), value: method(doc.method) }, { label: L("reference"), value: code(doc.reference) }, { label: L("account"), value: text(doc.account) }, { label: L("recordedBy"), value: text(doc.recorded_by) }),
+    meta: meta({ label: L("date"), value: date(doc.date) }, { label: L("method"), value: method(doc.method) }, { label: L("reference"), value: code(doc.reference) }, { label: L("account"), value: oneAccount(doc) }, { label: L("recordedBy"), value: text(doc.recorded_by) }),
     blocks: [
       { type: "totals", rows: total(T("paidAmount"), t.total, { strong: true }) },
       ...(doc.lines?.length ? [{
@@ -218,6 +232,7 @@ function supplierReceipt(doc: DocumentData): DocModel {
         rows: doc.lines.map((l) => [code(l.number), code(l.doc_no), date(l.date), figure(l.invoice_total), figure(l.amount)]),
       } satisfies Block] : []),
       { type: "totals", rows: [...total(T("allocated"), t.allocated, { show: !isZero(t.allocated) }), ...total(T("unallocated"), t.unallocated, { show: !isZero(t.unallocated) }), ...total(T("supplierBalance"), doc.balance ?? undefined, { line: true })] },
+      ...peopleTable(doc),
       ...notes(doc),
     ],
     signatures: S("prepared", "authorised", "supplier"),
@@ -231,15 +246,55 @@ function expenseVoucher(doc: DocumentData): DocModel {
     blocks: [
       { type: "fields", rows: [
         { label: L("date"), value: date(doc.date) }, { label: L("category"), value: named(doc.category) }, { label: L("payee"), value: text(doc.payee) }, { label: L("description"), value: text(doc.description) },
-        { label: L("method"), value: method(doc.method) }, { label: L("account"), value: text(doc.account) },
+        { label: L("method"), value: method(doc.method) }, ...meta({ label: L("account"), value: oneAccount(doc) }),
         ...meta({ label: L("reference"), value: code(doc.reference) }, { label: L("vehicle"), value: code(doc.vehicle) }, { label: L("job"), value: code(typeof doc.job === "string" ? doc.job : null) }),
         { label: L("receiptAttached"), value: doc.receipt ? { text: L("attached") } : text(doc.no_receipt_reason ?? L("noReceipt")) },
         { label: L("recordedBy"), value: text(doc.recorded_by) }, { label: L("approvedBy"), value: text(doc.approved_by) }, { label: L("status"), value: { text: biKey((t) => ({ ...t.purchasing.statuses, rejected: t.docs.marks.rejected }), doc.status) } },
         ...meta({ label: L("reason"), value: text(doc.void_reason) }),
       ] },
       { type: "totals", rows: total(T("total"), doc.totals?.total, { strong: true }) },
+      ...peopleTable(doc),
     ],
     signatures: S("prepared", "approved", "payee"),
+  };
+}
+
+function supplierReturn(doc: DocumentData): DocModel {
+  assertAddsUp(doc);
+  return {
+    title: title("supplier_return"), number: doc.number, watermark: mark(doc.status), party: partyOf(doc, doc.party?.principal ? L("company") : L("supplier")),
+    meta: meta({ label: L("date"), value: date(doc.date) }, { label: L("warehouse"), value: named(doc.warehouse) }, { label: L("receipts"), value: code(doc.receipts?.join(", ") || null) },
+      { label: L("status"), value: status(doc) }, { label: L("recordedBy"), value: text(doc.recorded_by) }),
+    blocks: [
+      { type: "table", numbered: true, columns: [{ label: L("product"), flex: 1 }, { label: L("quantity"), figure: true }, { label: L("unit") }, { label: L("price"), figure: true }, { label: L("total"), figure: true }],
+        rows: (doc.lines ?? []).map((l) => [product(l), quantity(l.quantity), unit(l), figure(l.price), figure(l.total)]) },
+      { type: "totals", rows: total(T("credited"), doc.totals?.total, { strong: true }) },
+      ...(doc.notes ? [{ type: "text", title: L("reason"), text: doc.notes } satisfies Block] : []),
+    ],
+    signatures: S("prepared", "warehouse", "supplier"),
+  };
+}
+
+/** One money voucher: company money, a cash or bank voucher, or cash handed in by an order taker. */
+function moneyVoucher(doc: DocumentData, kind: "company_money" | "cash_voucher" | "cash_deposit"): DocModel {
+  const countsAs = kind === "company_money" && doc.type_key && doc.direction === "out" ? { text: biKey((t) => t.supply.extra.kinds, doc.type_key) } : text(null);
+  return {
+    title: title(kind), number: doc.number, watermark: mark(doc.status),
+    meta: [],
+    blocks: [
+      { type: "fields", rows: [
+        { label: L("date"), value: date(doc.date) },
+        ...meta({ label: L("direction"), value: direction(doc) }, { label: L("countsAs"), value: countsAs }, { label: L("orderTaker"), value: named(doc.taker) }),
+        ...meta({ label: L("description"), value: text(doc.description) }, { label: L("party"), value: text(doc.payee) }, { label: L("counterAccount"), value: named(doc.category) }),
+        ...meta({ label: L("account"), value: oneAccount(doc) }),
+        ...meta({ label: L("method"), value: method(doc.method) }, { label: L("reference"), value: code(doc.reference) }, { label: L("notes"), value: text(doc.notes) }),
+        { label: L("recordedBy"), value: text(doc.recorded_by) }, ...meta({ label: L("approvedBy"), value: text(doc.approved_by) }),
+        { label: L("status"), value: status(doc) }, ...meta({ label: L("reason"), value: text(doc.void_reason) }),
+      ] },
+      { type: "totals", rows: total(T("total"), doc.totals?.total, { strong: true }) },
+      ...peopleTable(doc),
+    ],
+    signatures: kind === "cash_deposit" ? S("cashier", "authorised") : S("prepared", "authorised", "receiver"),
   };
 }
 
@@ -285,6 +340,8 @@ export function buildDocument(kind: DocumentKind, doc: DocumentData, settings: D
     case "supplier_receipt": return supplierReceipt(doc);
     case "sol_invoice": return solInvoice(doc, settings);
     case "expense_voucher": return expenseVoucher(doc);
+    case "supplier_return": return supplierReturn(doc);
+    case "company_money": case "cash_voucher": case "cash_deposit": return moneyVoucher(doc, kind);
     case "salary_slip": case "salary_slips": return salarySlip(doc);
     default: throw new Error(`No template for ${kind}`);
   }

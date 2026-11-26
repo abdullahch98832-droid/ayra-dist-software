@@ -219,7 +219,7 @@ export async function buildReport(kind: DocumentKind, ctx: SessionContext, query
       if (report === "notFound") return null;
       if (report === "forbidden") throw new AuthorizationError("reports.export");
       await recordExport(report, "pdf");
-      return reportDocument(report);
+      return reportDocument(report, typeof query.table === "string" ? query.table : undefined);
     }
     case "trial_balance": return trialBalance(period);
     case "profit_and_loss": return profitAndLoss(period);

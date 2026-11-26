@@ -150,8 +150,19 @@ function pdfTable(table: ReportTable, titled: boolean): Extract<Block, { type: "
 }
 
 /** The report as a document of the PDF engine. */
-export function reportDocument(report: LoadedReport): DocModel {
+/** The report as a paper; with `only`, just that one table, as a list screen shows it. */
+export function reportDocument(report: LoadedReport, only?: string): DocModel {
   const { model, definition } = report;
+  const picked = only ? model.tables.find((t) => t.key === only) : undefined;
+  if (picked) {
+    const block = pdfTable(picked, false);
+    const limit = limitedText(picked);
+    return {
+      title: picked.title, period: report.dates, landscape: block.columns.length > 5,
+      meta: report.chosen.map((c) => ({ label: c.label, value: cellText(c.value as Value) })),
+      blocks: [...(limit ? [{ type: "text" as const, text: limit }] : []), block],
+    };
+  }
   const tables = model.tables.map((table) => ({ table, block: pdfTable(table, model.tables.length > 1 || !!model.statement) }));
   const many = tables.some(({ block }) => block.columns.length > 5);
   const blocks: Block[] = [

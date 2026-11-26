@@ -7,7 +7,7 @@ import { flowPath, type Flow } from "@/features/purchasing/flow";
 import type { FlowSupplier } from "@/features/purchasing/queries";
 import { checkContributorsSum } from "@/features/payments/contributors";
 import { PAYMENT_METHODS, paymentSchema, type PaymentValues } from "@/features/purchasing/schema";
-import { ContributorsField, type ContributorsForm } from "@/components/forms/contributors-field";
+import { ContributorsField, SingleAccount, SplitOption, type ContributorsForm } from "@/components/forms/contributors-field";
 import { useI18n } from "@/i18n/context";
 import { formatPaisa, parseRupees, sumPaisa, toDbAmount, toPaisa, type Paisa } from "@/lib/utils/money";
 import { DocumentForm } from "@/components/documents/document-form";
@@ -89,12 +89,14 @@ export function PaymentForm({ flow, defaults, suppliers, accounts, bills, balanc
               </Field>
               <Field id="amount" label={p.paymentAmount} required error={errors.amount?.message}><MoneyInput id="amount" {...form.register("amount")} /></Field>
               <Field id="date" label={d.date} required error={errors.date?.message}><Input id="date" type="date" dir="ltr" {...form.register("date")} /></Field>
-              <Field id="accountId" label={p.paidFrom} required error={errors.accountId?.message} hint={accounts.length === 0 ? p.noAccounts : undefined}>
-                <NativeSelect id="accountId" {...form.register("accountId")}>
-                  <option value="">{d.choose}</option>
-                  {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                </NativeSelect>
-              </Field>
+              <SingleAccount form={form as unknown as ContributorsForm}>
+                <Field id="accountId" label={p.paidFrom} required error={errors.accountId?.message} hint={accounts.length === 0 ? p.noAccounts : undefined}>
+                  <NativeSelect id="accountId" {...form.register("accountId")}>
+                    <option value="">{d.choose}</option>
+                    {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                  <SplitOption accounts={accounts} /></NativeSelect>
+                </Field>
+              </SingleAccount>
               <Field id="method" label={p.method} required error={errors.method?.message}>
                 <NativeSelect id="method" {...form.register("method")}>{PAYMENT_METHODS.map((m) => <option key={m} value={m}>{p.methods[m]}</option>)}</NativeSelect>
               </Field>
@@ -102,7 +104,7 @@ export function PaymentForm({ flow, defaults, suppliers, accounts, bills, balanc
               <Field id="notes" label={d.notes} optional className="sm:col-span-2 lg:col-span-3" error={errors.notes?.message}><Textarea id="notes" rows={2} {...form.register("notes")} /></Field>
               <Balance form={form} balances={balances} />
             </FormSection>
-            <ContributorsField form={form as unknown as ContributorsForm} />
+            <ContributorsField form={form as unknown as ContributorsForm} accounts={accounts.map((a) => ({ id: a.id, label: a.name }))} />
             <Allocations form={form} bills={bills} />
           </>
         );

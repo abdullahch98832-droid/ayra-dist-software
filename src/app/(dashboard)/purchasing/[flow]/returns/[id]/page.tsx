@@ -8,6 +8,7 @@ import { loadReturn } from "@/features/purchasing/queries";
 import { can } from "@/lib/auth/session";
 import { toPaisa } from "@/lib/utils/money";
 import { ActionButton } from "@/components/documents/action-button";
+import { DocumentLink } from "@/components/documents/document-link";
 import { DocumentStatus } from "@/components/documents/document-status";
 import { PageHeader } from "@/components/layout/page-header";
 import { Ltr, Money } from "@/components/shared/bidi";
@@ -33,15 +34,16 @@ export default async function ReturnPage({ params }: PageProps<"/purchasing/[flo
         title={doc.doc_no}
         breadcrumbs={[{ label: t.purchasing.tabs.returns, href: base }]}
         description={<span className="flex flex-wrap items-center gap-3"><DocumentStatus status={doc.status} t={t} /><bdi>{local(doc.supplier.name, doc.supplier.name_ur)}</bdi></span>}
-        actions={doc.status === "draft" && (
+        actions={(
           <>
-            {can(ctx, "purchasing.create") && (
+            <DocumentLink kind="supplier_return" params={{ id }} label={t.docs.pdf} />
+            {doc.status === "draft" && can(ctx, "purchasing.create") && (
               <>
                 <ActionButton label={d.deleteDraft} icon={<Trash2 aria-hidden />} variant="outline" action={deletePurchasingDraftAction.bind(null, "supplier_returns", id)} success={d.deleted} redirectTo={base} confirm={{ title: d.confirmDeleteTitle, description: d.confirmDelete, tone: "danger" }} />
                 <LinkButton variant="outline" href={`${base}/${id}/edit`}><Pencil aria-hidden />{d.edit}</LinkButton>
               </>
             )}
-            {can(ctx, "purchasing.post") && (
+            {doc.status === "draft" && can(ctx, "purchasing.post") && (
               <ActionButton label={d.post} icon={<CheckCheck aria-hidden />} action={postReturnAction.bind(null, id)} success={d.posted} confirm={{ title: d.confirmPostTitle, description: d.confirmPost }} />
             )}
           </>

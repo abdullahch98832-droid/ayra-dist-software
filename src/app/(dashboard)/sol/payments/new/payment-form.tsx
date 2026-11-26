@@ -10,7 +10,7 @@ import { DocumentForm } from "@/components/documents/document-form";
 import { Field, NativeSelect } from "@/components/forms/field";
 import { FormSection } from "@/components/forms/form-section";
 import { MoneyInput } from "@/components/forms/money-input";
-import { ContributorsField, type ContributorsForm } from "@/components/forms/contributors-field";
+import { ContributorsField, SingleAccount, SplitOption, type ContributorsForm } from "@/components/forms/contributors-field";
 import { Ltr } from "@/components/shared/bidi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,16 +49,18 @@ export function SolPaymentForm({ defaults, jobs, accounts, poster }: { defaults:
             <Field id="method" label={s.method} required error={errors.method?.message}>
               <NativeSelect id="method" {...form.register("method")}>{SOL_METHODS.map((m) => <option key={m} value={m}>{t.purchasing.methods[m]}</option>)}</NativeSelect>
             </Field>
-            <Field id="accountId" label={s.account} required error={errors.accountId?.message}>
-              <NativeSelect id="accountId" {...form.register("accountId")}>
-                <option value="">{t.documents.choose}</option>
-                {accounts.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
-              </NativeSelect>
-            </Field>
+            <SingleAccount form={form as unknown as ContributorsForm}>
+              <Field id="accountId" label={s.account} required error={errors.accountId?.message}>
+                <NativeSelect id="accountId" {...form.register("accountId")}>
+                  <option value="">{t.documents.choose}</option>
+                  {accounts.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
+                <SplitOption accounts={accounts} /></NativeSelect>
+              </Field>
+            </SingleAccount>
             <Field id="reference" label={s.reference} error={errors.reference?.message}><Input id="reference" dir="ltr" {...form.register("reference")} /></Field>
             <Field id="payerAccount" label={s.payerAccount} optional hint={s.payerAccountHint} error={errors.payerAccount?.message}><Input id="payerAccount" dir="ltr" autoComplete="off" {...form.register("payerAccount")} /></Field>
             <Field id="notes" label={t.documents.notes} optional className="sm:col-span-2" error={errors.notes?.message}><Textarea id="notes" rows={2} {...form.register("notes")} /></Field>
-          <ContributorsField form={form as unknown as ContributorsForm} className="sm:col-span-2 lg:col-span-3" />
+          <ContributorsField form={form as unknown as ContributorsForm} accounts={accounts} className="sm:col-span-2 lg:col-span-3" />
           </FormSection>
         );
       }}

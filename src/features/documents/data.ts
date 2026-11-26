@@ -15,6 +15,7 @@ const line = z.object({
   total: amount.optional(), receipt: z.string().optional(), number: z.string().nullish(), doc_no: z.string().optional(), date: z.string().nullish(), invoice_total: amount.nullish(), amount: amount.optional(),
 });
 const payment = z.object({ number: z.string(), date: z.string(), method: z.string(), amount });
+const person = z.object({ name: z.string(), amount });
 
 /** What the database says about a document. Amounts are exact decimal text; nothing is calculated here. */
 export const documentSchema = z.object({
@@ -26,6 +27,7 @@ export const documentSchema = z.object({
   responsible: label.optional(), type: label.optional(), method: z.string().nullish(), payer_account: z.string().nullish(), void_reason: z.string().nullish(), account: z.string().nullish(), collector: label.optional(),
   recorded_by: z.string().nullish(), approved_by: z.string().nullish(), payee: z.string().nullish(), receipt: z.boolean().optional(), no_receipt_reason: z.string().nullish(), category: label.optional(),
   employee: z.object({ code: z.string(), en: z.string(), ur: z.string().nullable(), title: z.string().nullable(), advances: amount }).nullish(), balance: amount.nullish(),
+  direction: z.enum(["in", "out"]).optional(), type_key: z.string().optional(), people: z.array(person).optional(),
   lines: z.array(line).optional(), payments: z.array(payment).optional(), totals: z.record(z.string(), amount).optional(),
 });
 export type DocumentData = z.infer<typeof documentSchema>;
