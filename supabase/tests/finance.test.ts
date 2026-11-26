@@ -198,6 +198,11 @@ describe("expense vouchers", () => {
     expect([await book(cash) - before.cash, await book(till) - before.till]).toEqual([-7000 + 2000 + 1500, -3000 + 3000 + 2500]);
     const stored = one(await db.sql("select financial_account_id f from public.supplier_payments where supplier_id = $1", [s]));
     expect(stored.f).toBe(cash);
+    // Reports name each person with their share in place of the one account.
+    expect((await rows(b.admin, "report_supplier_payments", today, today, s)).map((r) => r.account)).toEqual(["Main cash (70.00), Till (30.00)"]);
+    expect((await rows(b.admin, "report_collections", today, today)).filter((r) => r.customer_id === c).map((r) => r.destination)).toEqual(["Main cash (20.00), Till (30.00)"]);
+    const shared = await voucher(b.admin, "WATER", "1234567.89", { contributors: split("1000000.00", "234567.89") });
+    expect((await rows(b.admin, "expense_register", today, today)).find((r) => r.expense_id === shared)?.account).toBe("Main cash (1,000,000.00), Till (234,567.89)");
     await checks();
   });
 

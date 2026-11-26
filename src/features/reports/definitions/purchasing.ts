@@ -3,8 +3,9 @@ import { ArrowLeftRight, Banknote, Building2, Clock3, HandCoins, History, Packag
 import { reportCompanyExtra } from "@/features/company-extra/queries";
 import { OTHER_VENDORS } from "@/config/vendors";
 import { flowOf, flowPath } from "@/features/purchasing/flow";
+import { readContributors } from "@/features/payments/contributors";
 import { loadUnpaidBills } from "@/features/purchasing/queries";
-import { toDbAmount, toPaisa } from "@/lib/utils/money";
+import { formatPaisa, toDbAmount, toPaisa } from "@/lib/utils/money";
 import { ledgerChecks } from "../checks";
 import type { ReportDefinition, ReportRow, ReportTable } from "../model";
 import { loadCompanyEntries, reportCompany, reportPayablesAging, reportPurchaseLines, reportPurchases, reportSupplierDelivery, reportSupplierPayments, reportSuppliers } from "../queries";
@@ -305,16 +306,17 @@ const all: ReportDefinition[] = [
       const extra = sumOf(rows.filter((x) => x.direction === "out" && x.kind === "extra").map((x) => x.amount));
       const owed = sumOf(rows.filter((x) => x.direction === "out" && x.kind === "account").map((x) => x.amount));
       const paidOut = sumOf(rows.filter((x) => x.direction === "out").map((x) => x.amount));
-      const given = (value: unknown) => (Array.isArray(value) ? value.map((p) => `${(p as { name: string }).name} (${(p as { amount: number }).amount})`).join(", ") : "");
+      // Where more than one person paid or received: each with their share, in place of the one account.
+      const people = (value: unknown) => readContributors(value).map((c) => `${c.name} (${formatPaisa(toPaisa(c.amount)).replace(/^Rs /, "")})`).join(", ") || null;
       return {
         figures: [
           { key: "received", label: bi((t) => t.supply.extra.received), value: { money: received }, icon: HandCoins }, { key: "extra", label: bi((t) => t.supply.extra.extraTotal), value: { money: extra }, icon: Banknote }, { key: "account", label: bi((t) => t.supply.extra.accountTotal), value: { money: owed }, icon: WalletCards },
         ],
         tables: [{
-          key: "payments", title: bi((t) => t.supply.extra.title), search: ["name", "no", "reference", "notes", "given"], empty: bi((t) => t.supply.extra.empty),
-          rows: rows.map((x): ReportRow => ({ id: `${x.payment_id}-${x.entry_date}`, name: x.name, no: x.doc_no, date: x.entry_date, type: x.direction === "in" ? bi((t) => t.supply.extra.inLabel) : bi((t) => (x.kind === "account" ? t.supply.extra.accountTotal : t.supply.extra.extraTotal)), account: x.account, method: biKey((t) => t.purchasing.methods, x.method), reference: x.reference, given: given(x.contributors), notes: x.notes, amount: x.amount })),
+          key: "payments", title: bi((t) => t.supply.extra.title), search: ["name", "no", "reference", "notes", "account"], empty: bi((t) => t.supply.extra.empty),
+          rows: rows.map((x): ReportRow => ({ id: `${x.payment_id}-${x.entry_date}`, name: x.name, no: x.doc_no, date: x.entry_date, type: x.direction === "in" ? bi((t) => t.supply.extra.inLabel) : bi((t) => (x.kind === "account" ? t.supply.extra.accountTotal : t.supply.extra.extraTotal)), account: people(x.contributors) ?? x.account, method: biKey((t) => t.purchasing.methods, x.method), reference: x.reference, notes: x.notes, amount: x.amount })),
           columns: [
-            col("name", (t) => t.supply.extra.name, "text", { sub: "no", subLabel: bi((t) => t.documents.number), primary: true }), col("date", (t) => t.documents.date, "date"), col("type", (t) => t.supply.extra.kind, "text", lg), col("given", (t) => t.supply.extra.givenBy, "text", { ...xxl, screenOnly: true }),
+            col("name", (t) => t.supply.extra.name, "text", { sub: "no", subLabel: bi((t) => t.documents.number), primary: true }), col("date", (t) => t.documents.date, "date"), col("type", (t) => t.supply.extra.kind, "text", lg),
             col("account", (t) => t.accounting.account, "text", { sub: "method", subLabel: bi((t) => t.supply.extra.method), hideBelow: "lg" }), col("reference", (t) => t.supply.extra.reference, "text", xxl), col("notes", (t) => t.supply.extra.notes, "text", { ...xxl, screenOnly: true }), col("amount", (t) => t.supply.extra.amount, "money", total),
           ],
         }],

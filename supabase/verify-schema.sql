@@ -1,4 +1,4 @@
--- Read-only. Compares this database with the migrations up to 20261207100000_split_accounts.sql.
+-- Read-only. Compares this database with the migrations up to 20261208100000_report_people.sql.
 -- Result "ok" = identical. Any other row names something that differs or is missing.
 with expected(kind, name, hash) as (values
   ('columns', 'public.account_openings', 'bfd02c1e3aabcacb1fc52284325eea16'),
@@ -178,7 +178,7 @@ with expected(kind, name, hash) as (values
   ('function', 'private.payable_account(uuid)', '2eb66d52c1efe43a90391565fcf719c9'),
   ('function', 'private.payable_scope(boolean)', '1c2430f4c56509f53e86eae5e21a51cb'),
   ('function', 'private.payment_unallocated(uuid)', '27b3d6af8d11980cba1a9f8369281d5c'),
-  ('function', 'private.people_names(jsonb)', 'abc65cda6971e2133fee2843f4698a5a'),
+  ('function', 'private.people_names(jsonb)', 'cd5d36602c1055d9bb656888d1342ae9'),
   ('function', 'private.period_checklist(uuid)', '7ba690ccc68384130d91c221e76a8a8c'),
   ('function', 'private.post_cash_deposit(uuid)', '314dbbd33573f3f9256fcd5e75d1a2da'),
   ('function', 'private.post_company_extra(uuid)', 'cd930696d7b5d04991483202a6702ff0'),
@@ -343,7 +343,7 @@ with expected(kind, name, hash) as (values
   ('function', 'public.reopen_period(uuid, text)', 'dabfadb7cbc7b609098eb68e4598a4cd'),
   ('function', 'public.reopen_sol_job(uuid, text)', '6e20ca5aa81fdf7e0d4b61ab7a003471'),
   ('function', 'public.report_cash_accounts(date, date)', '870d732e22fe56948cd4070c7a2a00bf'),
-  ('function', 'public.report_collections(date, date, uuid, text)', 'b8d3ec39b371e2dcb9ddbf3ea927cd31'),
+  ('function', 'public.report_collections(date, date, uuid, text)', '604dda5a9a93ad5e61aca7a240005e00'),
   ('function', 'public.report_company(date, date)', '81d877e60b5b6175df06880fd277b3e5'),
   ('function', 'public.report_company_extra(date, date)', '9fd16c78fcf5cbb3e6045c575364aae2'),
   ('function', 'public.report_damaged_stock(date, date)', 'adfcb300b4baa97fb8e16ce64ba35e00'),

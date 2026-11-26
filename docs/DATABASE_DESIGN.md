@@ -46,6 +46,7 @@
 | `20261205100000_expense_corrections` | approved expense vouchers can be corrected by an approver: the old entry is reversed and a corrected one posted |
 | `20261206100000_more_documents` | printable purchase returns, company money vouchers, cash vouchers and cash deposits; receipts and vouchers print who paid how much |
 | `20261207100000_split_accounts` | money paid or received by more than one person: each person is a cash or bank account and their share is posted to it |
+| `20261208100000_report_people` | reports name each person with their share where more than one paid or received |
 
 With every new migration, set `app_settings.schema_version` and update `src/config/database.ts` (a test enforces it). Until that migration has been applied, administrators see a notice naming the file and affected pages say the database needs an update.
 
